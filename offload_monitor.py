@@ -5,7 +5,7 @@
 - Reads offload.html from OneDrive/SharePoint (public link)
 - Creates daily pages per shift + archives each run
 - Keeps an index to browse by date and shift
-- ✅ جميع الرحلات في جدول واحد منظم مع فاصل لكل رحلة
+- جدول واحد: صف رأس الرحلة + شحناتها + رحلة ثانية... إلخ
 - Email is intentionally DISABLED (per request)
 """
 
@@ -17,77 +17,59 @@ from bs4 import BeautifulSoup
 
 CONFIG = {
     "onedrive_url": os.environ["ONEDRIVE_FILE_URL"],
-    "timezone": os.environ.get("TIMEZONE", "Asia/Muscat"),
-    "public_dir": os.environ.get("PUBLIC_DIR", "public"),
+    "timezone":     os.environ.get("TIMEZONE", "Asia/Muscat"),
+    "public_dir":   os.environ.get("PUBLIC_DIR", "public"),
 }
 
-# Shift windows (local time). Priority resolves overlap: Shift3 > Shift2 > Shift1
 SHIFT_DEFS = [
-    ("shift1", "06:00–14:30", "06:00", "14:30", False),
-    ("shift2", "14:30–21:30", "14:30", "21:30", False),
-    ("shift3", "21:00–05:30", "21:00", "05:30", True),
+    ("shift1", "06:00-14:30", "06:00", "14:30", False),
+    ("shift2", "14:30-21:30", "14:30", "21:30", False),
+    ("shift3", "21:00-05:30", "21:00", "05:30", True),
 ]
 
-def _hm_to_minutes(hm: str) -> int:
+# ─────────────────────────────────────────────
+def _hm(hm: str) -> int:
     h, m = hm.split(":")
     return int(h) * 60 + int(m)
 
 def get_shift(now_local: datetime):
     mins = now_local.hour * 60 + now_local.minute
-
-    # Shift3 (cross midnight) first
     s3 = SHIFT_DEFS[2]
-    s3_start = _hm_to_minutes(s3[2])
-    s3_end   = _hm_to_minutes(s3[3])
-    if mins >= s3_start or mins < s3_end:
+    if mins >= _hm(s3[2]) or mins < _hm(s3[3]):
         return s3[0], s3[1]
-
-    # Shift2
     s2 = SHIFT_DEFS[1]
-    if _hm_to_minutes(s2[2]) <= mins < _hm_to_minutes(s2[3]):
+    if _hm(s2[2]) <= mins < _hm(s2[3]):
         return s2[0], s2[1]
-
-    # Shift1
     s1 = SHIFT_DEFS[0]
-    if _hm_to_minutes(s1[2]) <= mins < _hm_to_minutes(s1[3]):
+    if _hm(s1[2]) <= mins < _hm(s1[3]):
         return s1[0], s1[1]
-
     return s3[0], s3[1]
 
-def _ensure_download_param(url: str) -> str:
+def _dl(url: str) -> str:
     if "download=1" in url:
         return url
-    joiner = "&" if "?" in url else "?"
-    return f"{url}{joiner}download=1"
+    return url + ("&" if "?" in url else "?") + "download=1"
 
+# ─────────────────────────────────────────────
 def read_html_from_onedrive():
-    print("  📥 جاري قراءة الملف من OneDrive...")
+    print("  Downloading file from OneDrive...")
     url = CONFIG["onedrive_url"].strip()
-    direct = _ensure_download_param(url)
+    for u in (_dl(url), url):
+        r = requests.get(u, allow_redirects=True, timeout=30)
+        if r.status_code == 200:
+            print("  File downloaded OK")
+            return r.text
+    raise Exception(f"Download failed: {r.status_code}")
 
-    r = requests.get(direct, allow_redirects=True, timeout=30)
-    if r.status_code == 200:
-        print("  ✅ تم تحميل الملف")
-        return r.text
-
-    r2 = requests.get(url, allow_redirects=True, timeout=30)
-    if r2.status_code == 200:
-        print("  ✅ تم تحميل الملف")
-        return r2.text
-
-    raise Exception(f"فشل التحميل: {r.status_code}")
-
-
-# ── المحلل الجديد: يُرجع قائمة رحلات ──────────────────────────────────────
+# ─────────────────────────────────────────────
 def parse_offload_html(html):
     """
-    يُرجع قائمة من الرحلات:
-      [ {"flight": ..., "date": ..., "destination": ..., "shipments": [...] }, ... ]
-    كل مرة يلتقي صف FLIGHT يبدأ رحلة جديدة.
+    Returns a list of flights:
+      [ { flight, date, destination, shipments:[{awb,pcs,kgs,desc,reason}] }, ... ]
+    A new flight begins each time a FLIGHT header row is encountered.
     """
-    soup = BeautifulSoup(html, "html.parser")
-    rows = soup.find_all("tr")
-
+    soup    = BeautifulSoup(html, "html.parser")
+    rows    = soup.find_all("tr")
     flights = []
     current = None
 
@@ -96,7 +78,7 @@ def parse_offload_html(html):
         texts = [c.get_text(strip=True) for c in cells]
         upper = [t.upper() for t in texts]
 
-        # صف رأس رحلة جديدة
+        # New flight header row
         if len(texts) >= 6 and upper and "FLIGHT" in upper[0]:
             current = {
                 "flight":      texts[1].strip(),
@@ -107,15 +89,13 @@ def parse_offload_html(html):
             flights.append(current)
             continue
 
-        # تجاهل صفوف الرأس أو الإجمالي
-        if texts and upper[0] in ("AWB", "TOTAL"):
+        if not texts or upper[0] in ("AWB", "TOTAL"):
             continue
 
         non_empty = [t for t in texts if t.strip() and t.strip() != "\xa0"]
         if len(non_empty) < 2:
             continue
 
-        # صف شحنة
         if len(texts) == 5 and current is not None:
             awb = texts[0].strip()
             if awb and re.search(r"[A-Za-z0-9]", awb):
@@ -127,194 +107,229 @@ def parse_offload_html(html):
                     "reason": texts[4].strip(),
                 })
 
-    # إذا لم يوجد أي صف FLIGHT (ملف قديم بدون header) نعيد هيكل قديم فارغ
     if not flights:
         flights = [{"flight": "", "date": "", "destination": "", "shipments": []}]
-
     return flights
 
+# ─────────────────────────────────────────────
+def _si(v):
+    try:    return int(str(v).strip())
+    except: return 0
 
-# ── بناء صفوف الشحنات داخل الجدول الموحّد ────────────────────────────────
-def build_all_rows(flights):
-    """
-    يبني صفوف HTML لجميع الرحلات في جدول واحد.
-    - صف فاصل ملوّن يحمل معلومات الرحلة قبل شحناتها
-    - تسلسل # مستمر عبر كل الرحلات
-    """
-    def si(v):
-        try: return int(str(v).strip())
-        except: return 0
-    def sf(v):
-        try: return float(str(v).replace(",", "").strip())
-        except: return 0.0
+def _sf(v):
+    try:    return float(str(v).replace(",", "").strip())
+    except: return 0.0
 
+# ─────────────────────────────────────────────
+def build_table_body(flights):
+    """
+    Builds the unified table body:
+      For each flight: a flight-header row (dark blue) then shipment rows.
+      ITEM numbering is continuous across all flights.
+    """
     html       = ""
-    global_idx = 0  # ترقيم AWB مستمر
+    global_idx = 0
 
     for fl in flights:
-        flight      = fl["flight"] or "-"
-        date        = fl["date"] or "-"
-        destination = fl["destination"] or "-"
-        shipments   = fl["shipments"]
+        flight = fl["flight"]      or "-"
+        date   = fl["date"]        or "-"
+        dest   = fl["destination"] or "-"
+        ships  = fl["shipments"]
 
-        fl_pcs = sum(si(s["pcs"]) for s in shipments)
-        fl_kgs = sum(sf(s["kgs"]) for s in shipments)
+        fl_pcs = sum(_si(s["pcs"]) for s in ships)
+        fl_kgs = sum(_sf(s["kgs"]) for s in ships)
 
-        # ── صف فاصل خاص بالرحلة ─────────────────────────────────────────
-        html += f"""
-      <tr>
-        <td colspan="6" style="
-            padding:10px 14px;
-            background:#0b3a78;
-            border:1px solid #083068;
-        ">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-            <td style="color:#fff;font-size:13px;font-weight:700;">
-              ✈️ &nbsp;{flight}
-              <span style="font-weight:400;color:#a8c4f0;margin-left:10px;">
-                Date: {date} &nbsp;|&nbsp; To: {destination}
-              </span>
-            </td>
-            <td style="text-align:right;color:#d4e6ff;font-size:12px;white-space:nowrap;">
-              AWBs: <strong>{len(shipments)}</strong>
-              &nbsp;|&nbsp; PCS: <strong>{fl_pcs}</strong>
-              &nbsp;|&nbsp; KGS: <strong>{fl_kgs:.0f}</strong>
-            </td>
-          </tr></table>
-        </td>
-      </tr>"""
+        # ── Flight header row ───────────────────────────────────────
+        html += (
+            '<tr style="background:#1e3a5f;">'
+            '<td colspan="9" style="padding:9px 14px;border:1px solid #163259;">'
+            '<table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
+            '<td style="color:#fff;font-size:13px;font-weight:700;vertical-align:middle;">'
+            f'Flight:&nbsp;<span style="color:#ffd966;">{flight}</span>'
+            '&nbsp;&nbsp;|&nbsp;&nbsp;'
+            f'Date:&nbsp;<span style="color:#d4e6ff;">{date}</span>'
+            '&nbsp;&nbsp;|&nbsp;&nbsp;'
+            f'Dest:&nbsp;<span style="color:#d4e6ff;">{dest}</span>'
+            '</td>'
+            '<td style="text-align:right;white-space:nowrap;font-size:12px;'
+            'color:#a8c4f0;vertical-align:middle;">'
+            f'AWBs:&nbsp;<strong style="color:#fff;">{len(ships)}</strong>'
+            '&nbsp;|&nbsp;'
+            f'PCS:&nbsp;<strong style="color:#fff;">{fl_pcs}</strong>'
+            '&nbsp;|&nbsp;'
+            f'KGS:&nbsp;<strong style="color:#fff;">{fl_kgs:.0f}</strong>'
+            '</td>'
+            '</tr></table>'
+            '</td></tr>'
+        )
 
-        # ── صفوف الشحنات ────────────────────────────────────────────────
-        if shipments:
-            for i, s in enumerate(shipments):
+        # ── Shipment rows ───────────────────────────────────────────
+        if ships:
+            for i, s in enumerate(ships):
                 global_idx += 1
-                bg = "#f0f5ff" if i % 2 == 0 else "#ffffff"
-                html += f"""
-      <tr style="background:{bg};">
-        <td style="padding:9px 8px;border:1px solid #d0d9ee;font-weight:700;color:#1b1f2a;text-align:center;">{global_idx}</td>
-        <td style="padding:9px 8px;border:1px solid #d0d9ee;font-family:Courier New,monospace;font-size:11px;color:#0b3a78;">{s['awb']}</td>
-        <td style="padding:9px 8px;border:1px solid #d0d9ee;color:#1b1f2a;text-align:center;">{s['pcs']}</td>
-        <td style="padding:9px 8px;border:1px solid #d0d9ee;color:#1b1f2a;text-align:center;">{s['kgs']}</td>
-        <td style="padding:9px 8px;border:1px solid #d0d9ee;color:#1b1f2a;">{s['desc']}</td>
-        <td style="padding:9px 8px;border:1px solid #d0d9ee;color:#c0392b;font-weight:700;">{s['reason']}</td>
-      </tr>"""
+                bg = "#f7f9ff" if i % 2 == 0 else "#ffffff"
+                html += (
+                    f'<tr style="background:{bg};">'
+                    f'<td style="padding:8px 10px;border:1px solid #d8dff0;'
+                    f'text-align:center;font-weight:700;color:#1b1f2a;">{global_idx}</td>'
+                    f'<td style="padding:8px 10px;border:1px solid #d8dff0;'
+                    f'color:#374151;white-space:nowrap;">{date}</td>'
+                    f'<td style="padding:8px 10px;border:1px solid #d8dff0;'
+                    f'font-weight:700;color:#0b3a78;">{flight}</td>'
+                    f'<td style="padding:8px 10px;border:1px solid #d8dff0;'
+                    f'text-align:center;color:#9ca3af;"></td>'
+                    f'<td style="padding:8px 10px;border:1px solid #d8dff0;'
+                    f'font-weight:700;color:#0b3a78;">{dest}</td>'
+                    f'<td style="padding:8px 10px;border:1px solid #d8dff0;'
+                    f'font-family:Courier New,monospace;font-size:11px;'
+                    f'color:#1e3a5f;">{s["awb"]}</td>'
+                    f'<td style="padding:8px 10px;border:1px solid #d8dff0;'
+                    f'text-align:center;color:#374151;">{s["pcs"]}</td>'
+                    f'<td style="padding:8px 10px;border:1px solid #d8dff0;'
+                    f'text-align:center;color:#374151;">{s["kgs"]}</td>'
+                    f'<td style="padding:8px 10px;border:1px solid #d8dff0;'
+                    f'color:#c0392b;font-weight:700;">{s["reason"]}</td>'
+                    '</tr>'
+                )
         else:
-            html += """
-      <tr>
-        <td colspan="6" style="padding:10px 14px;border:1px solid #d0d9ee;color:#888;font-style:italic;">
-          ⚠️ لا توجد شحنات لهذه الرحلة
-        </td>
-      </tr>"""
+            html += (
+                '<tr><td colspan="9" style="padding:10px 14px;'
+                'border:1px solid #d8dff0;color:#9ca3af;'
+                'font-style:italic;text-align:center;">'
+                'No shipments for this flight'
+                '</td></tr>'
+            )
 
     return html
 
 
-# ── بناء صفحة التقرير الكاملة ────────────────────────────────────────────
+# ─────────────────────────────────────────────
 def build_report_html(flights, generated_at_local: str, shift_label: str):
-    def si(v):
-        try: return int(str(v).strip())
-        except: return 0
-    def sf(v):
-        try: return float(str(v).replace(",", "").strip())
-        except: return 0.0
+    all_ships  = [s for fl in flights for s in fl["shipments"]]
+    total_awb  = len(all_ships)
+    total_pcs  = sum(_si(s["pcs"]) for s in all_ships)
+    total_kgs  = sum(_sf(s["kgs"]) for s in all_ships)
+    total_fls  = len(flights)
 
-    all_shipments = [s for fl in flights for s in fl["shipments"]]
-    total_awb = len(all_shipments)
-    total_pcs = sum(si(s["pcs"]) for s in all_shipments)
-    total_kgs = sum(sf(s["kgs"]) for s in all_shipments)
-    total_flights = len(flights)
+    tbody = build_table_body(flights)
 
-    all_rows = build_all_rows(flights)
+    # Summary box (top-right, like the screenshot)
+    summary_rows_html = ""
+    for fl in flights:
+        summary_rows_html += (
+            '<tr>'
+            '<td style="color:#6b7280;padding:2px 4px 2px 0;'
+            'font-size:12px;white-space:nowrap;">Flight:</td>'
+            f'<td style="font-weight:700;color:#0b3a78;font-size:12px;'
+            f'padding-right:10px;">{fl["flight"] or "-"}</td>'
+            '<td style="color:#6b7280;padding:2px 4px 2px 0;'
+            'font-size:12px;white-space:nowrap;">Dest:</td>'
+            f'<td style="font-weight:700;color:#0b3a78;font-size:12px;">'
+            f'{fl["destination"] or "-"}</td>'
+            '</tr>'
+        )
 
-    # ملخص الرحلات للـ header
-    flights_summary = "&nbsp;&nbsp;|&nbsp;&nbsp;".join(
-        f'<strong style="color:#d4e6ff;">{fl["flight"] or "-"}</strong>'
-        f'<span style="color:#a8c4f0;"> → {fl["destination"] or "-"}</span>'
-        for fl in flights
+    no_data_row = (
+        "" if all_ships else
+        "<tr><td colspan='9' style='padding:16px;border:1px solid #d8dff0;"
+        "text-align:center;color:#9ca3af;'>No data available</td></tr>"
     )
 
-    return f"""<div style="font-family:Calibri,Arial,sans-serif;">
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#eef1f7;padding:20px 0;">
-<tr><td style="padding:0 10px;">
-<table width="760" cellpadding="0" cellspacing="0" border="0" style="width:760px;background:#fff;border:1px solid #d0d5e8;">
+    return f"""<div style="font-family:Calibri,Arial,sans-serif;max-width:1100px;">
 
-  <!-- ── HEADER ── -->
-  <tr><td style="background:#0b3a78;padding:0;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td width="6" style="background:#c0392b;">&nbsp;</td>
-      <td style="padding:18px 22px;">
-        <div style="font-size:18px;font-weight:700;color:#fff;">📦 Offload Monitor</div>
-        <div style="font-size:12px;color:#a8c4f0;margin-top:6px;">
-          Shift: <strong style="color:#d4e6ff;">{shift_label}</strong>
-          &nbsp;&nbsp;|&nbsp;&nbsp;
-          Flights: <strong style="color:#d4e6ff;">{total_flights}</strong>
-        </div>
-        <div style="font-size:12px;color:#a8c4f0;margin-top:4px;">{flights_summary}</div>
-        <div style="font-size:11px;color:#6b9fd4;margin-top:6px;">Last update: {generated_at_local}</div>
-      </td>
-    </tr></table>
-  </td></tr>
+<!-- PAGE HEADER -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="margin-bottom:16px;">
+<tr>
+  <td style="vertical-align:top;">
+    <div style="font-size:24px;font-weight:700;color:#1b1f2a;letter-spacing:-0.5px;">
+      C) OFFLOADING CARGO
+    </div>
+    <div style="font-size:12px;color:#6b7280;margin-top:5px;">
+      Shift: <strong style="color:#1b1f2a;">{shift_label}</strong>
+      &nbsp;&bull;&nbsp;
+      Last update: <strong style="color:#1b1f2a;">{generated_at_local}</strong>
+    </div>
+  </td>
+  <td style="vertical-align:top;text-align:right;width:210px;">
+    <div style="display:inline-block;border:1px solid #d0d5e8;
+                padding:10px 14px;background:#fff;min-width:180px;">
+      <div style="font-weight:700;color:#1b1f2a;margin-bottom:6px;font-size:13px;">
+        Summary
+      </div>
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="color:#6b7280;padding:2px 4px 2px 0;
+              font-size:12px;white-space:nowrap;">Shift:</td>
+          <td colspan="3" style="font-weight:700;color:#0b3a78;font-size:12px;">
+            {shift_label}
+          </td>
+        </tr>
+        {summary_rows_html}
+      </table>
+    </div>
+  </td>
+</tr>
+</table>
 
-  <!-- ── SUMMARY ── -->
-  <tr><td style="padding:16px 24px 0 24px;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td width="4" style="background:#0b3a78;">&nbsp;</td>
-      <td style="padding:6px 10px;background:#eef3fc;">
-        <span style="font-size:12px;font-weight:700;color:#0b3a78;letter-spacing:1px;">SHIFT SUMMARY</span>
-      </td>
-    </tr></table>
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;border:1px solid #e0e7f5;">
-      <tr>
-        <td width="25%" style="padding:14px;border-right:1px solid #e0e7f5;background:#f5f8ff;">
-          <div style="font-size:11px;color:#6b7280;">FLIGHTS</div>
-          <div style="font-size:22px;font-weight:700;color:#0b3a78;">{total_flights}</div>
-        </td>
-        <td width="25%" style="padding:14px;border-right:1px solid #e0e7f5;background:#f5f8ff;">
-          <div style="font-size:11px;color:#6b7280;">AWB COUNT</div>
-          <div style="font-size:22px;font-weight:700;color:#0b3a78;">{total_awb}</div>
-        </td>
-        <td width="25%" style="padding:14px;border-right:1px solid #e0e7f5;background:#fff5f5;">
-          <div style="font-size:11px;color:#6b7280;">TOTAL PCS</div>
-          <div style="font-size:22px;font-weight:700;color:#c0392b;">{total_pcs}</div>
-        </td>
-        <td width="25%" style="padding:14px;background:#fff5f5;">
-          <div style="font-size:11px;color:#6b7280;">TOTAL KGS</div>
-          <div style="font-size:22px;font-weight:700;color:#c0392b;">{total_kgs:.0f}</div>
-        </td>
-      </tr>
-    </table>
-  </td></tr>
+<!-- MAIN TABLE -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="border-collapse:collapse;font-size:12.5px;
+              background:#fff;border:1px solid #c8d0e8;">
 
-  <!-- ── TABLE HEADER + LABEL ── -->
-  <tr><td style="padding:16px 24px 0 24px;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td width="4" style="background:#0b3a78;">&nbsp;</td>
-      <td style="padding:6px 10px;background:#eef3fc;">
-        <span style="font-size:12px;font-weight:700;color:#0b3a78;letter-spacing:1px;">SHIPMENTS — ALL FLIGHTS</span>
-      </td>
-    </tr></table>
+  <!-- Column headers -->
+  <tr style="background:#f0f0f0;">
+    <th style="padding:9px 10px;border:1px solid #c8d0e8;text-align:center;
+               font-weight:700;color:#1b1f2a;white-space:nowrap;">ITEM</th>
+    <th style="padding:9px 10px;border:1px solid #c8d0e8;font-weight:700;
+               color:#1b1f2a;white-space:nowrap;">DATE</th>
+    <th style="padding:9px 10px;border:1px solid #c8d0e8;font-weight:700;
+               color:#1b1f2a;white-space:nowrap;">FLIGHT</th>
+    <th style="padding:9px 10px;border:1px solid #c8d0e8;text-align:center;
+               font-weight:700;color:#1b1f2a;white-space:nowrap;">STD/<br>ATD</th>
+    <th style="padding:9px 10px;border:1px solid #c8d0e8;font-weight:700;
+               color:#1b1f2a;white-space:nowrap;">DEST</th>
+    <th style="padding:9px 10px;border:1px solid #c8d0e8;font-weight:700;
+               color:#1b1f2a;">AWB</th>
+    <th style="padding:9px 10px;border:1px solid #c8d0e8;text-align:center;
+               font-weight:700;color:#1b1f2a;white-space:nowrap;">PCS</th>
+    <th style="padding:9px 10px;border:1px solid #c8d0e8;text-align:center;
+               font-weight:700;color:#1b1f2a;white-space:nowrap;">KGS</th>
+    <th style="padding:9px 10px;border:1px solid #c8d0e8;font-weight:700;
+               color:#1b1f2a;white-space:nowrap;">Offloading<br>Reason</th>
+  </tr>
 
-    <!-- ── UNIFIED TABLE ── -->
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="margin-top:10px;border-collapse:collapse;font-size:12px;">
-      <tr style="background:#1a4f9c;">
-        <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #0a3166;width:36px;text-align:center;">#</td>
-        <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #0a3166;">AWB</td>
-        <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #0a3166;width:48px;text-align:center;">PCS</td>
-        <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #0a3166;width:60px;text-align:center;">KGS</td>
-        <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #0a3166;">Description</td>
-        <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #0a3166;">Reason</td>
-      </tr>
-      {all_rows if all_shipments else
-       "<tr><td colspan='6' style='padding:14px;border:1px solid #d0d9ee;text-align:center;'>⚠️ لا توجد بيانات</td></tr>"}
-    </table>
-  </td></tr>
+  {tbody if all_ships else no_data_row}
 
-  <tr><td style="background:#0b3a78;height:5px;margin-top:20px;">&nbsp;</td></tr>
-</table></td></tr></table>
+  <!-- Grand total row -->
+  <tr style="background:#f0f0f0;">
+    <td colspan="6" style="padding:9px 14px;border:1px solid #c8d0e8;
+        font-weight:700;color:#1b1f2a;">
+      TOTAL &mdash; {total_fls}&nbsp;flight{"s" if total_fls != 1 else ""}
+      &nbsp;|&nbsp; {total_awb}&nbsp;AWB
+    </td>
+    <td style="padding:9px 10px;border:1px solid #c8d0e8;
+               text-align:center;font-weight:700;color:#c0392b;">{total_pcs}</td>
+    <td style="padding:9px 10px;border:1px solid #c8d0e8;
+               text-align:center;font-weight:700;color:#c0392b;">{total_kgs:.0f}</td>
+    <td style="padding:9px 10px;border:1px solid #c8d0e8;"></td>
+  </tr>
+
+</table>
+
+<!-- NOTES -->
+<div style="margin-top:10px;border:1px solid #d0d5e8;padding:10px 14px;
+            background:#fff;font-size:12px;color:#374151;">
+  <strong>Notes</strong><br>
+  AWB/PCS/KGS columns are populated from the source file.
+  STD/ATD, ULD, CMS, and Verification columns are left blank
+  as they are not present in the source file.
+</div>
+
 </div>"""
 
 
+# ─────────────────────────────────────────────
 def safe_filename(s: str) -> str:
     s = (s or "").strip()
     s = re.sub(r"[^A-Za-z0-9._-]+", "_", s)
@@ -323,86 +338,80 @@ def safe_filename(s: str) -> str:
 def load_json(path: Path, default):
     if not path.exists():
         return default
-    try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except Exception:
-        return default
+    try:    return json.loads(path.read_text(encoding="utf-8"))
+    except: return default
 
 def write_json(path: Path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
 
 def build_simple_page(title: str, body_html: str) -> str:
-    return f"""<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{title}</title>
-</head>
-<body style="margin:0;background:#eef1f7;">
-  <div style="max-width:1000px;margin:0 auto;padding:14px 12px;font-family:Calibri,Arial,sans-serif;">
-    {body_html}
-  </div>
-</body>
-</html>"""
+    return (
+        "<!doctype html>\n<html>\n<head>\n"
+        '  <meta charset="utf-8">\n'
+        '  <meta name="viewport" content="width=device-width, initial-scale=1">\n'
+        f"  <title>{title}</title>\n"
+        "</head>\n"
+        '<body style="margin:0;background:#eef1f7;">\n'
+        '  <div style="max-width:1200px;margin:0 auto;padding:18px 16px;'
+        'font-family:Calibri,Arial,sans-serif;">\n'
+        f"    {body_html}\n"
+        "  </div>\n</body>\n</html>"
+    )
 
 
+# ─────────────────────────────────────────────
 def main():
     print("=" * 50)
-    print("  🚀 Offload Monitor — Shift Pages + History")
+    print("  Offload Monitor")
     print("=" * 50)
 
-    tz        = ZoneInfo(CONFIG["timezone"])
-    now_local = datetime.now(tz)
-
+    tz         = ZoneInfo(CONFIG["timezone"])
+    now_local  = datetime.now(tz)
     date_key   = now_local.strftime("%Y-%m-%d")
     time_key   = now_local.strftime("%H%M%S")
     human_time = now_local.strftime("%Y-%m-%d %H:%M:%S %Z")
 
     shift_id, shift_label = get_shift(now_local)
 
-    html    = read_html_from_onedrive()
-    flights = parse_offload_html(html)   # ← قائمة رحلات
+    raw_html = read_html_from_onedrive()
+    flights  = parse_offload_html(raw_html)
 
     total_shipments = sum(len(fl["shipments"]) for fl in flights)
-    print(f"  🗓️  Page date: {date_key} | Shift: {shift_id} ({shift_label})")
-    print(f"  ✈️  {len(flights)} رحلة | {total_shipments} شحنة")
+    print(f"  Date: {date_key} | Shift: {shift_id} ({shift_label})")
+    print(f"  Flights: {len(flights)} | Shipments: {total_shipments}")
 
-    public     = Path(CONFIG["public_dir"])
+    public      = Path(CONFIG["public_dir"])
     public.mkdir(parents=True, exist_ok=True)
-
-    day_dir    = public / date_key
-    shift_dir  = day_dir / shift_id
+    day_dir     = public / date_key
+    shift_dir   = day_dir / shift_id
     reports_dir = shift_dir / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
 
-    # ── بناء HTML التقرير الموحّد ─────────────────────────────────────────
-    report_html = build_report_html(flights, human_time, shift_label)
-
-    # اسم ملف الأرشيف يضم أسماء كل الرحلات
-    flights_tag = "_".join(safe_filename(fl["flight"]) for fl in flights)[:60] or "unknown"
+    report_html  = build_report_html(flights, human_time, shift_label)
+    flights_tag  = "_".join(safe_filename(fl["flight"]) for fl in flights)[:60] or "unknown"
     archive_name = f"{time_key}_{flights_tag}.html"
-    archive_path = reports_dir / archive_name
-    archive_path.write_text(
+
+    (reports_dir / archive_name).write_text(
         build_simple_page(f"Offload Report {date_key} {shift_id} {time_key}", report_html),
         encoding="utf-8"
     )
-
-    # index.html للمناوبة (يُحدَّث في كل تشغيل ليعكس كل الرحلات المتراكمة)
     (shift_dir / "index.html").write_text(
-        build_simple_page(f"Offload Monitor — {date_key} — {shift_id}", report_html),
+        build_simple_page(f"Offload Monitor - {date_key} - {shift_id}", report_html),
         encoding="utf-8"
     )
 
-    # ── Shift log ─────────────────────────────────────────────────────────
+    # Shift log
     log_path = shift_dir / "log.json"
-    log = load_json(log_path, {"date": date_key, "shift": shift_id, "label": shift_label, "entries": []})
+    log = load_json(log_path, {
+        "date": date_key, "shift": shift_id, "label": shift_label, "entries": []
+    })
     log["entries"].append({
-        "ts":       human_time,
-        "archive":  f"{date_key}/{shift_id}/reports/{archive_name}",
-        "flights":  [
-            {"flight": fl["flight"], "to": fl["destination"], "shipments": len(fl["shipments"])}
+        "ts":              human_time,
+        "archive":         f"{date_key}/{shift_id}/reports/{archive_name}",
+        "flights":         [
+            {"flight": fl["flight"], "to": fl["destination"],
+             "shipments": len(fl["shipments"])}
             for fl in flights
         ],
         "total_shipments": total_shipments,
@@ -410,100 +419,116 @@ def main():
     log["entries"] = log["entries"][-300:]
     write_json(log_path, log)
 
-    # ── Shift archive page ────────────────────────────────────────────────
-    entries = list(reversed(log["entries"]))[:200]
-    rows = ""
+    # Shift archive page
+    entries  = list(reversed(log["entries"]))[:200]
+    arc_rows = ""
     for e in entries:
         report_file = Path(e["archive"]).name
-        # اعرض كل الرحلات في الخلية
         fl_list = e.get("flights", [])
-        if fl_list:
-            fl_text = "<br>".join(
-                f"{f.get('flight','-')} → {f.get('to','-')} ({f.get('shipments',0)} AWB)"
-                for f in fl_list
-            )
-        else:
-            fl_text = e.get("flight", "-")  # backwards compat
-        rows += f"""
-        <tr>
-          <td style="padding:8px;border:1px solid #d0d5e8;font-size:12px;">{e.get('ts','')}</td>
-          <td style="padding:8px;border:1px solid #d0d5e8;font-size:12px;">{fl_text}</td>
-          <td style="padding:8px;border:1px solid #d0d5e8;text-align:center;">{e.get('total_shipments', e.get('shipments', 0))}</td>
-          <td style="padding:8px;border:1px solid #d0d5e8;"><a href="reports/{report_file}">Open</a></td>
-        </tr>"""
+        fl_text = "<br>".join(
+            f"{f.get('flight', '-')} to {f.get('to', '-')} "
+            f"({f.get('shipments', 0)} AWB)"
+            for f in fl_list
+        ) if fl_list else e.get("flight", "-")
+        arc_rows += (
+            "<tr>"
+            f'<td style="padding:8px;border:1px solid #d0d5e8;font-size:12px;">'
+            f"{e.get('ts', '')}</td>"
+            f'<td style="padding:8px;border:1px solid #d0d5e8;font-size:12px;">'
+            f"{fl_text}</td>"
+            f'<td style="padding:8px;border:1px solid #d0d5e8;text-align:center;">'
+            f"{e.get('total_shipments', e.get('shipments', 0))}</td>"
+            f'<td style="padding:8px;border:1px solid #d0d5e8;">'
+            f'<a href="reports/{report_file}">Open</a></td>'
+            "</tr>"
+        )
 
-    shift_archive_body = f"""
-    <h2 style="margin:6px 0 10px 0;">{date_key} — {shift_id} ({shift_label})</h2>
-    <div style="margin-bottom:10px;">
-      <a href="index.html">Latest</a> • <a href="../index.html">Day</a> • <a href="../../index.html">Home</a>
-    </div>
-    <table style="width:100%;border-collapse:collapse;background:#fff;">
-      <tr style="background:#0b3a78;color:#fff;">
-        <th style="padding:8px;border:1px solid #0a3166;text-align:left;">Timestamp</th>
-        <th style="padding:8px;border:1px solid #0a3166;text-align:left;">Flights</th>
-        <th style="padding:8px;border:1px solid #0a3166;">Total AWB</th>
-        <th style="padding:8px;border:1px solid #0a3166;">Report</th>
-      </tr>
-      {rows if rows else "<tr><td colspan='4' style='padding:10px;border:1px solid #d0d5e8;'>No entries yet.</td></tr>"}
-    </table>
-    """
+    shift_archive_body = (
+        f'<h2 style="margin:6px 0 10px 0;">{date_key} - {shift_id} ({shift_label})</h2>'
+        '<div style="margin-bottom:10px;">'
+        '<a href="index.html">Latest</a> | '
+        '<a href="../index.html">Day</a> | '
+        '<a href="../../index.html">Home</a>'
+        "</div>"
+        '<table style="width:100%;border-collapse:collapse;background:#fff;">'
+        '<tr style="background:#0b3a78;color:#fff;">'
+        '<th style="padding:8px;border:1px solid #0a3166;text-align:left;">Timestamp</th>'
+        '<th style="padding:8px;border:1px solid #0a3166;text-align:left;">Flights</th>'
+        '<th style="padding:8px;border:1px solid #0a3166;">Total AWB</th>'
+        '<th style="padding:8px;border:1px solid #0a3166;">Report</th>'
+        "</tr>"
+        + (arc_rows or
+           '<tr><td colspan="4" style="padding:10px;border:1px solid #d0d5e8;">'
+           "No entries yet.</td></tr>")
+        + "</table>"
+    )
     (shift_dir / "archive.html").write_text(
         build_simple_page(f"Archive {date_key} {shift_id}", shift_archive_body),
         encoding="utf-8"
     )
 
-    # ── Day index ─────────────────────────────────────────────────────────
-    day_body = f"""
-    <h1 style="margin:6px 0 6px 0;">Offload Monitor — {date_key}</h1>
-    <div style="margin-bottom:12px;color:#475569;">Timezone: {CONFIG['timezone']} • Last run: {human_time}</div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">
-      <a style="padding:10px 12px;border:1px solid #d0d5e8;background:#fff;text-decoration:none;" href="{shift_id}/index.html"><strong>Current shift</strong>: {shift_id} ({shift_label})</a>
-      <a style="padding:10px 12px;border:1px solid #d0d5e8;background:#fff;text-decoration:none;" href="shift1/index.html">Shift 1 (06:00–14:30)</a>
-      <a style="padding:10px 12px;border:1px solid #d0d5e8;background:#fff;text-decoration:none;" href="shift2/index.html">Shift 2 (14:30–21:30)</a>
-      <a style="padding:10px 12px;border:1px solid #d0d5e8;background:#fff;text-decoration:none;" href="shift3/index.html">Shift 3 (21:00–05:30)</a>
-    </div>
-    <div style="margin-bottom:8px;"><a href="../index.html">← Back to all dates</a></div>
-    <h3 style="margin:10px 0 6px 0;">Shift archives</h3>
-    <ul>
-      <li><a href="shift1/archive.html">Shift 1 archive</a></li>
-      <li><a href="shift2/archive.html">Shift 2 archive</a></li>
-      <li><a href="shift3/archive.html">Shift 3 archive</a></li>
-    </ul>
-    """
+    # Day index
+    day_body = (
+        f'<h1 style="margin:6px 0 6px 0;">Offload Monitor - {date_key}</h1>'
+        f'<div style="margin-bottom:12px;color:#475569;">'
+        f'Timezone: {CONFIG["timezone"]} &bull; Last run: {human_time}</div>'
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px;">'
+        f'<a style="padding:10px 12px;border:1px solid #d0d5e8;background:#fff;'
+        f'text-decoration:none;" href="{shift_id}/index.html">'
+        f'<strong>Current shift</strong>: {shift_id} ({shift_label})</a>'
+        '<a style="padding:10px 12px;border:1px solid #d0d5e8;background:#fff;'
+        'text-decoration:none;" href="shift1/index.html">Shift 1 (06:00-14:30)</a>'
+        '<a style="padding:10px 12px;border:1px solid #d0d5e8;background:#fff;'
+        'text-decoration:none;" href="shift2/index.html">Shift 2 (14:30-21:30)</a>'
+        '<a style="padding:10px 12px;border:1px solid #d0d5e8;background:#fff;'
+        'text-decoration:none;" href="shift3/index.html">Shift 3 (21:00-05:30)</a>'
+        "</div>"
+        '<div style="margin-bottom:8px;"><a href="../index.html">Back to all dates</a></div>'
+        '<h3 style="margin:10px 0 6px 0;">Shift archives</h3>'
+        "<ul>"
+        '<li><a href="shift1/archive.html">Shift 1 archive</a></li>'
+        '<li><a href="shift2/archive.html">Shift 2 archive</a></li>'
+        '<li><a href="shift3/archive.html">Shift 3 archive</a></li>'
+        "</ul>"
+    )
     (day_dir / "index.html").write_text(
         build_simple_page(f"Offload Monitor {date_key}", day_body),
         encoding="utf-8"
     )
 
-    # ── Home index ────────────────────────────────────────────────────────
+    # Home index
     date_dirs = sorted(
-        [p.name for p in public.iterdir() if p.is_dir() and re.match(r"^\d{4}-\d{2}-\d{2}$", p.name)],
+        [p.name for p in public.iterdir()
+         if p.is_dir() and re.match(r"^\d{4}-\d{2}-\d{2}$", p.name)],
         reverse=True
     )
-    items = "".join([
+    items = "".join(
         f'<li style="margin:6px 0;"><a href="{d}/index.html">{d}</a></li>'
         for d in date_dirs[:90]
-    ])
-    home_body = f"""
-    <h1 style="margin:6px 0 6px 0;">Offload Monitor — History</h1>
-    <div style="margin-bottom:12px;color:#475569;">Latest run: {human_time} • Current: <a href="{date_key}/index.html">{date_key}</a></div>
-    <p style="margin:0 0 10px 0;">اختر التاريخ ثم المناوبة (Shift) لعرض التقارير.</p>
-    <h3 style="margin:10px 0 6px 0;">Dates</h3>
-    <ul style="padding-left:18px;">{items or "<li>No dates yet.</li>"}</ul>
-    """
+    )
+    home_body = (
+        '<h1 style="margin:6px 0 6px 0;">Offload Monitor - History</h1>'
+        f'<div style="margin-bottom:12px;color:#475569;">'
+        f'Latest run: {human_time} &bull; '
+        f'Current: <a href="{date_key}/index.html">{date_key}</a></div>'
+        "<p>Select a date then a shift to view reports.</p>"
+        '<h3 style="margin:10px 0 6px 0;">Dates</h3>'
+        f'<ul style="padding-left:18px;">{items or "<li>No dates yet.</li>"}</ul>'
+    )
     (public / "index.html").write_text(
-        build_simple_page("Offload Monitor — Home", home_body),
+        build_simple_page("Offload Monitor - Home", home_body),
         encoding="utf-8"
     )
 
-    # ── Latest pointer JSON ───────────────────────────────────────────────
+    # latest.json
     write_json(public / "latest.json", {
         "generated_at":    human_time,
         "date":            date_key,
         "shift":           shift_id,
         "shift_label":     shift_label,
         "flights":         [
-            {"flight": fl["flight"], "to": fl["destination"], "shipments": len(fl["shipments"])}
+            {"flight": fl["flight"], "to": fl["destination"],
+             "shipments": len(fl["shipments"])}
             for fl in flights
         ],
         "total_shipments": total_shipments,
@@ -511,7 +536,8 @@ def main():
         "archive_page":    f"{date_key}/{shift_id}/reports/{archive_name}",
     })
 
-    print("  🌐 تم تحديث صفحات المناوبات + الأرشيف + الصفحة الرئيسية")
+    print("  Pages updated: shifts + archive + home")
+
 
 if __name__ == "__main__":
     main()
