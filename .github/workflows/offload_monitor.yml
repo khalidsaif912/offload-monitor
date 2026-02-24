@@ -1,9 +1,9 @@
-name: Offload Monitor — OneDrive Version
+name: Offload Monitor — Shift Pages + History
 
 on:
   schedule:
     - cron: '*/5 * * * *'   # كل 5 دقائق
-  workflow_dispatch:          # تشغيل يدوي للاختبار
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -15,13 +15,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  process-offload:
+  build:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
-
+    timeout-minutes: 8
     steps:
-      - name: Checkout
+      - name: Checkout default branch
         uses: actions/checkout@v4
+
+      - name: Checkout gh-pages (preserve history)
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: public
+        continue-on-error: true
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -31,21 +37,11 @@ jobs:
       - name: Install dependencies
         run: pip install beautifulsoup4 requests
 
-      - name: Run Offload Monitor (generate public/index.html)
+      - name: Run monitor (updates public/*)
         env:
           ONEDRIVE_FILE_URL: ${{ secrets.ONEDRIVE_FILE_URL }}
-
-          # Email is optional (workflow will not fail if these are missing/wrong)
-          SEND_EMAIL:       ${{ secrets.SEND_EMAIL }}     # set to "false" to disable
-          YOUR_EMAIL:       ${{ secrets.YOUR_EMAIL }}
-          YOUR_PASSWORD:    ${{ secrets.YOUR_PASSWORD }}
-          SEND_TO_EMAIL:    ${{ secrets.SEND_TO_EMAIL }}
-          YOUR_NAME:        ${{ secrets.YOUR_NAME }}
-          YOUR_TITLE:       ${{ secrets.YOUR_TITLE }}
-
-          # Optional override:
-          SMTP_SERVER:      ${{ secrets.SMTP_SERVER }}
-          SMTP_PORT:        ${{ secrets.SMTP_PORT }}
+          TIMEZONE: Asia/Muscat
+          PUBLIC_DIR: public
         run: python offload_monitor.py
 
       - name: Upload Pages artifact
@@ -58,7 +54,7 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
-    needs: process-offload
+    needs: build
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
