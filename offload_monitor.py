@@ -1,20 +1,18 @@
 """
 =============================================================
   OFFLOAD MONITOR — Shift Pages + Daily History (GitHub Pages)
-  REPORT FORMAT: Offloading Cargo Table (as provided)
+  REPORT FORMAT: Offloading Cargo Table + DE-DUPE + TOTAL PCS
 =============================================================
-- Reads offload.html from OneDrive/SharePoint (public link)
-- Creates daily pages per shift + archives each run
-- Keeps an index to browse by date and shift
-- Generates report in the same table format you shared:
-  ITEM | DATE | FLIGHT | STD/ATD | DEST | Email Received Time | Physical Cargo received from Ramp |
-  Trolley/ULD Number | Offloading Process Completed in CMS | Offloading Pieces Verification |
-  Offloading Reason | Remarks/Additional Information
-Notes:
-- Some columns are not present in offload.html, so they will be left blank (you can fill manually if needed).
+What changed vs previous:
+1) Prevent duplicates:
+   - For the same Date+Shift, if the fetched data (flight/dest/offload list) did NOT change,
+     we do NOT add a new archive entry (reports/*) and do NOT append to log.json.
+   - We still keep the "latest" page (shift/index.html) updated (and we show a banner: No change / Updated).
+2) Offloading Pieces Verification column:
+   - Shows TOTAL PCS (sum of PCS across all rows) on the FIRST row (others blank).
 """
 
-import os, re, json, requests
+import os, re, json, requests, hashlib
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -90,7 +88,6 @@ def parse_offload_html(html):
         texts = [c.get_text(strip=True) for c in cells]
         upper = [t.upper() for t in texts]
 
-        # Flight header row
         if len(texts) >= 6 and upper and "FLIGHT" in upper[0]:
             flight = texts[1].strip()
             date = texts[3].strip()
@@ -104,7 +101,6 @@ def parse_offload_html(html):
         if len(non_empty) < 2:
             continue
 
-        # Data rows
         if len(texts) == 5:
             awb = texts[0].strip()
             if awb and re.search(r"[A-Za-z0-9]", awb):
@@ -117,6 +113,31 @@ def parse_offload_html(html):
                 })
     return flight, date, destination, shipments
 
+def _to_int(v: str) -> int:
+    try:
+        return int(str(v).strip())
+    except Exception:
+        return 0
+
+def compute_payload_hash(flight: str, offload_date: str, dest: str, shipments: list[dict]) -> str:
+    norm = {
+        "flight": (flight or "").strip(),
+        "offload_date": (offload_date or "").strip(),
+        "dest": (dest or "").strip(),
+        "shipments": [
+            {
+                "awb": (s.get("awb") or "").strip(),
+                "pcs": (s.get("pcs") or "").strip(),
+                "kgs": (s.get("kgs") or "").strip(),
+                "desc": (s.get("desc") or "").strip(),
+                "reason": (s.get("reason") or "").strip(),
+            }
+            for s in shipments
+        ],
+    }
+    blob = json.dumps(norm, ensure_ascii=False, sort_keys=True).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
+
 def build_offloading_table_html(
     page_date: str,
     flight: str,
@@ -124,19 +145,9 @@ def build_offloading_table_html(
     generated_at_local: str,
     shift_label: str,
     shipments: list[dict],
+    total_pcs: int,
+    change_banner: str,
 ):
-    """
-    Builds the report table matching the provided form.
-    We map what we have:
-      - DATE: page_date (YYYY-MM-DD) + also show the "offload date" if present in header via meta box
-      - FLIGHT: flight
-      - DEST: dest
-      - Email Received Time: generated_at_local (time we fetched the file)
-      - Offloading Reason: shipment.reason
-      - Remarks/Additional Information: shipment.desc + (pcs/kgs/awb) as helpful notes
-    The rest columns are left blank (not in source html).
-    """
-    # Header block
     header = f"""
     <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;">
       <div>
@@ -144,6 +155,7 @@ def build_offloading_table_html(
         <div style="color:#475569;font-size:13px;">
           Shift: <strong>{shift_label}</strong> • Last update: <strong>{generated_at_local}</strong>
         </div>
+        {change_banner}
       </div>
       <div style="padding:10px 12px;border:1px solid #d0d5e8;background:#fff;">
         <div style="font-size:12px;color:#64748b;">Summary</div>
@@ -156,7 +168,6 @@ def build_offloading_table_html(
     </div>
     """
 
-    # Table columns from your image
     cols = [
         "ITEM",
         "DATE",
@@ -171,10 +182,8 @@ def build_offloading_table_html(
         "Offloading Reason",
         "Remarks/Additional Information",
     ]
-
     th = "".join([f"<th style='padding:10px 8px;border:1px solid #cbd5e1;background:#f8fafc;font-size:12px;text-align:center;'>{c}</th>" for c in cols])
 
-    # Rows
     rows_html = ""
     for i, s in enumerate(shipments, start=1):
         reason = (s.get("reason") or "").strip()
@@ -183,8 +192,14 @@ def build_offloading_table_html(
         pcs = (s.get("pcs") or "").strip()
         kgs = (s.get("kgs") or "").strip()
 
-        # We put AWB/PCS/KGS in remarks to keep the form layout, since the form doesn't have explicit AWB column
-        remarks = " | ".join([x for x in [f"AWB: {awb}" if awb else "", f"PCS: {pcs}" if pcs else "", f"KGS: {kgs}" if kgs else "", desc] if x])
+        remarks = " | ".join([x for x in [
+            f"AWB: {awb}" if awb else "",
+            f"PCS: {pcs}" if pcs else "",
+            f"KGS: {kgs}" if kgs else "",
+            desc,
+        ] if x])
+
+        verification = str(total_pcs) if i == 1 else ""
 
         bg = "#ffffff" if i % 2 else "#f9fbff"
         rows_html += f"""
@@ -198,8 +213,8 @@ def build_offloading_table_html(
           <td style="padding:10px 8px;border:1px solid #cbd5e1;"></td>
           <td style="padding:10px 8px;border:1px solid #cbd5e1;"></td>
           <td style="padding:10px 8px;border:1px solid #cbd5e1;"></td>
-          <td style="padding:10px 8px;border:1px solid #cbd5e1;"></td>
-          <td style="padding:10px 8px;border:1px solid #cbd5e1;color:#b91c1c;font-weight:700;">{reason}</td>
+          <td style="padding:10px 8px;border:1px solid #cbd5e1;text-align:center;font-weight:700;">{verification}</td>
+          <td style="padding:10px 8px;border:1px solid #cbd5e1;color:#b91c1c;font-weight:700;text-align:center;">{reason}</td>
           <td style="padding:10px 8px;border:1px solid #cbd5e1;font-size:12px;line-height:1.4;">{remarks}</td>
         </tr>
         """
@@ -217,13 +232,14 @@ def build_offloading_table_html(
     <div style="margin-top:12px;padding:10px 12px;border:1px dashed #cbd5e1;background:#fff;">
       <div style="font-weight:700;margin-bottom:6px;">Notes</div>
       <div style="color:#475569;font-size:12px;line-height:1.6;">
-        بعض الأعمدة غير موجودة في ملف المصدر (مثل STD/ATD, ULD, CMS, Verification)، لذلك تُترك فارغة لتعبئتها يدويًا إذا احتجت.
+        بعض الأعمدة غير موجودة في ملف المصدر (مثل STD/ATD, ULD, CMS, Verification التفاصيل)، لذلك تُترك فارغة لتعبئتها يدويًا إذا احتجت.
         تمت إضافة AWB/PCS/KGS داخل خانة Remarks لعدم وجود عمود AWB في النموذج.
+        تم وضع <strong>إجمالي PCS</strong> في عمود Offloading Pieces Verification (أول سطر فقط).
       </div>
     </div>
     """
 
-    table = f"""
+    return f"""
     {header}
     <div style="margin-top:12px;overflow:auto;">
       <table style="width:100%;min-width:1100px;border-collapse:collapse;background:#fff;">
@@ -233,7 +249,6 @@ def build_offloading_table_html(
     </div>
     {notes}
     """
-    return table
 
 def safe_filename(s: str) -> str:
     s = (s or "").strip()
@@ -269,7 +284,7 @@ def build_simple_page(title: str, body_html: str) -> str:
 
 def main():
     print("=" * 50)
-    print("  🚀 Offload Monitor — Shift Pages + History (Table Format)")
+    print("  🚀 Offload Monitor — Shift Pages + History (Table + De-dupe)")
     print("=" * 50)
 
     tz = ZoneInfo(CONFIG["timezone"])
@@ -283,10 +298,11 @@ def main():
 
     html = read_html_from_onedrive()
     flight, offload_date, destination, shipments = parse_offload_html(html)
+    total_pcs = sum(_to_int(s.get("pcs", "")) for s in shipments)
 
     print(f"  🗓️  Page date: {date_key} | Shift: {shift_id} ({shift_label})")
     print(f"  ✈️  {flight} / {offload_date} → {destination}")
-    print(f"  📦 {len(shipments)} شحنة")
+    print(f"  📦 rows={len(shipments)} | total_pcs={total_pcs}")
 
     public = Path(CONFIG["public_dir"])
     public.mkdir(parents=True, exist_ok=True)
@@ -296,6 +312,17 @@ def main():
     reports_dir = shift_dir / "reports"
     reports_dir.mkdir(parents=True, exist_ok=True)
 
+    payload_hash = compute_payload_hash(flight, offload_date, destination, shipments)
+    last_hash_path = shift_dir / "last_hash.txt"
+    last_hash = last_hash_path.read_text(encoding="utf-8").strip() if last_hash_path.exists() else ""
+
+    changed = payload_hash != last_hash
+
+    if changed:
+        change_banner = "<div style='margin-top:8px;padding:8px 10px;border:1px solid #bbf7d0;background:#ecfdf5;color:#166534;font-size:12px;display:inline-block;'>✅ Updated: New data detected (archived)</div>"
+    else:
+        change_banner = "<div style='margin-top:8px;padding:8px 10px;border:1px solid #fed7aa;background:#fffbeb;color:#92400e;font-size:12px;display:inline-block;'>⏸ No change: Same flight data (not archived)</div>"
+
     report_body = build_offloading_table_html(
         page_date=date_key,
         flight=flight,
@@ -303,37 +330,45 @@ def main():
         generated_at_local=human_time,
         shift_label=shift_label,
         shipments=shipments,
+        total_pcs=total_pcs,
+        change_banner=change_banner,
     )
 
-    # Archive file (every run)
-    archive_name = f"{time_key}_{safe_filename(flight)}_{safe_filename(destination)}.html"
-    (reports_dir / archive_name).write_text(
-        build_simple_page(f"Offloading Cargo {date_key} {shift_id} {time_key}", report_body),
-        encoding="utf-8",
-    )
-
-    # Latest for that shift
+    # Always update "latest" page
     (shift_dir / "index.html").write_text(
         build_simple_page(f"Offloading Cargo — {date_key} — {shift_id}", report_body),
         encoding="utf-8",
     )
 
-    # Shift log
+    archive_name = None
+    if changed:
+        archive_name = f"{time_key}_{safe_filename(flight)}_{safe_filename(destination)}.html"
+        (reports_dir / archive_name).write_text(
+            build_simple_page(f"Offloading Cargo {date_key} {shift_id} {time_key}", report_body),
+            encoding="utf-8",
+        )
+        last_hash_path.write_text(payload_hash, encoding="utf-8")
+
+    # Update log only if changed
     log_path = shift_dir / "log.json"
     log = load_json(log_path, {"date": date_key, "shift": shift_id, "label": shift_label, "entries": []})
-    log["entries"].append({
-        "ts": human_time,
-        "archive": f"{date_key}/{shift_id}/reports/{archive_name}",
-        "flight": flight,
-        "offload_date": offload_date,
-        "to": destination,
-        "shipments": len(shipments),
-    })
-    log["entries"] = log["entries"][-300:]
-    write_json(log_path, log)
 
-    # Shift archive page
-    entries = list(reversed(log["entries"]))[:200]
+    if changed and archive_name:
+        log["entries"].append({
+            "ts": human_time,
+            "archive": f"{date_key}/{shift_id}/reports/{archive_name}",
+            "flight": flight,
+            "offload_date": offload_date,
+            "to": destination,
+            "rows": len(shipments),
+            "total_pcs": total_pcs,
+            "hash": payload_hash,
+        })
+        log["entries"] = log["entries"][-300:]
+        write_json(log_path, log)
+
+    # Archive page from log
+    entries = list(reversed(log.get("entries", [])))[:200]
     rows = ""
     for e in entries:
         report_file = Path(e["archive"]).name
@@ -342,7 +377,8 @@ def main():
           <td style="padding:8px;border:1px solid #d0d5e8;">{e.get('ts','')}</td>
           <td style="padding:8px;border:1px solid #d0d5e8;">{e.get('flight','')}</td>
           <td style="padding:8px;border:1px solid #d0d5e8;">{e.get('to','')}</td>
-          <td style="padding:8px;border:1px solid #d0d5e8;text-align:center;">{e.get('shipments',0)}</td>
+          <td style="padding:8px;border:1px solid #d0d5e8;text-align:center;">{e.get('rows',0)}</td>
+          <td style="padding:8px;border:1px solid #d0d5e8;text-align:center;">{e.get('total_pcs',0)}</td>
           <td style="padding:8px;border:1px solid #d0d5e8;"><a href="reports/{report_file}">Open</a></td>
         </tr>
         """
@@ -357,9 +393,10 @@ def main():
         <th style="padding:8px;border:1px solid #0a3166;text-align:left;">Flight</th>
         <th style="padding:8px;border:1px solid #0a3166;text-align:left;">To</th>
         <th style="padding:8px;border:1px solid #0a3166;">Rows</th>
+        <th style="padding:8px;border:1px solid #0a3166;">Total PCS</th>
         <th style="padding:8px;border:1px solid #0a3166;">Report</th>
       </tr>
-      {rows if rows else "<tr><td colspan='5' style='padding:10px;border:1px solid #d0d5e8;'>No entries yet.</td></tr>"}
+      {rows if rows else "<tr><td colspan='6' style='padding:10px;border:1px solid #d0d5e8;'>No archived updates yet.</td></tr>"}
     </table>
     """
     (shift_dir / "archive.html").write_text(build_simple_page(f"Archive {date_key} {shift_id}", shift_archive_body), encoding="utf-8")
@@ -382,11 +419,12 @@ def main():
     </ul>
     <div style="margin-top:10px;"><a href="../index.html">← Back to all dates</a></div>
     """
+    day_dir.mkdir(parents=True, exist_ok=True)
     (day_dir / "index.html").write_text(build_simple_page(f"Offloading Cargo {date_key}", day_body), encoding="utf-8")
 
     # Home index (dates)
     date_dirs = sorted([p.name for p in public.iterdir() if p.is_dir() and re.match(r"^\d{4}-\d{2}-\d{2}$", p.name)], reverse=True)
-    items = "".join([f'<li style="margin:6px 0;"><a href="{d}/index.html">{d}</a></li>' for d in date_dirs[:90]])
+    items = "".join([f'<li style="margin:6px 0;"><a href="{d}/index.html">{d}</a></li>' for d in date_dirs[:120]])
     home_body = f"""
     <h1 style="margin:6px 0 6px 0;">Offloading Cargo — History</h1>
     <div style="margin-bottom:12px;color:#475569;">Latest run: {human_time} • Current: <a href="{date_key}/index.html">{date_key}</a></div>
@@ -396,7 +434,6 @@ def main():
     """
     (public / "index.html").write_text(build_simple_page("Offloading Cargo — Home", home_body), encoding="utf-8")
 
-    # Latest pointer JSON
     write_json(public / "latest.json", {
         "generated_at": human_time,
         "date": date_key,
@@ -406,11 +443,13 @@ def main():
         "offload_date": offload_date,
         "to": destination,
         "rows": len(shipments),
+        "total_pcs": total_pcs,
+        "changed": changed,
         "latest_page": f"{date_key}/{shift_id}/index.html",
-        "archive_page": f"{date_key}/{shift_id}/reports/{archive_name}",
+        "archived": bool(changed),
     })
 
-    print("  🌐 تم تحديث صفحات المناوبات + الأرشيف + الصفحة الرئيسية (Table Format)")
+    print(f"  🌐 Latest updated. Archived: {changed}")
 
 if __name__ == "__main__":
     main()
