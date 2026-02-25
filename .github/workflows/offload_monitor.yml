@@ -2,8 +2,17 @@ name: Offload Monitor — Shift Pages + History
 
 on:
   schedule:
-    - cron: '*/5 * * * *'   # كل 5 دقائق
-  workflow_dispatch:
+    - cron: '*/5 * * * *'   # كل 5 دقائق — تحديث مستمر
+
+    # إرسال إيميل نص ساعة قبل نهاية كل مناوبة (توقيت UTC)
+    # Shift 1 ينتهي 14:30 مسقط = 10:30 UTC → يرسل 10:00 UTC
+    - cron: '0 10 * * *'
+    # Shift 2 ينتهي 21:30 مسقط = 17:30 UTC → يرسل 17:00 UTC
+    - cron: '0 17 * * *'
+    # Shift 3 ينتهي 05:30 مسقط = 01:30 UTC → يرسل 01:00 UTC
+    - cron: '0 1  * * *'
+
+  workflow_dispatch:   # تشغيل يدوي من GitHub
 
 permissions:
   contents: read
@@ -18,6 +27,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 8
+
     steps:
       - name: Checkout default branch
         uses: actions/checkout@v4
@@ -37,10 +47,11 @@ jobs:
       - name: Install dependencies
         run: pip install beautifulsoup4 requests
 
-      - name: Run monitor (updates public/*)
+      - name: Run monitor
         env:
-          ONEDRIVE_FILE_URL: ${{ secrets.ONEDRIVE_FILE_URL }}
-          TIMEZONE: Asia/Muscat
+          MASTER_SHARE_URL:  ${{ secrets.MASTER_SHARE_URL }}
+          ARCHIVE_SHARE_URL: ${{ secrets.ARCHIVE_SHARE_URL }}
+          TIMEZONE:  Asia/Muscat
           PUBLIC_DIR: public
         run: python offload_monitor.py
 
