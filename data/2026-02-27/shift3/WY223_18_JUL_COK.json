@@ -1,0 +1,17 @@
+{
+  "flight": "WY223",
+  "date": "18.JUL",
+  "std_etd": "",
+  "destination": "COK",
+  "format": "A",
+  "items": [
+    {
+      "awb": "910 17149554",
+      "pcs": "35",
+      "kgs": "781",
+      "description": "COURIER",
+      "reason": "SPACE"
+    }
+  ],
+  "saved_at": "2026-02-27T01:26:00.153488+04:00"
+}
