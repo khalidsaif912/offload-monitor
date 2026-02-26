@@ -18,7 +18,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install deps
-        run: pip install requests
+        run: pip install requests beautifulsoup4
 
       - name: Run script
         env:
