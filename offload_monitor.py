@@ -8,7 +8,7 @@ TIMEZONE = "Asia/Muscat"
 
 DATA_DIR = Path("data")
 STATE_FILE = Path("state.txt")
-PUBLIC_DIR = Path("public")
+PUBLIC_DIR = Path("docs")
 
 def download_file():
     url = ONEDRIVE_URL.strip()
