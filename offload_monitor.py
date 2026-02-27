@@ -3,6 +3,10 @@
 ║              OFFLOAD MONITOR — Cargo Tracking System             ║
 ║              Automated HTML Report Generator via GitHub Actions  ║
 ╚══════════════════════════════════════════════════════════════════╝
+
+  النوع A : جدول HTML أفقي  (FLIGHT# | DATE | DESTINATION → AWB/PCS/KGS)
+  النوع B : جدول HTML عمودي (ITEM | DATE | FLIGHT | STD/ETD | DEST ...)
+  النوع C : نص عادي         (OFFLOADED CARGO ON OV237/27FEB + سطر بيانات)
 """
 
 from __future__ import annotations
@@ -114,62 +118,55 @@ def _find_index(row: list[str], keys: list[str]) -> int | None:
 
 
 # ══════════════════════════════════════════════════════════════════
-#  تحليل HTML
-#
-#  النوع A (الحالي): جدول أفقي
-#    Row: FLIGHT # | WY223 | DATE | 18.JUL | DESTINATION | COK
-#    Row: AWB | PCS | KGS | DESCRIPTION | REASON
-#    Row: 910... | 35 | 781 | COURIER | SPACE
-#    Row: TOTAL | 35 | 781 | ...
-#
-#  النوع B (مستقبلي): جدول عمودي
-#    Header: ITEM | DATE | FLIGHT | STD/ETD | DEST | Email | Physical | ...
-#    Row:    1    | 26FEB| WY251  | 0120    | MAA  | 0124  | 0134     | ...
+#  تحليل HTML / النص
 # ══════════════════════════════════════════════════════════════════
 
 def extract_flights(html: str) -> list[dict]:
+    """
+    يجرّب الأنواع الثلاثة ويعيد أفضل نتيجة.
+    الأولوية: A → B → C
+    """
     soup   = BeautifulSoup(html, "html.parser")
     tables = soup.find_all("table")
-    if not tables:
-        return []
 
     best: list[dict] = []
 
     for table in tables:
         rows = table.find_all("tr")
-        if len(rows) < 3:
+        if len(rows) < 2:
             continue
         all_rows = [row_texts(tr) for tr in rows]
 
-        # جرّب النوع A أولاً (الأولوية لأنه التنسيق الحالي)
         result_a = _parse_type_a(all_rows)
-
-        # جرّب النوع B فقط إذا فشل النوع A
         if result_a:
             if len(result_a) > len(best):
                 best = result_a
-        else:
-            result_b = _parse_type_b(all_rows)
-            if result_b and len(result_b) > len(best):
-                best = result_b
+            continue
+
+        result_b = _parse_type_b(all_rows)
+        if result_b and len(result_b) > len(best):
+            best = result_b
+
+    # النوع C: نص عادي (يُضاف فوق ما وجدناه من جداول)
+    result_c = _parse_type_c(soup)
+    best.extend(result_c)
 
     return best
 
 
+# ────────────────────────────────────────────────────────────────
+#  النوع A — جدول أفقي
+#  Row: FLIGHT # | WY223 | DATE | 18.JUL | DESTINATION | COK
+#  Row: AWB | PCS | KGS | DESCRIPTION | REASON
+#  Row: 910... | 35 | 781 | COURIER | SPACE
+# ────────────────────────────────────────────────────────────────
 def _parse_type_a(all_rows: list[list[str]]) -> list[dict]:
-    """
-    يبحث عن صفوف تحتوي على FLIGHT # + DATE + DESTINATION في صف واحد أفقي
-    بنمط key-value (الخلية الزوجية = مفتاح، الخلية الفردية = قيمة).
-    ثم يقرأ AWB/PCS/KGS/DESCRIPTION/REASON من الصفوف التالية.
-    """
     flights = []
     i = 0
     while i < len(all_rows):
         row    = all_rows[i]
         joined = " ".join(row).upper()
 
-        # الشرط: الصف يحتوي كلمة FLIGHT (كمفتاح) وDATE وDESTINATION
-        # ويجب أن تكون القيم في الخلايا المجاورة (ليس كهيدر عمودي)
         if ("FLIGHT" in joined and "DATE" in joined and
                 ("DESTINATION" in joined or "DEST" in joined)):
 
@@ -177,17 +174,13 @@ def _parse_type_a(all_rows: list[list[str]]) -> list[dict]:
             date        = _find_value_after(row, ["DATE"])
             destination = _find_value_after(row, ["DESTINATION", "DEST"])
 
-            # تجاهل الصف إذا كانت القيم كلها فارغة (يعني هيدر وليس بيانات)
             if not flight_num and not destination:
                 i += 1
                 continue
-
-            # تجاهل إذا كانت القيم نفسها كلمات هيدر (النوع B)
             if flight_num.upper() in ("ITEM", "AWB", "PCS", ""):
                 i += 1
                 continue
 
-            # الصف التالي: هيدر الشحنات
             cargo_header = all_rows[i + 1] if i + 1 < len(all_rows) else []
             awb_idx  = _find_index(cargo_header, ["AWB"])
             pcs_idx  = _find_index(cargo_header, ["PCS", "PIECES"])
@@ -217,7 +210,8 @@ def _parse_type_a(all_rows: list[list[str]]) -> list[dict]:
                     continue
 
                 items.append({"awb": awb, "pcs": pcs, "kgs": kgs,
-                               "description": desc, "reason": rsn})
+                               "description": desc, "reason": rsn,
+                               "class_": "", "item": ""})
                 j += 1
 
             flights.append({
@@ -235,11 +229,11 @@ def _parse_type_a(all_rows: list[list[str]]) -> list[dict]:
     return flights
 
 
+# ────────────────────────────────────────────────────────────────
+#  النوع B — جدول عمودي
+#  Header: ITEM | DATE | FLIGHT | STD/ETD | DEST | Email | Physical | ...
+# ────────────────────────────────────────────────────────────────
 def _parse_type_b(all_rows: list[list[str]]) -> list[dict]:
-    """
-    يبحث عن صف هيدر عمودي (ITEM, DATE, FLIGHT, DEST...)
-    ثم يقرأ بيانات الشحنات صفاً صفاً.
-    """
     header_idx = None
     headers    = []
     for i, row in enumerate(all_rows):
@@ -303,17 +297,114 @@ def _parse_type_b(all_rows: list[list[str]]) -> list[dict]:
 
         if current is not None:
             item = {
-                "item":     _get(row, c_item),
-                "email":    _get(row, c_email),
-                "physical": _get(row, c_phys),
-                "trolley":  _get(row, c_trol),
-                "cms":      _get(row, c_cms),
-                "pieces":   _get(row, c_pcs),
-                "reason":   _get(row, c_rsn),
-                "remarks":  _get(row, c_rmk),
+                "item":        _get(row, c_item),
+                "awb":         "",
+                "pcs":         _get(row, c_pcs),
+                "kgs":         "",
+                "description": "",
+                "class_":      "",
+                "reason":      _get(row, c_rsn),
+                "email":       _get(row, c_email),
+                "physical":    _get(row, c_phys),
+                "trolley":     _get(row, c_trol),
+                "cms":         _get(row, c_cms),
+                "remarks":     _get(row, c_rmk),
             }
             if any(item.values()):
                 current["items"].append(item)
+
+    return flights
+
+
+# ────────────────────────────────────────────────────────────────
+#  النوع C — نص عادي
+#  OFFLOADED CARGO ON OV237/27FEB
+#  703 13436275   14   SPORTS WERAS   B   194.0   SKTDUS
+#  CGO OFFLOADED DUE SPACE
+# ────────────────────────────────────────────────────────────────
+def _parse_type_c(soup: BeautifulSoup) -> list[dict]:
+    """
+    يستخرج الرحلات من النصوص الحرة في الإيميل (ليس جداول).
+    العنوان: OFFLOADED CARGO ON <FLIGHT>/<DATE>
+    السطر:   <AWB>   <PCS>   <DESC>   <CLASS>   <KGS>   <DEST>
+    السبب:   CGO OFFLOADED DUE <REASON>
+    """
+    flights = []
+
+    # استخرج كل النصوص من الصفحة
+    full_text = soup.get_text("\n")
+    lines     = [ln.strip() for ln in full_text.splitlines() if ln.strip()]
+
+    # نمط العنوان: OFFLOADED CARGO ON WY237/27FEB أو OFFLOADED CARGO ON OV237/27FEB
+    title_pat  = re.compile(
+        r"OFFLOAD(?:ED)?\s+CARGO\s+ON\s+([A-Z0-9]{2,6})\s*/\s*(\w+)",
+        re.IGNORECASE,
+    )
+    # نمط سطر البيانات: رقم AWB ثم PCS ثم DESC ثم CLASS ثم KGS ثم DEST
+    # مثال: 703 13436275   14   SPORTS WERAS   B   194.0   SKTDUS
+    data_pat   = re.compile(
+        r"^(\d[\d\s]{5,15})\s{2,}(\d+)\s{2,}(.+?)\s{2,}([A-Z])\s{2,}([\d.]+)\s{2,}([A-Z]{3,6})\s*$"
+    )
+    reason_pat = re.compile(r"CGO\s+OFFLOAD(?:ED)?\s+DUE\s+(.+)", re.IGNORECASE)
+
+    i = 0
+    while i < len(lines):
+        m_title = title_pat.search(lines[i])
+        if m_title:
+            flight_num = m_title.group(1).upper()
+            date       = m_title.group(2).upper()
+            items      = []
+            reason     = ""
+
+            # ابحث في الأسطر التالية عن البيانات والسبب
+            j = i + 1
+            while j < len(lines) and j < i + 15:
+                m_data = data_pat.match(lines[j])
+                if m_data:
+                    awb   = m_data.group(1).strip()
+                    pcs   = m_data.group(2).strip()
+                    desc  = m_data.group(3).strip()
+                    cls_  = m_data.group(4).strip()
+                    kgs   = m_data.group(5).strip()
+                    dest  = m_data.group(6).strip()
+                    items.append({
+                        "item":        "",
+                        "awb":         awb,
+                        "pcs":         pcs,
+                        "kgs":         kgs,
+                        "description": desc,
+                        "class_":      cls_,
+                        "reason":      "",
+                        "email":       "",
+                        "physical":    "",
+                        "trolley":     "",
+                        "cms":         "",
+                        "remarks":     "",
+                    })
+
+                m_rsn = reason_pat.search(lines[j])
+                if m_rsn:
+                    reason = m_rsn.group(1).strip()
+                    # أضف السبب لكل الشحنات
+                    for it in items:
+                        if not it["reason"]:
+                            it["reason"] = reason
+
+                j += 1
+
+            if items or flight_num:
+                flights.append({
+                    "flight":      flight_num,
+                    "date":        date,
+                    "std_etd":     "",
+                    "destination": items[0]["reason"].split()[-1] if items and not items[0].get("class_") else "",
+                    "format":      "C",
+                    "reason":      reason,
+                    "items":       items,
+                })
+            i = j
+        else:
+            i += 1
 
     return flights
 
@@ -332,7 +423,9 @@ def save_flights(flights: list[dict], now: datetime) -> tuple[str, str, dict]:
     meta      = load_json(meta_path, {"flights": {}})
 
     for flight in flights:
-        filename  = slugify(f"{flight['flight']}_{flight.get('date','')}_{flight['destination']}") + ".json"
+        filename  = slugify(
+            f"{flight['flight']}_{flight.get('date','')}_{flight.get('destination','')}"
+        ) + ".json"
         file_path = folder / filename
         existed   = file_path.exists()
 
@@ -342,7 +435,7 @@ def save_flights(flights: list[dict], now: datetime) -> tuple[str, str, dict]:
         entry = meta["flights"].get(filename, {
             "flight":     flight["flight"],
             "date":       flight.get("date", ""),
-            "dest":       flight["destination"],
+            "dest":       flight.get("destination", ""),
             "created_at": now.isoformat(),
             "updated_at": now.isoformat(),
             "updates":    0,
@@ -377,6 +470,8 @@ def _css() -> str:
         --badge:    #f59e0b;
         --row-alt:  #f7f9fc;
         --total-bg: #e8f0fe;
+        --empty-bg: #fffbeb;
+        --empty-br: #fde68a;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -388,6 +483,7 @@ def _css() -> str:
         font-size: 13px;
     }
 
+    /* ── شريط الرأس ── */
     .page-header {
         background: linear-gradient(135deg, var(--blue-hd) 0%, var(--blue-dk) 100%);
         color: #fff;
@@ -399,7 +495,6 @@ def _css() -> str:
         flex-wrap: wrap;
         box-shadow: 0 2px 12px rgba(13,45,110,.25);
     }
-
     .page-header h1   { font-size: 19px; font-weight: 700; }
     .page-header .sub { font-size: 12px; opacity: .75; margin-top: 3px; }
 
@@ -413,7 +508,7 @@ def _css() -> str:
     }
     .stat-box strong { display: block; font-size: 22px; font-weight: 700; }
 
-    .wrap { max-width: 1280px; margin: 0 auto; padding: 24px 20px 48px; }
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 24px 20px 48px; }
 
     /* ── الجدول الرئيسي ── */
     .report-table {
@@ -436,6 +531,7 @@ def _css() -> str:
         padding: 10px 11px;
         border-right: 1px solid rgba(255,255,255,.1);
         white-space: nowrap;
+        text-align: center;
     }
     .report-table thead th:last-child { border-right: none; }
 
@@ -463,10 +559,23 @@ def _css() -> str:
         text-transform: uppercase;
         letter-spacing: .4px;
         display: block;
-        margin-bottom: 1px;
+        margin-bottom: 2px;
     }
 
-    .val { font-weight: 700; color: var(--blue-dk); }
+    .val { font-weight: 700; color: var(--blue-dk); font-size: 14px; }
+
+    /* حقل فارغ قابل للتعبئة يدوياً */
+    .empty-field {
+        background: var(--empty-bg);
+        border: 1px dashed var(--empty-br);
+        border-radius: 5px;
+        padding: 3px 8px;
+        font-size: 11px;
+        color: #92400e;
+        min-width: 70px;
+        display: inline-block;
+        font-style: italic;
+    }
 
     .badge-upd {
         background: var(--badge);
@@ -481,13 +590,14 @@ def _css() -> str:
     /* ══ الصف الثاني: هيدر الشحنة ══ */
     tr.row-subhead td {
         background: #dce8ff;
-        padding: 6px 11px;
-        font-size: 11px;
+        padding: 5px 11px;
+        font-size: 10px;
         font-weight: 700;
         color: var(--blue-hd);
         text-transform: uppercase;
-        letter-spacing: .4px;
+        letter-spacing: .5px;
         border-bottom: 1px solid #c3d4f5;
+        text-align: center;
     }
 
     /* ══ الصف الثاني: بيانات الشحنة ══ */
@@ -495,14 +605,16 @@ def _css() -> str:
         padding: 8px 11px;
         border-bottom: 1px solid #edf0f7;
         border-right: 1px solid #edf0f7;
-        vertical-align: top;
+        vertical-align: middle;
+        text-align: center;
     }
     tr.row-cargo:nth-child(odd)  td { background: var(--card); }
     tr.row-cargo:nth-child(even) td { background: var(--row-alt); }
     tr.row-cargo td:last-child { border-right: none; }
+    tr.row-cargo td:first-child { text-align: left; }
 
     .mono { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
-    .dim  { color: var(--muted); }
+    .dim  { color: var(--muted); font-size: 12px; }
 
     .reason-tag {
         display: inline-block;
@@ -510,12 +622,24 @@ def _css() -> str:
         color: #b45309;
         border: 1px solid #fcd34d;
         border-radius: 5px;
-        padding: 1px 8px;
+        padding: 2px 9px;
         font-size: 11px;
-        font-weight: 600;
+        font-weight: 700;
+        white-space: nowrap;
     }
 
-    /* ══ الصف الثالث: التعبئة ══ */
+    .class-tag {
+        display: inline-block;
+        background: #e0e7ff;
+        color: #3730a3;
+        border: 1px solid #a5b4fc;
+        border-radius: 5px;
+        padding: 2px 9px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    /* ══ الصف الثالث: الإجمالي ══ */
     tr.row-totals td {
         background: var(--total-bg);
         border-top: 2px solid var(--blue);
@@ -524,16 +648,77 @@ def _css() -> str:
         font-weight: 700;
         color: var(--blue-hd);
         font-size: 12px;
+        text-align: center;
     }
-    .tlbl { font-size: 10px; font-weight: 400; color: var(--muted); display: block; }
+    .tlbl {
+        font-size: 10px;
+        font-weight: 400;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 1px;
+    }
+
+    /* نص الـ label داخل صف الرحلة (FLIGHT: DATE: إلخ) */
+    .flt-label-inline {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        margin-right: 4px;
+    }
+
+    /* ══ الصف الأول: معلومات الرحلة inline ══ */
+    tr.row-flight-inline td {
+        background: var(--blue-hd);
+        border-top: 3px solid var(--blue);
+        padding: 9px 14px;
+        border-bottom: 1px solid #1a3a7a;
+        color: #fff;
+    }
+
+    .il-lbl {
+        font-size: 10px;
+        font-weight: 700;
+        color: rgba(255,255,255,.6);
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        margin-right: 3px;
+    }
+
+    .il-val {
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+        margin-right: 2px;
+    }
+
+    .il-sep {
+        color: rgba(255,255,255,.25);
+        margin: 0 10px;
+        font-size: 14px;
+    }
 
     .footer { text-align:center; color:var(--muted); font-size:12px; margin-top:28px; }
     """
 
 
 # ══════════════════════════════════════════════════════════════════
-#  تصيير الرحلات
+#  تصيير الرحلات — هيكل موحّد لجميع الأنواع
+#
+#  الصف الأول  : ITEM | FLIGHT | DATE | STD/ETD | DEST | EMAIL_TIME | PHYSICAL | حقول فارغة
+#  الصف الثاني : AWB  | PCS    | KGS  | CLASS   | DESCRIPTION | REASON
+#  الصف الثالث : TOTAL SHIPMENTS | TOTAL PCS | TOTAL KGS
 # ══════════════════════════════════════════════════════════════════
+
+# أعمدة الجدول الثابتة (8 أعمدة)
+# [0] ITEM   [1] FLIGHT   [2] DATE   [3] STD/ETD
+# [4] DEST   [5] AWB/PCS  [6] KGS   [7] REASON/CLASS
+
+def _empty(label: str) -> str:
+    """خلية فارغة بلون مميز تُشير إلى بيانات ناقصة."""
+    return f'<span class="empty-field">{label}…</span>'
+
 
 def _render_flight(flight: dict, meta_entry: dict) -> str:
     items     = flight.get("items", [])
@@ -541,6 +726,8 @@ def _render_flight(flight: dict, meta_entry: dict) -> str:
     updates   = int(meta_entry.get("updates", 0))
     upd_at    = meta_entry.get("updated_at", "")[:16].replace("T", " ")
     upd_badge = f'<span class="badge-upd">UPDATED ×{updates}</span>' if updates > 0 else ""
+
+    # (type badge removed — B means Priority, not email type)
 
     def safe_sum(key: str) -> int:
         total = 0
@@ -551,115 +738,88 @@ def _render_flight(flight: dict, meta_entry: dict) -> str:
                 pass
         return total
 
-    # ══════════════════════════════════════════════
-    #  النوع A: AWB / PCS / KGS / DESCRIPTION / REASON
-    # ══════════════════════════════════════════════
-    if fmt == "A":
-        total_pcs = safe_sum("pcs")
-        total_kgs = safe_sum("kgs")
+    total_pcs = safe_sum("pcs")
+    total_kgs = safe_sum("kgs")
 
-        row_flight = f"""
-        <tr class="row-flight">
-            <td colspan="2" class="flt-num">✈ {flight['flight'] or '—'}</td>
-            <td><span class="lbl">DATE</span><span class="val">{flight.get('date','') or '—'}</span></td>
-            <td colspan="3"><span class="lbl">DESTINATION</span><span class="val">{flight['destination'] or '—'}</span></td>
-            <td colspan="2">
-                {upd_badge}
-                <span class="dim" style="font-size:11px">Last: {upd_at}</span>
-            </td>
-        </tr>"""
+    # ══ الصف الأول: معلومات الرحلة ══
+    # يعرض الحقول المتوفرة + حقول فارغة للبيانات الناقصة حسب النوع
 
-        row_subhead = """
-        <tr class="row-subhead">
-            <td colspan="2">AWB</td>
-            <td>PCS</td>
-            <td>KGS</td>
-            <td colspan="2">DESCRIPTION</td>
-            <td colspan="2">REASON</td>
-        </tr>"""
+    flt  = flight.get("flight", "") or ""
+    date = flight.get("date", "")   or ""
+    std  = flight.get("std_etd", "") or ""
+    dest = flight.get("destination", "") or ""
 
-        cargo_rows = ""
-        for it in items:
-            rsn = it.get("reason", "")
-            reason_cell = f'<span class="reason-tag">{rsn}</span>' if rsn else '<span class="dim">—</span>'
-            cargo_rows += f"""
-            <tr class="row-cargo">
-                <td colspan="2" class="mono">{it.get('awb','') or '—'}</td>
-                <td class="mono">{it.get('pcs','') or '—'}</td>
-                <td class="mono">{it.get('kgs','') or '—'}</td>
-                <td colspan="2">{it.get('description','') or '—'}</td>
-                <td colspan="2">{reason_cell}</td>
-            </tr>"""
+    # ══ صفوف الشحنات — كل بيانات الرحلة مدمجة في كل صف ══
+    cargo_rows = ""
 
-        if not cargo_rows:
-            cargo_rows = '<tr class="row-cargo"><td colspan="8" class="dim" style="text-align:center;padding:14px">No cargo data</td></tr>'
-
-        row_totals = f"""
-        <tr class="row-totals">
-            <td colspan="2"><span class="tlbl">TOTAL SHIPMENTS</span>{len(items)}</td>
-            <td><span class="tlbl">TOTAL PCS</span>{total_pcs or '—'}</td>
-            <td><span class="tlbl">TOTAL KGS</span>{total_kgs or '—'}</td>
-            <td colspan="4"></td>
-        </tr>"""
-
-        return row_flight + row_subhead + cargo_rows + row_totals
-
-    # ══════════════════════════════════════════════
-    #  النوع B: ITEM / EMAIL / PHYSICAL / TROLLEY / CMS / PIECES / REASON / REMARKS
-    # ══════════════════════════════════════════════
-    total_pcs = safe_sum("pieces")
-
-    row_flight = f"""
-    <tr class="row-flight">
-        <td class="flt-num">✈ {flight['flight'] or '—'}</td>
-        <td><span class="lbl">DATE</span><span class="val">{flight.get('date','') or '—'}</span></td>
-        <td><span class="lbl">STD/ETD</span><span class="val">{flight.get('std_etd','') or '—'}</span></td>
-        <td><span class="lbl">DEST</span><span class="val">{flight['destination'] or '—'}</span></td>
-        <td colspan="4">
-            {upd_badge}
-            <span class="dim" style="font-size:11px">Last: {upd_at}</span>
+    # ── صف الرحلة مرة واحدة فقط ──
+    cargo_rows += f"""
+    <tr class="row-flight-inline">
+        <td colspan="12">
+            <span class="il-lbl">FLIGHT:</span><span class="il-val flt-num">✈ {flt or '—'}</span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">DATE:</span><span class="il-val">{date or '—'}</span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">STD/ETD:</span><span class="il-val">{std or _empty("STD/ETD")}</span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">DEST:</span><span class="il-val">{dest or '—'}</span>
+            <span style="float:right">{upd_badge}<span class="dim" style="font-size:11px">Last: {upd_at}</span></span>
         </td>
     </tr>"""
 
-    row_subhead = """
+    # ── هيدر الشحنات بعد صف الرحلة مباشرة ──
+    cargo_rows += """
     <tr class="row-subhead">
         <td>ITEM</td>
-        <td>EMAIL TIME</td>
-        <td>PHYSICAL</td>
-        <td>TROLLEY / ULD</td>
-        <td>CMS</td>
-        <td>PIECES</td>
+        <td colspan="2">AWB</td>
+        <td>PCS</td>
+        <td>KGS</td>
+        <td>PRIORITY</td>
+        <td colspan="3">DESCRIPTION</td>
+        <td colspan="2">TROLLEY / ULD</td>
         <td>REASON</td>
-        <td>REMARKS</td>
     </tr>"""
 
-    cargo_rows = ""
-    for it in items:
-        rsn = it.get("reason", "")
-        reason_cell = f'<span class="reason-tag">{rsn}</span>' if rsn else '<span class="dim">—</span>'
+    # ── صفوف الشحنات ──
+    for idx, it in enumerate(items, 1):
+        rsn   = it.get("reason", "")
+        cls_  = it.get("class_", "")
+        trol  = it.get("trolley", "")
+        reason_cell  = f'<span class="reason-tag">{rsn}</span>'  if rsn  else '<span class="dim">—</span>'
+        class_cell   = f'<span class="class-tag">{cls_}</span>'  if cls_ else '<span class="dim">—</span>'
+        trolley_cell = trol if trol else '<span class="dim">—</span>'
+
         cargo_rows += f"""
         <tr class="row-cargo">
-            <td class="mono">{it.get('item','') or '—'}</td>
-            <td class="mono">{it.get('email','') or '—'}</td>
-            <td class="mono">{it.get('physical','') or '—'}</td>
-            <td>{it.get('trolley','') or '—'}</td>
-            <td class="mono">{it.get('cms','') or '—'}</td>
-            <td class="mono">{it.get('pieces','') or '—'}</td>
+            <td class="mono">{it.get('item','') or idx}</td>
+            <td colspan="2" class="mono" style="text-align:left">{it.get('awb','') or '—'}</td>
+            <td class="mono"><b>{it.get('pcs','') or '—'}</b></td>
+            <td class="mono">{it.get('kgs','') or '—'}</td>
+            <td>{class_cell}</td>
+            <td colspan="3" style="text-align:left">{it.get('description','') or '—'}</td>
+            <td colspan="2" class="mono">{trolley_cell}</td>
             <td>{reason_cell}</td>
-            <td>{it.get('remarks','') or '—'}</td>
         </tr>"""
 
-    if not cargo_rows:
-        cargo_rows = '<tr class="row-cargo"><td colspan="8" class="dim" style="text-align:center;padding:14px">No cargo data</td></tr>'
+    if not items:
+        cargo_rows += '<tr class="row-cargo"><td colspan="12" class="dim" style="text-align:center;padding:14px">No cargo data</td></tr>'
 
+    # ══ الصف الثالث: الإجمالي / التعبئة ══
     row_totals = f"""
     <tr class="row-totals">
-        <td colspan="5"><span class="tlbl">TOTAL SHIPMENTS</span>{len(items)}</td>
-        <td><span class="tlbl">TOTAL PIECES</span>{total_pcs or '—'}</td>
-        <td colspan="2"></td>
+        <td colspan="6" style="text-align:left">
+            <span class="tlbl">TOTAL SHIPMENTS</span>{len(items)}
+        </td>
+        <td><span class="tlbl">TOTAL PCS</span>{total_pcs or '—'}</td>
+        <td><span class="tlbl">TOTAL KGS</span>{total_kgs or '—'}</td>
+        <td colspan="3">
+            {upd_badge}
+            <span class="dim" style="font-size:11px">Last: {upd_at}</span>
+        </td>
+        <td></td>
     </tr>"""
 
-    return row_flight + row_subhead + cargo_rows + row_totals
+    return cargo_rows + row_totals
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -686,12 +846,14 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 
     tbody = ""
     for flight in flights:
-        fname  = slugify(f"{flight['flight']}_{flight.get('date','')}_{flight['destination']}") + ".json"
+        fname  = slugify(
+            f"{flight['flight']}_{flight.get('date','')}_{flight.get('destination','')}"
+        ) + ".json"
         meta_e = meta.get("flights", {}).get(fname, {})
         tbody += _render_flight(flight, meta_e)
 
     if not tbody:
-        tbody = '<tr><td colspan="8" style="text-align:center;padding:36px;color:#6b7a99">No offload data recorded for this shift.</td></tr>'
+        tbody = '<tr><td colspan="12" style="text-align:center;padding:36px;color:#6b7a99">No offload data recorded for this shift.</td></tr>'
 
     html = f"""<!doctype html>
 <html lang="en">
@@ -714,18 +876,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 </div>
 <div class="wrap">
     <table class="report-table">
-        <thead>
-            <tr>
-                <th>FLIGHT / ITEM</th>
-                <th>DATE / EMAIL</th>
-                <th>STD·ETD / PHYSICAL</th>
-                <th>DEST / TROLLEY·ULD</th>
-                <th>AWB · DESC / CMS</th>
-                <th>PCS</th>
-                <th>KGS / REASON</th>
-                <th>REMARKS / STATUS</th>
-            </tr>
-        </thead>
+        <thead></thead>
         <tbody>{tbody}</tbody>
     </table>
     <div class="footer">Generated automatically by GitHub Actions &nbsp;·&nbsp; {date_dir}</div>
