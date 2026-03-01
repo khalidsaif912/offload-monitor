@@ -45,6 +45,21 @@
         flex-wrap: wrap;
         box-shadow: 0 2px 12px rgba(13,45,110,.25);
     }
+
+.hdr-left { display:flex; flex-direction:column; gap:6px; }
+.btn-back {
+    display:inline-block;
+    width: fit-content;
+    background: rgba(255,255,255,.14);
+    border: 1px solid rgba(255,255,255,.26);
+    color:#fff;
+    text-decoration:none;
+    padding:6px 10px;
+    border-radius:10px;
+    font-size:12px;
+    font-weight:800;
+}
+.btn-back:hover { background: rgba(255,255,255,.22); }
     .page-header h1   { font-size: 19px; font-weight: 700; }
     .page-header .sub { font-size: 12px; opacity: .75; margin-top: 3px; }
 
@@ -243,6 +258,10 @@
         margin-right: 2px;
     }
 
+/* STD/ETD times inside banner (keep time only; no repeated STD/ETD text) */
+.stdtime, .etdtime { color: #fff; font-weight: 800; font-family: 'IBM Plex Mono', monospace; }
+.stdsep { color: rgba(255,255,255,.35); margin: 0 8px; font-weight: 700; }
+
     .il-sep {
         color: rgba(255,255,255,.25);
         margin: 0 10px;
@@ -254,19 +273,63 @@
 </head>
 <body>
 <div class="page-header">
-    <div>
+    <div class="hdr-left">
+        <a class="btn-back" href="../../">⬅ العودة للرئيسية</a>
         <h1>✈ Offload Monitor Report</h1>
-        <div class="sub">2026-03-01 &nbsp;·&nbsp; Shift 2 — 14:30 to 21:30</div>
+        <div class="sub">2026-03-01 &nbsp;·&nbsp; ظهر — 14:30 إلى 21:30</div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <div class="stat-box"><strong>3</strong>Flights</div>
-        <div class="stat-box"><strong>4</strong>Shipments</div>
+        <div class="stat-box"><strong>4</strong>Flights</div>
+        <div class="stat-box"><strong>5</strong>Shipments</div>
     </div>
 </div>
 <div class="wrap">
     <table class="report-table">
-        <thead></thead>
         <tbody>
+    <tr class="row-flight-inline">
+        <td colspan="12">
+            <span class="il-lbl">FLIGHT:</span><span class="il-val flt-num">✈ WY101</span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">DATE:</span><span class="il-val">01MAR26</span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">STD/ETD:</span><span class="il-val"><span class="stdtime">14:25</span><span class="stdsep">·</span><span class="etdtime">14:18</span></span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">DEST:</span><span class="il-val">ADD</span>
+            <span style="float:right"><span class="dim" style="font-size:11px">Last: 2026-03-01 15:27</span></span>
+        </td>
+    </tr>
+    <tr class="row-subhead">
+        <td>ITEM</td>
+        <td colspan="2">AWB</td>
+        <td>PCS</td>
+        <td>KGS</td>
+        <td>PRIORITY</td>
+        <td colspan="3">DESCRIPTION</td>
+        <td colspan="2">TROLLEY / ULD</td>
+        <td>REASON</td>
+    </tr>
+        <tr class="row-cargo">
+            <td class="mono">1</td>
+            <td colspan="2" class="mono" style="text-align:left">910-50090000</td>
+            <td class="mono"><b>84</b></td>
+            <td class="mono">1478</td>
+            <td><span class="dim">—</span></td>
+            <td colspan="3" style="text-align:left">P. EFFECTS</td>
+            <td colspan="2" class="mono">AKE46011WY BT-012</td>
+            <td><span class="reason-tag">SPACE</span></td>
+        </tr>
+    <tr class="row-totals">
+        <td colspan="6" style="text-align:left">
+            <span class="tlbl">TOTAL SHIPMENTS</span>1
+        </td>
+        <td><span class="tlbl">TOTAL PCS</span>84</td>
+        <td><span class="tlbl">TOTAL KGS</span>1478</td>
+        <td colspan="3">
+            
+            <span class="dim" style="font-size:11px">Last: 2026-03-01 15:27</span>
+        </td>
+        <td></td>
+    </tr>
     <tr class="row-flight-inline">
         <td colspan="12">
             <span class="il-lbl">FLIGHT:</span><span class="il-val flt-num">✈ WY113</span>
@@ -327,7 +390,7 @@
             <span class="il-sep">·</span>
             <span class="il-lbl">DATE:</span><span class="il-val">01MAR26</span>
             <span class="il-sep">·</span>
-            <span class="il-lbl">STD/ETD:</span><span class="il-val">STD 2026-03-01 15:00 · ETD 2026-03-01 14:55</span>
+            <span class="il-lbl">STD/ETD:</span><span class="il-val"><span class="stdtime">STD 2026-03-01 15:00 · ETD 2026-03-01 14:55</span></span>
             <span class="il-sep">·</span>
             <span class="il-lbl">DEST:</span><span class="il-val">ADD</span>
             <span style="float:right"><span class="dim" style="font-size:11px">Last: 2026-03-01 14:57</span></span>

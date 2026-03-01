@@ -1,0 +1,20 @@
+{
+  "flight": "WY101",
+  "date": "01MAR26",
+  "std_etd": "14:25|14:18",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "910-50090000",
+      "pcs": "84",
+      "kgs": "1478",
+      "description": "P. EFFECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": "AKE46011WY BT-012"
+    }
+  ],
+  "saved_at": "2026-03-01T15:27:46.078812+04:00"
+}
