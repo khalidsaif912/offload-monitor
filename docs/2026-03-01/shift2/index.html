@@ -73,7 +73,22 @@
     }
     .stat-box strong { display: block; font-size: 22px; font-weight: 700; }
 
-    .wrap { max-width: 1400px; margin: 0 auto; padding: 24px 20px 48px; }
+    .back-btn {
+        text-decoration: none;
+        color: #fff;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px; /* match the visual height of stat boxes with <strong> */
+        padding: 7px 18px;
+    }
+    .back-btn:hover {
+        background: rgba(255,255,255,.25);
+        transform: translateY(-1px);
+    }
+
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 16px 14px 28px; }
 
     /* ── الجدول الرئيسي ── */
     .report-table {
@@ -175,7 +190,7 @@
     /* ══ الصف الثاني: هيدر الشحنة ══ */
     tr.row-subhead td {
         background: #dce8ff;
-        padding: 5px 11px;
+        padding: 4px 8px;
         font-size: 10px;
         font-weight: 700;
         color: var(--blue-hd);
@@ -187,7 +202,7 @@
 
     /* ══ الصف الثاني: بيانات الشحنة ══ */
     tr.row-cargo td {
-        padding: 8px 11px;
+        padding: 6px 8px;
         border-bottom: 1px solid #edf0f7;
         border-right: 1px solid #edf0f7;
         vertical-align: middle;
@@ -256,8 +271,8 @@
     /* ══ الصف الأول: معلومات الرحلة inline ══ */
     tr.row-flight-inline td {
         background: var(--blue-hd);
-        border-top: 3px solid var(--blue);
-        padding: 9px 14px;
+        border-top: 0;
+        padding: 7px 10px;
         border-bottom: 1px solid #1a3a7a;
         color: #fff;
     }
@@ -289,24 +304,72 @@
         font-size: 14px;
     }
 
-    .footer { text-align:center; color:var(--muted); font-size:12px; margin-top:28px; }
+    .tot-inline { font-size: 12px; font-weight: 700; color: var(--blue-hd); }
+    .tot-sep { color: rgba(13,45,110,.35); margin: 0 10px; }
+
+    .footer { text-align:center; color:var(--muted); font-size:12px; margin-top:22px; }
     </style>
 </head>
 <body>
 <div class="page-header">
-    <div class="hdr-left">
-        <a class="btn-back" href="../../">⬅ العودة للرئيسية</a>
-        <h1>✈ Offload Monitor Report</h1>
-        <div class="sub">2026-03-01 &nbsp;·&nbsp; ظهر — 14:30 إلى 21:30</div>
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <a href="../../index.html" class="stat-box back-btn">← العودة</a>
+        <div>
+            <h1>✈ Offload Monitor Report</h1>
+            <div class="sub">2026-03-01 &nbsp;·&nbsp; ظهر — 14:30 إلى 21:30</div>
+        </div>
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <div class="stat-box"><strong>5</strong>Flights</div>
-        <div class="stat-box"><strong>6</strong>Shipments</div>
+        <div class="stat-box"><strong>6</strong>Flights</div>
+        <div class="stat-box"><strong>7</strong>Shipments</div>
     </div>
 </div>
 <div class="wrap">
     <table class="report-table">
         <tbody>
+    <tr class="row-flight-inline">
+        <td colspan="12">
+            <span class="il-lbl">FLIGHT:</span><span class="il-val flt-num">✈ ET625</span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">DATE:</span><span class="il-val">01MAR26</span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">STD:</span><span class="il-val"><span class="empty-field">STD/ETD…</span></span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">DEST:</span><span class="il-val">ADD</span>
+            <span style="float:right"><span class="dim" style="font-size:11px">Last: 2026-03-01 17:54</span></span>
+        </td>
+    </tr>
+    <tr class="row-subhead">
+        <td>ITEM</td>
+        <td colspan="2">AWB</td>
+        <td>PCS</td>
+        <td>KGS</td>
+        <td>PRIORITY</td>
+        <td colspan="3">DESCRIPTION</td>
+        <td colspan="2">TROLLEY / ULD</td>
+        <td>REASON</td>
+    </tr>
+        <tr class="row-cargo">
+            <td class="mono">1</td>
+            <td colspan="2" class="mono" style="text-align:left">071-60091356</td>
+            <td class="mono"><b>84</b></td>
+            <td class="mono">1478</td>
+            <td><span class="dim">—</span></td>
+            <td colspan="3" style="text-align:left">P. EFFECTS</td>
+            <td colspan="2" class="mono"><span class="dim">—</span></td>
+            <td><span class="reason-tag">SPACE</span></td>
+        </tr>
+    <tr class="row-totals">
+        <td colspan="12" style="text-align:left">
+            <span class="tot-inline">
+                <b>TOTAL SHIPMENTS:</b> 1
+                <span class="tot-sep">·</span>
+                <b>TOTAL PCS:</b> 84
+                <span class="tot-sep">·</span>
+                <b>TOTAL:</b> 1478 <b>KGS</b>
+            </span>
+        </td>
+    </tr>
     <tr class="row-flight-inline">
         <td colspan="12">
             <span class="il-lbl">FLIGHT:</span><span class="il-val flt-num">✈ WY101</span>
@@ -340,13 +403,15 @@
             <td><span class="reason-tag">SPACE</span></td>
         </tr>
     <tr class="row-totals">
-        <td colspan="6" style="text-align:left">
-            <span class="tlbl">TOTAL SHIPMENTS</span>1
+        <td colspan="12" style="text-align:left">
+            <span class="tot-inline">
+                <b>TOTAL SHIPMENTS:</b> 1
+                <span class="tot-sep">·</span>
+                <b>TOTAL PCS:</b> 84
+                <span class="tot-sep">·</span>
+                <b>TOTAL:</b> 1478 <b>KGS</b>
+            </span>
         </td>
-        <td><span class="tlbl">TOTAL PCS</span>84</td>
-        <td><span class="tlbl">TOTAL KGS</span>1478</td>
-        <td colspan="3"></td>
-        <td></td>
     </tr>
     <tr class="row-flight-inline">
         <td colspan="12">
@@ -391,13 +456,15 @@
             <td><span class="dim">—</span></td>
         </tr>
     <tr class="row-totals">
-        <td colspan="6" style="text-align:left">
-            <span class="tlbl">TOTAL SHIPMENTS</span>2
+        <td colspan="12" style="text-align:left">
+            <span class="tot-inline">
+                <b>TOTAL SHIPMENTS:</b> 2
+                <span class="tot-sep">·</span>
+                <b>TOTAL PCS:</b> 5
+                <span class="tot-sep">·</span>
+                <b>TOTAL:</b> 500 <b>KGS</b>
+            </span>
         </td>
-        <td><span class="tlbl">TOTAL PCS</span>5</td>
-        <td><span class="tlbl">TOTAL KGS</span>500</td>
-        <td colspan="3"></td>
-        <td></td>
     </tr>
     <tr class="row-flight-inline">
         <td colspan="12">
@@ -432,13 +499,15 @@
             <td><span class="reason-tag">SPACE</span></td>
         </tr>
     <tr class="row-totals">
-        <td colspan="6" style="text-align:left">
-            <span class="tlbl">TOTAL SHIPMENTS</span>1
+        <td colspan="12" style="text-align:left">
+            <span class="tot-inline">
+                <b>TOTAL SHIPMENTS:</b> 1
+                <span class="tot-sep">·</span>
+                <b>TOTAL PCS:</b> 2
+                <span class="tot-sep">·</span>
+                <b>TOTAL:</b> 1000 <b>KGS</b>
+            </span>
         </td>
-        <td><span class="tlbl">TOTAL PCS</span>2</td>
-        <td><span class="tlbl">TOTAL KGS</span>1000</td>
-        <td colspan="3"></td>
-        <td></td>
     </tr>
     <tr class="row-flight-inline">
         <td colspan="12">
@@ -473,13 +542,15 @@
             <td><span class="reason-tag">SPACE</span></td>
         </tr>
     <tr class="row-totals">
-        <td colspan="6" style="text-align:left">
-            <span class="tlbl">TOTAL SHIPMENTS</span>1
+        <td colspan="12" style="text-align:left">
+            <span class="tot-inline">
+                <b>TOTAL SHIPMENTS:</b> 1
+                <span class="tot-sep">·</span>
+                <b>TOTAL PCS:</b> 5
+                <span class="tot-sep">·</span>
+                <b>TOTAL:</b> 500 <b>KGS</b>
+            </span>
         </td>
-        <td><span class="tlbl">TOTAL PCS</span>5</td>
-        <td><span class="tlbl">TOTAL KGS</span>500</td>
-        <td colspan="3"></td>
-        <td></td>
     </tr>
     <tr class="row-flight-inline">
         <td colspan="12">
@@ -514,13 +585,15 @@
             <td><span class="reason-tag">SPACE</span></td>
         </tr>
     <tr class="row-totals">
-        <td colspan="6" style="text-align:left">
-            <span class="tlbl">TOTAL SHIPMENTS</span>1
+        <td colspan="12" style="text-align:left">
+            <span class="tot-inline">
+                <b>TOTAL SHIPMENTS:</b> 1
+                <span class="tot-sep">·</span>
+                <b>TOTAL PCS:</b> 84
+                <span class="tot-sep">·</span>
+                <b>TOTAL:</b> 1478 <b>KGS</b>
+            </span>
         </td>
-        <td><span class="tlbl">TOTAL PCS</span>84</td>
-        <td><span class="tlbl">TOTAL KGS</span>1478</td>
-        <td colspan="3"></td>
-        <td></td>
     </tr></tbody>
     </table>
     <div class="footer">Generated automatically by GitHub Actions &nbsp;·&nbsp; 2026-03-01</div>
