@@ -24,7 +24,7 @@ jobs:
         env:
           ONEDRIVE_FILE_URL: ${{ secrets.ONEDRIVE_FILE_URL }}
           AIRLABS_API_KEY:   ${{ secrets.AIRLABS_API_KEY }}
-        run: python offload_monitor_full_with_std_etd.py
+        run: python offload_monitor.py
 
       - name: Commit changes
         run: |
