@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Offload Monitor — 2026-03-01 — shift2</title>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap');
+
+    :root {
+        --bg:       #f0f4f8;
+        --card:     #ffffff;
+        --line:     #dde3ec;
+        --blue:     #1a56db;
+        --blue-dk:  #1240a8;
+        --blue-hd:  #0d2d6e;
+        --gray-hd:  #e8edf5;
+        --text:     #0f1f3d;
+        --muted:    #6b7a99;
+        --badge:    #f59e0b;
+        --row-alt:  #f7f9fc;
+        --total-bg: #e8f0fe;
+        --empty-bg: #fffbeb;
+        --empty-br: #fde68a;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+        background: var(--bg);
+        font-family: 'IBM Plex Sans', Calibri, sans-serif;
+        color: var(--text);
+        font-size: 13px;
+    }
+
+    /* ── شريط الرأس ── */
+    .page-header {
+        background: linear-gradient(135deg, var(--blue-hd) 0%, var(--blue-dk) 100%);
+        color: #fff;
+        padding: 18px 32px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        flex-wrap: wrap;
+        box-shadow: 0 2px 12px rgba(13,45,110,.25);
+    }
+    .page-header h1   { font-size: 19px; font-weight: 700; }
+    .page-header .sub { font-size: 12px; opacity: .75; margin-top: 3px; }
+
+    .stat-box {
+        background: rgba(255,255,255,.13);
+        border: 1px solid rgba(255,255,255,.22);
+        border-radius: 8px;
+        padding: 7px 18px;
+        text-align: center;
+        font-size: 12px;
+    }
+    .stat-box strong { display: block; font-size: 22px; font-weight: 700; }
+
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 24px 20px 48px; }
+
+    /* ── الجدول الرئيسي ── */
+    .report-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: var(--card);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 2px 14px rgba(15,31,61,.08);
+        border: 1px solid var(--line);
+    }
+
+    .report-table thead th {
+        background: var(--blue-hd);
+        color: #fff;
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        padding: 10px 11px;
+        border-right: 1px solid rgba(255,255,255,.1);
+        white-space: nowrap;
+        text-align: center;
+    }
+    .report-table thead th:last-child { border-right: none; }
+
+    /* ══ الصف الأول: معلومات الرحلة ══ */
+    tr.row-flight td {
+        background: var(--gray-hd);
+        border-top: 3px solid var(--blue);
+        border-bottom: 1px solid var(--line);
+        padding: 10px 12px;
+        vertical-align: middle;
+    }
+
+    .flt-num {
+        font-family: 'IBM Plex Mono', monospace;
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--blue-hd);
+        white-space: nowrap;
+    }
+
+    .lbl {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        display: block;
+        margin-bottom: 2px;
+    }
+
+    .val { font-weight: 700; color: var(--blue-dk); font-size: 14px; }
+
+    /* حقل فارغ قابل للتعبئة يدوياً */
+    .empty-field {
+        background: var(--empty-bg);
+        border: 1px dashed var(--empty-br);
+        border-radius: 5px;
+        padding: 3px 8px;
+        font-size: 11px;
+        color: #92400e;
+        min-width: 70px;
+        display: inline-block;
+        font-style: italic;
+    }
+
+    .badge-upd {
+        background: var(--badge);
+        color: #111;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 2px 9px;
+        border-radius: 999px;
+        margin-right: 6px;
+    }
+
+    /* ══ الصف الثاني: هيدر الشحنة ══ */
+    tr.row-subhead td {
+        background: #dce8ff;
+        padding: 5px 11px;
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--blue-hd);
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        border-bottom: 1px solid #c3d4f5;
+        text-align: center;
+    }
+
+    /* ══ الصف الثاني: بيانات الشحنة ══ */
+    tr.row-cargo td {
+        padding: 8px 11px;
+        border-bottom: 1px solid #edf0f7;
+        border-right: 1px solid #edf0f7;
+        vertical-align: middle;
+        text-align: center;
+    }
+    tr.row-cargo:nth-child(odd)  td { background: var(--card); }
+    tr.row-cargo:nth-child(even) td { background: var(--row-alt); }
+    tr.row-cargo td:last-child { border-right: none; }
+    tr.row-cargo td:first-child { text-align: left; }
+
+    .mono { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+    .dim  { color: var(--muted); font-size: 12px; }
+
+    .reason-tag {
+        display: inline-block;
+        background: #fff3e0;
+        color: #b45309;
+        border: 1px solid #fcd34d;
+        border-radius: 5px;
+        padding: 2px 9px;
+        font-size: 11px;
+        font-weight: 700;
+        white-space: nowrap;
+    }
+
+    .class-tag {
+        display: inline-block;
+        background: #e0e7ff;
+        color: #3730a3;
+        border: 1px solid #a5b4fc;
+        border-radius: 5px;
+        padding: 2px 9px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    /* ══ الصف الثالث: الإجمالي ══ */
+    tr.row-totals td {
+        background: var(--total-bg);
+        border-top: 2px solid var(--blue);
+        border-bottom: 3px solid var(--blue-hd);
+        padding: 8px 12px;
+        font-weight: 700;
+        color: var(--blue-hd);
+        font-size: 12px;
+        text-align: center;
+    }
+    .tlbl {
+        font-size: 10px;
+        font-weight: 400;
+        color: var(--muted);
+        display: block;
+        margin-bottom: 1px;
+    }
+
+    /* نص الـ label داخل صف الرحلة (FLIGHT: DATE: إلخ) */
+    .flt-label-inline {
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        margin-right: 4px;
+    }
+
+    /* ══ الصف الأول: معلومات الرحلة inline ══ */
+    tr.row-flight-inline td {
+        background: var(--blue-hd);
+        border-top: 3px solid var(--blue);
+        padding: 9px 14px;
+        border-bottom: 1px solid #1a3a7a;
+        color: #fff;
+    }
+
+    .il-lbl {
+        font-size: 10px;
+        font-weight: 700;
+        color: rgba(255,255,255,.6);
+        text-transform: uppercase;
+        letter-spacing: .4px;
+        margin-right: 3px;
+    }
+
+    .il-val {
+        font-size: 13px;
+        font-weight: 700;
+        color: #fff;
+        margin-right: 2px;
+    }
+
+    .il-sep {
+        color: rgba(255,255,255,.25);
+        margin: 0 10px;
+        font-size: 14px;
+    }
+
+    .footer { text-align:center; color:var(--muted); font-size:12px; margin-top:28px; }
+    </style>
+</head>
+<body>
+<div class="page-header">
+    <div>
+        <h1>✈ Offload Monitor Report</h1>
+        <div class="sub">2026-03-01 &nbsp;·&nbsp; Shift 2 — 14:30 to 21:30</div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <div class="stat-box"><strong>1</strong>Flights</div>
+        <div class="stat-box"><strong>1</strong>Shipments</div>
+    </div>
+</div>
+<div class="wrap">
+    <table class="report-table">
+        <thead></thead>
+        <tbody>
+    <tr class="row-flight-inline">
+        <td colspan="12">
+            <span class="il-lbl">FLIGHT:</span><span class="il-val flt-num">✈ WY143</span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">DATE:</span><span class="il-val">01MAR26</span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">STD/ETD:</span><span class="il-val">STD 2026-03-01 15:00 · ETD 2026-03-01 14:55</span>
+            <span class="il-sep">·</span>
+            <span class="il-lbl">DEST:</span><span class="il-val">ADD</span>
+            <span style="float:right"><span class="dim" style="font-size:11px">Last: 2026-03-01 14:57</span></span>
+        </td>
+    </tr>
+    <tr class="row-subhead">
+        <td>ITEM</td>
+        <td colspan="2">AWB</td>
+        <td>PCS</td>
+        <td>KGS</td>
+        <td>PRIORITY</td>
+        <td colspan="3">DESCRIPTION</td>
+        <td colspan="2">TROLLEY / ULD</td>
+        <td>REASON</td>
+    </tr>
+        <tr class="row-cargo">
+            <td class="mono">1</td>
+            <td colspan="2" class="mono" style="text-align:left">910-60091356</td>
+            <td class="mono"><b>2</b></td>
+            <td class="mono">1000</td>
+            <td><span class="dim">—</span></td>
+            <td colspan="3" style="text-align:left">P. EFFECTS</td>
+            <td colspan="2" class="mono"><span class="dim">—</span></td>
+            <td><span class="reason-tag">SPACE</span></td>
+        </tr>
+    <tr class="row-totals">
+        <td colspan="6" style="text-align:left">
+            <span class="tlbl">TOTAL SHIPMENTS</span>1
+        </td>
+        <td><span class="tlbl">TOTAL PCS</span>2</td>
+        <td><span class="tlbl">TOTAL KGS</span>1000</td>
+        <td colspan="3">
+            
+            <span class="dim" style="font-size:11px">Last: 2026-03-01 14:57</span>
+        </td>
+        <td></td>
+    </tr></tbody>
+    </table>
+    <div class="footer">Generated automatically by GitHub Actions &nbsp;·&nbsp; 2026-03-01</div>
+</div>
+</body>
+</html>
