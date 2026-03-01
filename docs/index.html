@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Offload Monitor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+        :root {
+            --bg:#f0f4f8; --card:#fff; --line:#dde3ec;
+            --blue:#1a56db; --blue2:#0d2d6e; --muted:#6b7a99; --shadow:0 6px 22px rgba(15,31,61,.10);
+        }
+        * { box-sizing:border-box; }
+        body { margin:0; background:var(--bg); font-family:'IBM Plex Sans',Calibri,sans-serif; color:#0f1f3d; }
+        .top {
+            background: linear-gradient(135deg, var(--blue2) 0%, #1240a8 100%);
+            color:#fff; padding:22px 26px; box-shadow:0 2px 12px rgba(13,45,110,.25);
+        }
+        .top h1 { margin:0; font-size:22px; }
+        .top p { margin:6px 0 0; opacity:.8; font-size:13px; }
+        .wrap { max-width:980px; margin:18px auto 60px; padding:0 16px; }
+        .day-accordion {
+            background:var(--card); border:1px solid var(--line); border-radius:14px;
+            box-shadow:var(--shadow); margin:14px 0; overflow:hidden;
+        }
+        summary {
+            list-style:none; cursor:pointer; padding:14px 16px; display:flex; align-items:center; justify-content:space-between;
+            background: #f7f9fc;
+            border-bottom:1px solid #edf0f7;
+        }
+        summary::-webkit-details-marker { display:none; }
+        .day-title { font-weight:800; color:var(--blue2); }
+        .day-hint { color:rgba(13,45,110,.65); font-size:12px; font-weight:700; }
+        .day-body { padding:14px 14px 6px; display:grid; gap:10px; }
+        .shift-card {
+            display:flex; justify-content:space-between; align-items:center; gap:14px;
+            text-decoration:none; color:inherit;
+            border:1px solid #edf0f7; border-radius:12px; padding:12px 14px;
+            transition:transform .08s ease, border-color .12s ease, background .12s ease;
+            background:#fff;
+        }
+        .shift-card:hover { transform: translateY(-1px); border-color:#c9dbff; background:#f6f9ff; }
+        .shift-title { font-weight:800; color:#0d2d6e; }
+        .shift-time { font-weight:700; color:var(--muted); font-size:12px; }
+        .shift-sub { margin-top:6px; font-size:12px; color:var(--muted); display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+        .pill { background:#e8f0fe; color:#0d2d6e; border:1px solid #cfe0ff; border-radius:999px; padding:2px 8px; font-weight:800; font-size:11px; }
+        .mono { font-family:'IBM Plex Mono', monospace; }
+        .dot { opacity:.5; }
+        .chev { font-size:24px; color:#1a56db; font-weight:900; }
+        .empty { padding:18px; color:var(--muted); text-align:center; }
+        .footer { text-align:center; color:var(--muted); font-size:12px; margin-top:18px; }
+    </style>
+</head>
+<body>
+    <div class="top">
+        <h1>✈ Offload Monitor</h1>
+        <p>اختر المناوبة لعرض تفاصيل الـ Offload. الأيام السابقة مطوية تلقائيًا.</p>
+    </div>
+    <div class="wrap">
+        
+        <details class="day-accordion" open>
+            <summary>
+                <span class="day-title">📅 2026-03-01</span>
+                <span class="day-hint">اليوم</span>
+            </summary>
+            <div class="day-body">
+                
+            <a class="shift-card" href="2026-03-01/shift1/">
+                <div class="shift-left">
+                    <div class="shift-title">صباح <span class="shift-time">(06:00–14:30)</span></div>
+                    <div class="shift-sub">
+                        <span class="pill">يبدأ</span> <span class="mono">2026-03-01 06:00</span>
+                        <span class="dot">•</span>
+                        <span class="pill">ينتهي</span> <span class="mono">2026-03-01 14:30</span>
+                    </div>
+                </div>
+                <div class="shift-right">
+                    <span class="chev">›</span>
+                </div>
+            </a>
+            
+            <a class="shift-card" href="2026-03-01/shift2/">
+                <div class="shift-left">
+                    <div class="shift-title">ظهر <span class="shift-time">(14:30–21:30)</span></div>
+                    <div class="shift-sub">
+                        <span class="pill">يبدأ</span> <span class="mono">2026-03-01 14:30</span>
+                        <span class="dot">•</span>
+                        <span class="pill">ينتهي</span> <span class="mono">2026-03-01 21:30</span>
+                    </div>
+                </div>
+                <div class="shift-right">
+                    <span class="chev">›</span>
+                </div>
+            </a>
+            
+            </div>
+        </details>
+        
+        <details class="day-accordion">
+            <summary>
+                <span class="day-title">📅 2026-02-27</span>
+                <span class="day-hint">اضغط للعرض</span>
+            </summary>
+            <div class="day-body">
+                
+            <a class="shift-card" href="2026-02-27/shift3/">
+                <div class="shift-left">
+                    <div class="shift-title">ليل <span class="shift-time">(21:30–06:00)</span></div>
+                    <div class="shift-sub">
+                        <span class="pill">يبدأ</span> <span class="mono">2026-02-27 21:30</span>
+                        <span class="dot">•</span>
+                        <span class="pill">ينتهي</span> <span class="mono">2026-02-28 06:00</span>
+                    </div>
+                </div>
+                <div class="shift-right">
+                    <span class="chev">›</span>
+                </div>
+            </a>
+            
+            </div>
+        </details>
+        
+        <div class="footer">Generated automatically by GitHub Actions · 2026-03-01</div>
+    </div>
+</body>
+</html>
