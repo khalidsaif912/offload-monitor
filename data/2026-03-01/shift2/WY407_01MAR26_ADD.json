@@ -1,0 +1,19 @@
+{
+  "flight": "WY407",
+  "date": "01MAR26",
+  "std_etd": "",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "910-60091356",
+      "pcs": "84",
+      "kgs": "1478",
+      "description": "P. EFFECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": ""
+    }
+  ],
+  "saved_at": "2026-03-01T15:01:58.365324+04:00"
+}
