@@ -111,7 +111,7 @@
 
     .flt-num {
         font-family: 'IBM Plex Mono', monospace;
-        font-size: 16px;
+        font-size: 13px;
         font-weight: 700;
         color: var(--blue-hd);
         white-space: nowrap;
@@ -150,6 +150,26 @@
         padding: 2px 9px;
         border-radius: 999px;
         margin-right: 6px;
+    }
+
+    .upd-flash {
+        display: inline-block;
+        background: #fff1f2;
+        color: #dc2626;
+        border: 1px solid #fecaca;
+        font-size: 11px;
+        font-weight: 800;
+        padding: 2px 9px;
+        border-radius: 999px;
+        margin-right: 8px;
+        animation: updBlink 2.4s ease-in-out infinite;
+        letter-spacing: .4px;
+    }
+
+    @keyframes updBlink {
+        0%, 25%   { opacity: 0; transform: translateY(-1px); }
+        35%, 70%  { opacity: 1; transform: translateY(0); }
+        80%, 100% { opacity: 0; transform: translateY(-1px); }
     }
 
     /* ══ الصف الثاني: هيدر الشحنة ══ */
@@ -243,7 +263,7 @@
     }
 
     .il-lbl {
-        font-size: 10px;
+        font-size: 13px;
         font-weight: 700;
         color: rgba(255,255,255,.6);
         text-transform: uppercase;
@@ -261,6 +281,7 @@
 /* STD/ETD times inside banner (keep time only; no repeated STD/ETD text) */
 .stdtime, .etdtime { color: #fff; font-weight: 800; font-family: 'IBM Plex Mono', monospace; }
 .stdsep { color: rgba(255,255,255,.35); margin: 0 8px; font-weight: 700; }
+.stdslash { color: rgba(255,255,255,.55); margin: 0 0px; font-weight: 800; }
 
     .il-sep {
         color: rgba(255,255,255,.25);
@@ -292,7 +313,7 @@
             <span class="il-sep">·</span>
             <span class="il-lbl">DATE:</span><span class="il-val">01MAR26</span>
             <span class="il-sep">·</span>
-            <span class="il-lbl">STD/ETD:</span><span class="il-val"><span class="stdtime">14:25</span><span class="stdsep">·</span><span class="etdtime">14:18</span></span>
+            <span class="il-lbl">STD:</span><span class="il-val"><span class="stdtime">14:25</span><span class="stdslash">/</span><span class="stdtime">ETD:14:18</span></span>
             <span class="il-sep">·</span>
             <span class="il-lbl">DEST:</span><span class="il-val">ADD</span>
             <span style="float:right"><span class="dim" style="font-size:11px">Last: 2026-03-01 15:27</span></span>
@@ -324,10 +345,7 @@
         </td>
         <td><span class="tlbl">TOTAL PCS</span>84</td>
         <td><span class="tlbl">TOTAL KGS</span>1478</td>
-        <td colspan="3">
-            
-            <span class="dim" style="font-size:11px">Last: 2026-03-01 15:27</span>
-        </td>
+        <td colspan="3"></td>
         <td></td>
     </tr>
     <tr class="row-flight-inline">
@@ -336,7 +354,7 @@
             <span class="il-sep">·</span>
             <span class="il-lbl">DATE:</span><span class="il-val">01MAR26</span>
             <span class="il-sep">·</span>
-            <span class="il-lbl">STD/ETD:</span><span class="il-val"><span class="empty-field">STD/ETD…</span></span>
+            <span class="il-lbl">STD:</span><span class="il-val"><span class="empty-field">STD/ETD…</span></span>
             <span class="il-sep">·</span>
             <span class="il-lbl">DEST:</span><span class="il-val">ADD</span>
             <span style="float:right"><span class="dim" style="font-size:11px">Last: 2026-03-01 15:11</span></span>
@@ -378,10 +396,7 @@
         </td>
         <td><span class="tlbl">TOTAL PCS</span>5</td>
         <td><span class="tlbl">TOTAL KGS</span>500</td>
-        <td colspan="3">
-            
-            <span class="dim" style="font-size:11px">Last: 2026-03-01 15:11</span>
-        </td>
+        <td colspan="3"></td>
         <td></td>
     </tr>
     <tr class="row-flight-inline">
@@ -390,7 +405,7 @@
             <span class="il-sep">·</span>
             <span class="il-lbl">DATE:</span><span class="il-val">01MAR26</span>
             <span class="il-sep">·</span>
-            <span class="il-lbl">STD/ETD:</span><span class="il-val"><span class="stdtime">STD 2026-03-01 15:00 · ETD 2026-03-01 14:55</span></span>
+            <span class="il-lbl">STD:</span><span class="il-val"><span class="stdtime">15:00</span><span class="stdslash">/</span><span class="stdtime">ETD:14:55</span></span>
             <span class="il-sep">·</span>
             <span class="il-lbl">DEST:</span><span class="il-val">ADD</span>
             <span style="float:right"><span class="dim" style="font-size:11px">Last: 2026-03-01 14:57</span></span>
@@ -422,10 +437,7 @@
         </td>
         <td><span class="tlbl">TOTAL PCS</span>2</td>
         <td><span class="tlbl">TOTAL KGS</span>1000</td>
-        <td colspan="3">
-            
-            <span class="dim" style="font-size:11px">Last: 2026-03-01 14:57</span>
-        </td>
+        <td colspan="3"></td>
         <td></td>
     </tr>
     <tr class="row-flight-inline">
@@ -434,10 +446,10 @@
             <span class="il-sep">·</span>
             <span class="il-lbl">DATE:</span><span class="il-val">01MAR26</span>
             <span class="il-sep">·</span>
-            <span class="il-lbl">STD/ETD:</span><span class="il-val"><span class="stdtime">13:55</span><span class="stdsep">·</span><span class="etdtime">14:16</span></span>
+            <span class="il-lbl">STD:</span><span class="il-val"><span class="stdtime">13:55</span><span class="stdslash">/</span><span class="stdtime">ETD:14:16</span></span>
             <span class="il-sep">·</span>
             <span class="il-lbl">DEST:</span><span class="il-val">ADD</span>
-            <span style="float:right"><span class="dim" style="font-size:11px">Last: 2026-03-01 15:40</span></span>
+            <span style="float:right"><span class="upd-flash">UPDATE</span><span class="dim" style="font-size:11px">Last: 2026-03-01 15:54</span></span>
         </td>
     </tr>
     <tr class="row-subhead">
@@ -457,7 +469,7 @@
             <td class="mono">500</td>
             <td><span class="dim">—</span></td>
             <td colspan="3" style="text-align:left">P. EFFECTS</td>
-            <td colspan="2" class="mono">PMC350123WY</td>
+            <td colspan="2" class="mono">PMC350123WY AKE46000WY</td>
             <td><span class="reason-tag">SPACE</span></td>
         </tr>
     <tr class="row-totals">
@@ -466,10 +478,7 @@
         </td>
         <td><span class="tlbl">TOTAL PCS</span>5</td>
         <td><span class="tlbl">TOTAL KGS</span>500</td>
-        <td colspan="3">
-            
-            <span class="dim" style="font-size:11px">Last: 2026-03-01 15:40</span>
-        </td>
+        <td colspan="3"></td>
         <td></td>
     </tr>
     <tr class="row-flight-inline">
@@ -478,7 +487,7 @@
             <span class="il-sep">·</span>
             <span class="il-lbl">DATE:</span><span class="il-val">01MAR26</span>
             <span class="il-sep">·</span>
-            <span class="il-lbl">STD/ETD:</span><span class="il-val"><span class="empty-field">STD/ETD…</span></span>
+            <span class="il-lbl">STD:</span><span class="il-val"><span class="empty-field">STD/ETD…</span></span>
             <span class="il-sep">·</span>
             <span class="il-lbl">DEST:</span><span class="il-val">ADD</span>
             <span style="float:right"><span class="dim" style="font-size:11px">Last: 2026-03-01 15:01</span></span>
@@ -510,10 +519,7 @@
         </td>
         <td><span class="tlbl">TOTAL PCS</span>84</td>
         <td><span class="tlbl">TOTAL KGS</span>1478</td>
-        <td colspan="3">
-            
-            <span class="dim" style="font-size:11px">Last: 2026-03-01 15:01</span>
-        </td>
+        <td colspan="3"></td>
         <td></td>
     </tr></tbody>
     </table>
