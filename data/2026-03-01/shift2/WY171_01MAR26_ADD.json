@@ -2,7 +2,7 @@
   "flight": "WY171",
   "date": "01MAR26",
   "std_etd": "13:55|14:16",
-  "destination": "ADD",
+  "destination": "AMS",
   "format": "A",
   "items": [
     {
@@ -16,5 +16,6 @@
       "trolley": "PMC350123WY AKE46000WY"
     }
   ],
-  "saved_at": "2026-03-01T15:54:26.039372+04:00"
+  "saved_at": "2026-03-01T15:54:26.039372+04:00",
+  "retro_enriched_at": "2026-03-01T23:16:23.023130+04:00"
 }

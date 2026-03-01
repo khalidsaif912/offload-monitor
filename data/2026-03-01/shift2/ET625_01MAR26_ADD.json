@@ -1,7 +1,7 @@
 {
   "flight": "ET625",
   "date": "01MAR26",
-  "std_etd": "",
+  "std_etd": "04:15",
   "destination": "ADD",
   "format": "A",
   "items": [
@@ -16,5 +16,6 @@
       "trolley": ""
     }
   ],
-  "saved_at": "2026-03-01T17:54:46.314657+04:00"
+  "saved_at": "2026-03-01T17:54:46.314657+04:00",
+  "retro_enriched_at": "2026-03-01T23:16:23.023130+04:00"
 }

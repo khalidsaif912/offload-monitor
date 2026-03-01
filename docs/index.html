@@ -5,121 +5,207 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Offload Monitor</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
         :root {
-            --bg:#f0f4f8; --card:#fff; --line:#dde3ec;
-            --blue:#1a56db; --blue2:#0d2d6e; --muted:#6b7a99; --shadow:0 6px 22px rgba(15,31,61,.10);
+            --bg:#f1f5fb; --card:#fff; --border:#e2e8f4;
+            --navy:#0a1f52; --blue:#2563eb; --blue-dk:#1d4ed8;
+            --muted:#64748b; --text:#0f1f3d;
+            --shadow:0 4px 20px rgba(15,31,61,.10);
         }
-        * { box-sizing:border-box; }
-        body { margin:0; background:var(--bg); font-family:'IBM Plex Sans',Calibri,sans-serif; color:#0f1f3d; }
+        *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+        body {
+            background:var(--bg);
+            font-family:'Inter', system-ui, sans-serif;
+            color:var(--text);
+            -webkit-font-smoothing:antialiased;
+        }
+
+        /* ── HEADER ── */
         .top {
-            background: linear-gradient(135deg, var(--blue2) 0%, #1240a8 100%);
-            color:#fff; padding:22px 26px; box-shadow:0 2px 12px rgba(13,45,110,.25);
+            background: linear-gradient(135deg, var(--navy) 0%, #1a3a8f 55%, #2251c9 100%);
+            color:#fff;
+            padding: 20px 24px 18px;
+            box-shadow: 0 2px 16px rgba(10,31,82,.35);
         }
-        .top h1 { margin:0; font-size:22px; }
-        .top p { margin:6px 0 0; opacity:.8; font-size:13px; }
-        .wrap { max-width:980px; margin:18px auto 60px; padding:0 16px; }
+        .top-inner { max-width:860px; margin:0 auto; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+        .top h1 { font-size:20px; font-weight:800; letter-spacing:-.2px; }
+        .top p  { font-size:12px; opacity:.7; margin-top:3px; }
+        .hdr-badge {
+            background:rgba(255,255,255,.12);
+            border:1px solid rgba(255,255,255,.2);
+            border-radius:10px;
+            padding:7px 16px;
+            font-size:12px; font-weight:600;
+            color:rgba(255,255,255,.85);
+            text-align:center;
+        }
+        .hdr-badge strong { display:block; font-size:22px; font-weight:800; color:#fff; line-height:1.2; }
+
+        /* ── WRAP ── */
+        .wrap { max-width:860px; margin:20px auto 60px; padding:0 14px; display:flex; flex-direction:column; gap:12px; }
+
+        /* ── ACCORDION ── */
         .day-accordion {
-            background:var(--card); border:1px solid var(--line); border-radius:14px;
-            box-shadow:var(--shadow); margin:14px 0; overflow:hidden;
+            background:var(--card);
+            border:1px solid var(--border);
+            border-radius:16px;
+            box-shadow:var(--shadow);
+            overflow:hidden;
         }
-        summary {
-            list-style:none; cursor:pointer; padding:14px 16px; display:flex; align-items:center; justify-content:space-between;
-            background: #f7f9fc;
-            border-bottom:1px solid #edf0f7;
+        .day-summary {
+            list-style:none;
+            cursor:pointer;
+            padding:14px 18px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:12px;
+            background:#f7f9fd;
+            border-bottom:1px solid var(--border);
+            user-select:none;
+            transition:background .12s;
         }
-        summary::-webkit-details-marker { display:none; }
-        .day-title { font-weight:800; color:var(--blue2); }
-        .day-hint { color:rgba(13,45,110,.65); font-size:12px; font-weight:700; }
-        .day-body { padding:14px 14px 6px; display:grid; gap:10px; }
+        .day-summary:hover { background:#eff3fb; }
+        .day-accordion[open] .day-summary { background:#eff3fb; }
+        .day-summary::-webkit-details-marker { display:none; }
+        .day-sum-left { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+        .day-date { font-weight:800; font-size:14px; color:var(--navy); font-family:'JetBrains Mono', monospace; }
+        .today-badge {
+            background: linear-gradient(90deg, #2563eb, #1d4ed8);
+            color:#fff; font-size:10px; font-weight:800;
+            padding:2px 8px; border-radius:999px;
+            letter-spacing:.5px;
+        }
+        .day-pill {
+            background:#e8f0fe; color:var(--navy);
+            border:1px solid #bdd1ff;
+            font-size:11px; font-weight:700;
+            padding:2px 9px; border-radius:999px;
+        }
+        .day-chev {
+            font-size:20px; color:var(--blue); font-weight:900;
+            transition:transform .2s;
+        }
+        .day-accordion[open] .day-chev { transform: rotate(90deg); }
+
+        .day-body { padding:12px 14px 14px; display:flex; flex-direction:column; gap:8px; }
+
+        /* ── SHIFT CARDS ── */
         .shift-card {
-            display:flex; justify-content:space-between; align-items:center; gap:14px;
-            text-decoration:none; color:inherit;
-            border:1px solid #edf0f7; border-radius:12px; padding:12px 14px;
-            transition:transform .08s ease, border-color .12s ease, background .12s ease;
+            display:flex;
+            align-items:center;
+            gap:14px;
+            text-decoration:none;
+            color:inherit;
             background:#fff;
+            border:1px solid var(--border);
+            border-radius:12px;
+            padding:12px 16px;
+            transition:transform .1s, border-color .15s, box-shadow .15s;
         }
-        .shift-card:hover { transform: translateY(-1px); border-color:#c9dbff; background:#f6f9ff; }
-        .shift-title { font-weight:800; color:#0d2d6e; }
-        .shift-time { font-weight:700; color:var(--muted); font-size:12px; }
-        .shift-sub { margin-top:6px; font-size:12px; color:var(--muted); display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
-        .pill { background:#e8f0fe; color:#0d2d6e; border:1px solid #cfe0ff; border-radius:999px; padding:2px 8px; font-weight:800; font-size:11px; }
-        .mono { font-family:'IBM Plex Mono', monospace; }
-        .dot { opacity:.5; }
-        .chev { font-size:24px; color:#1a56db; font-weight:900; }
-        .empty { padding:18px; color:var(--muted); text-align:center; }
-        .footer { text-align:center; color:var(--muted); font-size:12px; margin-top:18px; }
+        .shift-card:hover {
+            transform:translateY(-1px);
+            border-color:#93c5fd;
+            box-shadow:0 4px 14px rgba(37,99,235,.12);
+        }
+        .sc-icon { font-size:22px; line-height:1; flex-shrink:0; }
+        .sc-body { flex:1; }
+        .sc-title { font-size:14px; font-weight:800; color:var(--navy); }
+        .sc-en { font-size:12px; font-weight:600; color:var(--muted); }
+        .sc-time { font-size:12px; color:var(--muted); margin-top:2px; font-family:'JetBrains Mono',monospace; }
+        .sc-right { display:flex; align-items:center; gap:10px; }
+        .sc-count {
+            background:#eff6ff; color:var(--blue-dk);
+            border:1px solid #bfdbfe;
+            font-size:11px; font-weight:700;
+            padding:3px 10px; border-radius:999px;
+        }
+        .sc-arrow { font-size:20px; color:var(--blue); font-weight:900; }
+
+        .empty-day { padding:18px; color:var(--muted); text-align:center; font-size:13px; }
+        .footer { text-align:center; color:var(--muted); font-size:11.5px; margin-top:6px; }
+
+        @media (max-width:600px) {
+            .top { padding:14px 14px 12px; }
+            .top h1 { font-size:17px; }
+            .wrap { padding:0 10px; margin-top:14px; }
+            .day-date { font-size:13px; }
+            .shift-card { padding:10px 12px; }
+            .hdr-badge { display:none; }
+        }
     </style>
 </head>
 <body>
     <div class="top">
-        <h1>✈ Offload Monitor</h1>
-        <p>اختر المناوبة لعرض تفاصيل الـ Offload. الأيام السابقة مطوية تلقائيًا.</p>
+        <div class="top-inner">
+            <div>
+                <h1>✈ Offload Monitor</h1>
+                <p>اختر المناوبة لعرض تفاصيل الـ Offload · الأيام السابقة مطوية تلقائيًا</p>
+            </div>
+            <div class="hdr-badge"><strong>2</strong>Days</div>
+        </div>
     </div>
     <div class="wrap">
         
         <details class="day-accordion" open>
-            <summary>
-                <span class="day-title">📅 2026-03-01</span>
-                <span class="day-hint">اليوم</span>
+            <summary class="day-summary">
+                <div class="day-sum-left">
+                    <span class="day-date">📅 2026-03-01</span>
+                    <span class="today-badge">TODAY</span>
+                    <span class="day-pill">7 flights</span>
+                </div>
+                <span class="day-chev">›</span>
             </summary>
             <div class="day-body">
                 
             <a class="shift-card" href="2026-03-01/shift1/">
-                <div class="shift-left">
-                    <div class="shift-title">صباح <span class="shift-time">(06:00–14:30)</span></div>
-                    <div class="shift-sub">
-                        <span class="pill">يبدأ</span> <span class="mono">2026-03-01 06:00</span>
-                        <span class="dot">•</span>
-                        <span class="pill">ينتهي</span> <span class="mono">2026-03-01 14:30</span>
-                    </div>
+                <div class="sc-icon">🌅</div>
+                <div class="sc-body">
+                    <div class="sc-title">صباح <span class="sc-en">/ Morning</span></div>
+                    <div class="sc-time">06:00 – 14:30</div>
                 </div>
-                <div class="shift-right">
-                    <span class="chev">›</span>
+                <div class="sc-right">
+                    <span class="sc-count">1 flight</span>
+                    <span class="sc-arrow">›</span>
                 </div>
             </a>
-            
             <a class="shift-card" href="2026-03-01/shift2/">
-                <div class="shift-left">
-                    <div class="shift-title">ظهر <span class="shift-time">(14:30–21:30)</span></div>
-                    <div class="shift-sub">
-                        <span class="pill">يبدأ</span> <span class="mono">2026-03-01 14:30</span>
-                        <span class="dot">•</span>
-                        <span class="pill">ينتهي</span> <span class="mono">2026-03-01 21:30</span>
-                    </div>
+                <div class="sc-icon">☀️</div>
+                <div class="sc-body">
+                    <div class="sc-title">ظهر <span class="sc-en">/ Afternoon</span></div>
+                    <div class="sc-time">14:30 – 21:30</div>
                 </div>
-                <div class="shift-right">
-                    <span class="chev">›</span>
+                <div class="sc-right">
+                    <span class="sc-count">6 flights</span>
+                    <span class="sc-arrow">›</span>
                 </div>
             </a>
-            
             </div>
         </details>
-        
         <details class="day-accordion">
-            <summary>
-                <span class="day-title">📅 2026-02-27</span>
-                <span class="day-hint">اضغط للعرض</span>
+            <summary class="day-summary">
+                <div class="day-sum-left">
+                    <span class="day-date">📅 2026-02-27</span>
+                    
+                    <span class="day-pill">2 flights</span>
+                </div>
+                <span class="day-chev">›</span>
             </summary>
             <div class="day-body">
                 
             <a class="shift-card" href="2026-02-27/shift3/">
-                <div class="shift-left">
-                    <div class="shift-title">ليل <span class="shift-time">(21:30–06:00)</span></div>
-                    <div class="shift-sub">
-                        <span class="pill">يبدأ</span> <span class="mono">2026-02-27 21:30</span>
-                        <span class="dot">•</span>
-                        <span class="pill">ينتهي</span> <span class="mono">2026-02-28 06:00</span>
-                    </div>
+                <div class="sc-icon">🌙</div>
+                <div class="sc-body">
+                    <div class="sc-title">ليل <span class="sc-en">/ Night</span></div>
+                    <div class="sc-time">21:30 – 06:00</div>
                 </div>
-                <div class="shift-right">
-                    <span class="chev">›</span>
+                <div class="sc-right">
+                    <span class="sc-count">2 flights</span>
+                    <span class="sc-arrow">›</span>
                 </div>
             </a>
-            
             </div>
         </details>
-        
         <div class="footer">Generated automatically by GitHub Actions · 2026-03-01</div>
     </div>
 </body>

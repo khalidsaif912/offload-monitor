@@ -2,7 +2,7 @@
   "flight": "WY101",
   "date": "01MAR26",
   "std_etd": "14:25|14:18",
-  "destination": "ADD",
+  "destination": "LHR",
   "format": "A",
   "items": [
     {
@@ -16,5 +16,6 @@
       "trolley": "AKE46011WY BT-012"
     }
   ],
-  "saved_at": "2026-03-01T15:27:46.078812+04:00"
+  "saved_at": "2026-03-01T15:27:46.078812+04:00",
+  "retro_enriched_at": "2026-03-01T23:16:23.023130+04:00"
 }

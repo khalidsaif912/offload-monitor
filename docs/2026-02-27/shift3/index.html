@@ -5,288 +5,495 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Offload Monitor — 2026-02-27 — shift3</title>
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@400;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
 
     :root {
-        --bg:       #f0f4f8;
-        --card:     #ffffff;
-        --line:     #dde3ec;
-        --blue:     #1a56db;
-        --blue-dk:  #1240a8;
-        --blue-hd:  #0d2d6e;
-        --gray-hd:  #e8edf5;
-        --text:     #0f1f3d;
-        --muted:    #6b7a99;
-        --badge:    #f59e0b;
-        --row-alt:  #f7f9fc;
-        --total-bg: #e8f0fe;
+        --bg:        #f1f5fb;
+        --card:      #ffffff;
+        --border:    #e2e8f4;
+        --blue:      #2563eb;
+        --blue-dk:   #1d4ed8;
+        --blue-hd:   #0f2660;
+        --navy:      #0a1f52;
+        --sky:       #e8f0fe;
+        --text:      #0f1f3d;
+        --muted:     #64748b;
+        --amber:     #f59e0b;
+        --amber-bg:  #fffbeb;
+        --amber-br:  #fde68a;
+        --row-alt:   #f8fafd;
+        --total-bg:  #eff6ff;
+        --green:     #059669;
+        --green-bg:  #ecfdf5;
+        --red:       #dc2626;
+        --shadow-sm: 0 1px 4px rgba(15,31,61,.07);
+        --shadow-md: 0 4px 20px rgba(15,31,61,.10);
+        --shadow-lg: 0 8px 32px rgba(15,31,61,.13);
+        --radius:    14px;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
         background: var(--bg);
-        font-family: 'IBM Plex Sans', Calibri, sans-serif;
+        font-family: 'Inter', system-ui, sans-serif;
         color: var(--text);
         font-size: 13px;
+        line-height: 1.5;
+        -webkit-font-smoothing: antialiased;
     }
 
+    /* ─── TOP HEADER ─── */
     .page-header {
-        background: linear-gradient(135deg, var(--blue-hd) 0%, var(--blue-dk) 100%);
+        background: linear-gradient(135deg, var(--navy) 0%, #1a3a8f 55%, #2251c9 100%);
         color: #fff;
-        padding: 18px 32px;
+        padding: 16px 20px;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        gap: 16px;
+        gap: 12px;
         flex-wrap: wrap;
-        box-shadow: 0 2px 12px rgba(13,45,110,.25);
+        box-shadow: 0 2px 16px rgba(10,31,82,.35);
+        position: sticky;
+        top: 0;
+        z-index: 100;
     }
 
-    .page-header h1   { font-size: 19px; font-weight: 700; }
-    .page-header .sub { font-size: 12px; opacity: .75; margin-top: 3px; }
+    .hdr-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+
+    .btn-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.22);
+        color: #fff;
+        text-decoration: none;
+        padding: 7px 12px;
+        border-radius: 9px;
+        font-size: 12px;
+        font-weight: 700;
+        white-space: nowrap;
+        transition: background .15s;
+    }
+    .btn-back:hover { background: rgba(255,255,255,.22); }
+
+    .page-header h1   { font-size: 17px; font-weight: 800; letter-spacing: -.2px; }
+    .page-header .sub { font-size: 11.5px; opacity: .7; margin-top: 2px; }
+
+    .hdr-stats { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
     .stat-box {
-        background: rgba(255,255,255,.13);
-        border: 1px solid rgba(255,255,255,.22);
-        border-radius: 8px;
-        padding: 7px 18px;
+        background: rgba(255,255,255,.12);
+        border: 1px solid rgba(255,255,255,.2);
+        border-radius: 10px;
+        padding: 6px 16px;
         text-align: center;
-        font-size: 12px;
-    }
-    .stat-box strong { display: block; font-size: 22px; font-weight: 700; }
-
-    .wrap { max-width: 1280px; margin: 0 auto; padding: 24px 20px 48px; }
-
-    /* ── الجدول الرئيسي ── */
-    .report-table {
-        width: 100%;
-        border-collapse: collapse;
-        background: var(--card);
-        border-radius: 12px;
-        overflow: hidden;
-        box-shadow: 0 2px 14px rgba(15,31,61,.08);
-        border: 1px solid var(--line);
-    }
-
-    .report-table thead th {
-        background: var(--blue-hd);
-        color: #fff;
         font-size: 11px;
         font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: .5px;
-        padding: 10px 11px;
-        border-right: 1px solid rgba(255,255,255,.1);
+        color: rgba(255,255,255,.85);
         white-space: nowrap;
     }
-    .report-table thead th:last-child { border-right: none; }
+    .stat-box strong { display: block; font-size: 20px; font-weight: 800; color: #fff; line-height: 1.2; }
 
-    /* ══ الصف الأول: معلومات الرحلة ══ */
-    tr.row-flight td {
-        background: var(--gray-hd);
-        border-top: 3px solid var(--blue);
-        border-bottom: 1px solid var(--line);
-        padding: 10px 12px;
-        vertical-align: middle;
+    /* ─── MAIN WRAP ─── */
+    .wrap {
+        max-width: 1300px;
+        margin: 0 auto;
+        padding: 20px 14px 40px;
+        display: flex;
+        flex-direction: column;
+        gap: 18px;
     }
 
-    .flt-num {
-        font-family: 'IBM Plex Mono', monospace;
+    /* ─── FLIGHT CARD ─── */
+    .flight-card {
+        background: var(--card);
+        border-radius: var(--radius);
+        border: 1px solid var(--border);
+        box-shadow: var(--shadow-md);
+        overflow: hidden;
+    }
+
+    /* ─── FLIGHT BANNER ─── */
+    .flt-banner {
+        background: linear-gradient(90deg, var(--navy) 0%, #1a3d8f 100%);
+        color: #fff;
+        padding: 11px 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .flt-banner-left {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .flt-number {
+        font-family: 'JetBrains Mono', monospace;
         font-size: 16px;
         font-weight: 700;
-        color: var(--blue-hd);
+        letter-spacing: .3px;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .flt-number::before { content: "✈"; font-size: 13px; opacity: .8; }
+
+    .flt-chip {
+        background: rgba(255,255,255,.13);
+        border: 1px solid rgba(255,255,255,.2);
+        border-radius: 7px;
+        padding: 4px 10px;
+        font-size: 11.5px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        white-space: nowrap;
+    }
+    .flt-chip .lbl {
+        color: rgba(255,255,255,.55);
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+
+    .dest-chip {
+        background: rgba(37,99,235,.35);
+        border-color: rgba(96,165,250,.4);
+        font-size: 13px;
+        font-weight: 800;
+        letter-spacing: .5px;
+    }
+
+    .flt-banner-right {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+
+    .upd-flash {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        background: rgba(239,68,68,.15);
+        color: #fca5a5;
+        border: 1px solid rgba(239,68,68,.35);
+        font-size: 10px;
+        font-weight: 800;
+        padding: 3px 9px;
+        border-radius: 999px;
+        letter-spacing: .5px;
+        animation: updBlink 2.4s ease-in-out infinite;
+    }
+    @keyframes updBlink {
+        0%,25%  { opacity:0; }
+        35%,70% { opacity:1; }
+        80%,100%{ opacity:0; }
+    }
+
+    .last-upd {
+        font-size: 10px;
+        color: rgba(255,255,255,.45);
         white-space: nowrap;
     }
 
-    .lbl {
+    .stdtime { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #fff; }
+    .etdsep  { color: rgba(255,255,255,.4); margin: 0 2px; }
+
+    .empty-field {
+        background: rgba(245,158,11,.15);
+        border: 1px dashed rgba(245,158,11,.5);
+        border-radius: 5px;
+        padding: 2px 7px;
+        font-size: 10.5px;
+        color: #fcd34d;
+        font-style: italic;
+    }
+
+    /* ─── CARGO TABLE ─── */
+    .cargo-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .cargo-table thead tr {
+        background: #f0f4fb;
+        border-bottom: 2px solid var(--border);
+    }
+    .cargo-table thead th {
+        padding: 7px 10px;
         font-size: 10px;
-        font-weight: 600;
-        color: var(--muted);
-        text-transform: uppercase;
-        letter-spacing: .4px;
-        display: block;
-        margin-bottom: 1px;
-    }
-
-    .val { font-weight: 700; color: var(--blue-dk); }
-
-    .badge-upd {
-        background: var(--badge);
-        color: #111;
-        font-size: 11px;
-        font-weight: 800;
-        padding: 2px 9px;
-        border-radius: 999px;
-        margin-right: 6px;
-    }
-
-    /* ══ الصف الثاني: هيدر الشحنة ══ */
-    tr.row-subhead td {
-        background: #dce8ff;
-        padding: 6px 11px;
-        font-size: 11px;
         font-weight: 700;
-        color: var(--blue-hd);
         text-transform: uppercase;
-        letter-spacing: .4px;
-        border-bottom: 1px solid #c3d4f5;
+        letter-spacing: .6px;
+        color: var(--muted);
+        text-align: center;
+        white-space: nowrap;
+        border-right: 1px solid var(--border);
     }
+    .cargo-table thead th:last-child { border-right: none; }
+    .cargo-table thead th:first-child { text-align: left; }
 
-    /* ══ الصف الثاني: بيانات الشحنة ══ */
-    tr.row-cargo td {
-        padding: 8px 11px;
-        border-bottom: 1px solid #edf0f7;
-        border-right: 1px solid #edf0f7;
-        vertical-align: top;
+    .cargo-table tbody tr.row-cargo td {
+        padding: 8px 10px;
+        border-bottom: 1px solid #eef1f8;
+        border-right: 1px solid #eef1f8;
+        vertical-align: middle;
+        text-align: center;
     }
-    tr.row-cargo:nth-child(odd)  td { background: var(--card); }
-    tr.row-cargo:nth-child(even) td { background: var(--row-alt); }
-    tr.row-cargo td:last-child { border-right: none; }
+    .cargo-table tbody tr.row-cargo:last-child td { border-bottom: none; }
+    .cargo-table tbody tr.row-cargo td:last-child  { border-right: none; }
+    .cargo-table tbody tr.row-cargo td:first-child { text-align: left; padding-left: 14px; }
+    .cargo-table tbody tr.row-cargo:nth-child(even) td { background: var(--row-alt); }
 
-    .mono { font-family: 'IBM Plex Mono', monospace; font-size: 12px; }
+    /* ─── TOTALS ROW ─── */
+    .row-totals td {
+        background: var(--total-bg);
+        border-top: 2px solid #bfdbfe;
+        padding: 9px 14px;
+        font-weight: 700;
+        color: var(--blue-dk);
+        font-size: 12px;
+    }
+    .tot-stat {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        margin-right: 18px;
+    }
+    .tot-lbl { color: var(--muted); font-weight: 600; font-size: 11px; }
+    .tot-val { font-weight: 800; color: var(--blue-hd); }
+
+    /* ─── TAGS ─── */
+    .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
     .dim  { color: var(--muted); }
 
     .reason-tag {
         display: inline-block;
-        background: #fff3e0;
-        color: #b45309;
-        border: 1px solid #fcd34d;
-        border-radius: 5px;
-        padding: 1px 8px;
+        background: #fff7ed;
+        color: #c2410c;
+        border: 1px solid #fed7aa;
+        border-radius: 6px;
+        padding: 2px 8px;
         font-size: 11px;
-        font-weight: 600;
-    }
-
-    /* ══ الصف الثالث: التعبئة ══ */
-    tr.row-totals td {
-        background: var(--total-bg);
-        border-top: 2px solid var(--blue);
-        border-bottom: 3px solid var(--blue-hd);
-        padding: 8px 12px;
         font-weight: 700;
-        color: var(--blue-hd);
-        font-size: 12px;
+        white-space: nowrap;
     }
-    .tlbl { font-size: 10px; font-weight: 400; color: var(--muted); display: block; }
 
-    .footer { text-align:center; color:var(--muted); font-size:12px; margin-top:28px; }
+    .class-tag {
+        display: inline-block;
+        background: #ede9fe;
+        color: #5b21b6;
+        border: 1px solid #c4b5fd;
+        border-radius: 6px;
+        padding: 2px 8px;
+        font-size: 11px;
+        font-weight: 700;
+    }
+
+    /* ─── FOOTER ─── */
+    .footer {
+        text-align: center;
+        color: var(--muted);
+        font-size: 11.5px;
+        padding-top: 4px;
+    }
+
+    /* ─── RESPONSIVE ─── */
+    @media (max-width: 700px) {
+        .page-header { padding: 12px 14px; }
+        .page-header h1 { font-size: 15px; }
+        .wrap { padding: 12px 10px 28px; gap: 14px; }
+        .flt-banner { padding: 10px 12px; }
+        .flt-number { font-size: 14px; }
+        .cargo-table thead { display: none; }
+        .cargo-table tbody tr.row-cargo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            border-bottom: 2px solid var(--border);
+        }
+        .cargo-table tbody tr.row-cargo td {
+            text-align: left !important;
+            padding: 5px 10px;
+            border-right: none;
+        }
+        .cargo-table tbody tr.row-cargo td::before {
+            content: attr(data-label) " ";
+            font-size: 9px;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            display: block;
+        }
+        .row-totals td { padding: 8px 12px; }
+        .hdr-stats { display: none; }
+    }
     </style>
 </head>
 <body>
 <div class="page-header">
-    <div>
-        <h1>✈ Offload Monitor Report</h1>
-        <div class="sub">2026-02-27 &nbsp;·&nbsp; Shift 3 — 21:30 to 06:00</div>
+    <div class="hdr-left">
+        <a href="../../index.html" class="btn-back">← Back</a>
+        <div>
+            <h1>✈ Offload Monitor</h1>
+            <div class="sub">2026-02-27 &nbsp;·&nbsp; ليل — 21:30 إلى 06:00</div>
+        </div>
     </div>
-    <div style="display:flex;gap:10px;flex-wrap:wrap">
+    <div class="hdr-stats">
         <div class="stat-box"><strong>2</strong>Flights</div>
         <div class="stat-box"><strong>6</strong>Shipments</div>
     </div>
 </div>
 <div class="wrap">
-    <table class="report-table">
+    
+<div class="flight-card">
+    <div class="flt-banner">
+        <div class="flt-banner-left">
+            <span class="flt-number">WY223</span>
+            <span class="flt-chip"><span class="lbl">DATE</span>18.JUL</span>
+            <span class="flt-chip"><span class="lbl">STD</span><span class="stdtime">08:30</span></span>
+            <span class="flt-chip dest-chip"><span class="lbl">DEST</span>COK</span>
+        </div>
+        <div class="flt-banner-right">
+            
+            <span class="last-upd">Last: 2026-02-27 01:26</span>
+        </div>
+    </div>
+    <table class="cargo-table">
         <thead>
             <tr>
-                <th>FLIGHT / ITEM</th>
-                <th>DATE / EMAIL</th>
-                <th>STD·ETD / PHYSICAL</th>
-                <th>DEST / TROLLEY·ULD</th>
-                <th>AWB · DESC / CMS</th>
+                <th>Item</th>
+                <th>AWB</th>
                 <th>PCS</th>
-                <th>KGS / REASON</th>
-                <th>REMARKS / STATUS</th>
+                <th>KGS</th>
+                <th>Priority</th>
+                <th style="text-align:left">Description</th>
+                <th>Trolley / ULD</th>
+                <th>Reason</th>
             </tr>
         </thead>
         <tbody>
-        <tr class="row-flight">
-            <td colspan="2" class="flt-num">✈ WY223</td>
-            <td><span class="lbl">DATE</span><span class="val">18.JUL</span></td>
-            <td colspan="3"><span class="lbl">DESTINATION</span><span class="val">COK</span></td>
-            <td colspan="2">
-                
-                <span class="dim" style="font-size:11px">Last: 2026-02-27 01:26</span>
-            </td>
-        </tr>
-        <tr class="row-subhead">
-            <td colspan="2">AWB</td>
-            <td>PCS</td>
-            <td>KGS</td>
-            <td colspan="2">DESCRIPTION</td>
-            <td colspan="2">REASON</td>
-        </tr>
+            
             <tr class="row-cargo">
-                <td colspan="2" class="mono">910 17149554</td>
-                <td class="mono">35</td>
-                <td class="mono">781</td>
-                <td colspan="2">COURIER</td>
-                <td colspan="2"><span class="reason-tag">SPACE</span></td>
+                <td class="mono" data-label="ITEM">1</td>
+                <td class="mono" data-label="AWB" style="text-align:left">910 17149554</td>
+                <td class="mono" data-label="PCS"><b>35</b></td>
+                <td class="mono" data-label="KGS">781</td>
+                <td data-label="PRIORITY"><span class="dim">—</span></td>
+                <td data-label="DESCRIPTION" style="text-align:left">COURIER</td>
+                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
+                <td data-label="REASON"><span class="reason-tag">SPACE</span></td>
             </tr>
-        <tr class="row-totals">
-            <td colspan="2"><span class="tlbl">TOTAL SHIPMENTS</span>1</td>
-            <td><span class="tlbl">TOTAL PCS</span>35</td>
-            <td><span class="tlbl">TOTAL KGS</span>781</td>
-            <td colspan="4"></td>
-        </tr>
-        <tr class="row-flight">
-            <td colspan="2" class="flt-num">✈ WY681</td>
-            <td><span class="lbl">DATE</span><span class="val">18-Nov</span></td>
-            <td colspan="3"><span class="lbl">DESTINATION</span><span class="val">RUH</span></td>
-            <td colspan="2">
-                
-                <span class="dim" style="font-size:11px">Last: 2026-02-27 01:17</span>
-            </td>
-        </tr>
-        <tr class="row-subhead">
-            <td colspan="2">AWB</td>
-            <td>PCS</td>
-            <td>KGS</td>
-            <td colspan="2">DESCRIPTION</td>
-            <td colspan="2">REASON</td>
-        </tr>
-            <tr class="row-cargo">
-                <td colspan="2" class="mono">910-16708580P</td>
-                <td class="mono">25</td>
-                <td class="mono">219</td>
-                <td colspan="2">COURIER MAT</td>
-                <td colspan="2"><span class="reason-tag">SPACE</span></td>
+            <tr class="row-totals">
+                <td colspan="8">
+                    <span class="tot-stat"><span class="tot-lbl">SHIPMENTS</span><span class="tot-val">1</span></span>
+                    <span class="tot-stat"><span class="tot-lbl">TOTAL PCS</span><span class="tot-val">35</span></span>
+                    <span class="tot-stat"><span class="tot-lbl">TOTAL KGS</span><span class="tot-val">781</span></span>
+                </td>
             </tr>
-            <tr class="row-cargo">
-                <td colspan="2" class="mono">910-16723195</td>
-                <td class="mono">5</td>
-                <td class="mono">101</td>
-                <td colspan="2">COURIER</td>
-                <td colspan="2"><span class="reason-tag">SPACE</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td colspan="2" class="mono">910-16819121</td>
-                <td class="mono">1</td>
-                <td class="mono">16</td>
-                <td colspan="2">NEW CIVIL HELI</td>
-                <td colspan="2"><span class="reason-tag">SPACE</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td colspan="2" class="mono">910-16887986</td>
-                <td class="mono">2</td>
-                <td class="mono">21</td>
-                <td colspan="2">BAGS</td>
-                <td colspan="2"><span class="reason-tag">SPACE</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td colspan="2" class="mono">910-16888071</td>
-                <td class="mono">7</td>
-                <td class="mono">24</td>
-                <td colspan="2">GARMENTS BAG</td>
-                <td colspan="2"><span class="reason-tag">SPACE</span></td>
-            </tr>
-        <tr class="row-totals">
-            <td colspan="2"><span class="tlbl">TOTAL SHIPMENTS</span>5</td>
-            <td><span class="tlbl">TOTAL PCS</span>40</td>
-            <td><span class="tlbl">TOTAL KGS</span>381</td>
-            <td colspan="4"></td>
-        </tr></tbody>
+        </tbody>
     </table>
-    <div class="footer">Generated automatically by GitHub Actions &nbsp;·&nbsp; 2026-02-27</div>
+</div>
+<div class="flight-card">
+    <div class="flt-banner">
+        <div class="flt-banner-left">
+            <span class="flt-number">WY681</span>
+            <span class="flt-chip"><span class="lbl">DATE</span>18-Nov</span>
+            <span class="flt-chip"><span class="lbl">STD</span><span class="stdtime">18:50</span><span class="stdslash">/</span><span class="stdtime">ETD:18:55</span></span>
+            <span class="flt-chip dest-chip"><span class="lbl">DEST</span>RUH</span>
+        </div>
+        <div class="flt-banner-right">
+            
+            <span class="last-upd">Last: 2026-02-27 01:17</span>
+        </div>
+    </div>
+    <table class="cargo-table">
+        <thead>
+            <tr>
+                <th>Item</th>
+                <th>AWB</th>
+                <th>PCS</th>
+                <th>KGS</th>
+                <th>Priority</th>
+                <th style="text-align:left">Description</th>
+                <th>Trolley / ULD</th>
+                <th>Reason</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            <tr class="row-cargo">
+                <td class="mono" data-label="ITEM">1</td>
+                <td class="mono" data-label="AWB" style="text-align:left">910-16708580P</td>
+                <td class="mono" data-label="PCS"><b>25</b></td>
+                <td class="mono" data-label="KGS">219</td>
+                <td data-label="PRIORITY"><span class="dim">—</span></td>
+                <td data-label="DESCRIPTION" style="text-align:left">COURIER MAT</td>
+                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
+                <td data-label="REASON"><span class="reason-tag">SPACE</span></td>
+            </tr>
+            <tr class="row-cargo">
+                <td class="mono" data-label="ITEM">2</td>
+                <td class="mono" data-label="AWB" style="text-align:left">910-16723195</td>
+                <td class="mono" data-label="PCS"><b>5</b></td>
+                <td class="mono" data-label="KGS">101</td>
+                <td data-label="PRIORITY"><span class="dim">—</span></td>
+                <td data-label="DESCRIPTION" style="text-align:left">COURIER</td>
+                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
+                <td data-label="REASON"><span class="reason-tag">SPACE</span></td>
+            </tr>
+            <tr class="row-cargo">
+                <td class="mono" data-label="ITEM">3</td>
+                <td class="mono" data-label="AWB" style="text-align:left">910-16819121</td>
+                <td class="mono" data-label="PCS"><b>1</b></td>
+                <td class="mono" data-label="KGS">16</td>
+                <td data-label="PRIORITY"><span class="dim">—</span></td>
+                <td data-label="DESCRIPTION" style="text-align:left">NEW CIVIL HELI</td>
+                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
+                <td data-label="REASON"><span class="reason-tag">SPACE</span></td>
+            </tr>
+            <tr class="row-cargo">
+                <td class="mono" data-label="ITEM">4</td>
+                <td class="mono" data-label="AWB" style="text-align:left">910-16887986</td>
+                <td class="mono" data-label="PCS"><b>2</b></td>
+                <td class="mono" data-label="KGS">21</td>
+                <td data-label="PRIORITY"><span class="dim">—</span></td>
+                <td data-label="DESCRIPTION" style="text-align:left">BAGS</td>
+                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
+                <td data-label="REASON"><span class="reason-tag">SPACE</span></td>
+            </tr>
+            <tr class="row-cargo">
+                <td class="mono" data-label="ITEM">5</td>
+                <td class="mono" data-label="AWB" style="text-align:left">910-16888071</td>
+                <td class="mono" data-label="PCS"><b>7</b></td>
+                <td class="mono" data-label="KGS">24</td>
+                <td data-label="PRIORITY"><span class="dim">—</span></td>
+                <td data-label="DESCRIPTION" style="text-align:left">GARMENTS BAG</td>
+                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
+                <td data-label="REASON"><span class="reason-tag">SPACE</span></td>
+            </tr>
+            <tr class="row-totals">
+                <td colspan="8">
+                    <span class="tot-stat"><span class="tot-lbl">SHIPMENTS</span><span class="tot-val">5</span></span>
+                    <span class="tot-stat"><span class="tot-lbl">TOTAL PCS</span><span class="tot-val">40</span></span>
+                    <span class="tot-stat"><span class="tot-lbl">TOTAL KGS</span><span class="tot-val">381</span></span>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+    <div class="footer">Generated automatically · 2026-02-27</div>
 </div>
 </body>
 </html>

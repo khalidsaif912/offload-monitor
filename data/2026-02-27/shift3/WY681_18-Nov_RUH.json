@@ -1,7 +1,7 @@
 {
   "flight": "WY681",
   "date": "18-Nov",
-  "std_etd": "",
+  "std_etd": "18:50|18:55",
   "destination": "RUH",
   "format": "A",
   "items": [
@@ -41,5 +41,6 @@
       "reason": "SPACE"
     }
   ],
-  "saved_at": "2026-02-27T01:17:44.035735+04:00"
+  "saved_at": "2026-02-27T01:17:44.035735+04:00",
+  "retro_enriched_at": "2026-03-01T23:16:23.023130+04:00"
 }
