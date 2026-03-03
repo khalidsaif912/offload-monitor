@@ -1523,13 +1523,7 @@ def _render_manpower(roster: dict) -> str:
 # ══════════════════════════════════════════════════════════════════
 
 def _render_offload_table(flights: list[dict], meta: dict) -> str:
-    """Render offload cards — one card per flight, matching the screenshot design.
-    Each card has:
-      - Blue header bar: Flight | Date | STD | ETD | DEST  + UPDATE button + timestamp
-      - Status bar: Email | Ramp Received | CMS Completed | Pieces Verified | Remarks
-      - Table: # | AWB | PCS | KGS | Priority | Description | ULD | Offloading Reason
-      - Footer: Total Shipments | Total PCS | Total KGS
-    """
+    """Render offload cards matching screenshot design — one card per flight."""
     from datetime import datetime as _dt
 
     onedrive_url = os.environ.get("ONEDRIVE_FILE_URL", "").strip()
@@ -1538,29 +1532,26 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
 
     if not flights:
         return """
-    <div style="margin-top:12px; padding:16px; background:#f8faff; border:1px dashed #c7d4f0;
-                border-radius:8px; text-align:center; color:#64748b;
-                font-family:Calibri,Arial,sans-serif; font-size:13px;">
+    <div style="margin-top:12px;padding:16px;background:#f8faff;border:1px dashed #c7d4f0;
+                border-radius:8px;text-align:center;color:#64748b;
+                font-family:Calibri,Arial,sans-serif;font-size:13px;">
       NIL — No offload data recorded for this shift.
     </div>"""
 
     cards_html = ""
-
     for flight in flights:
-        flt     = flight.get("flight", "")      or "—"
-        date    = flight.get("date", "")         or "—"
-        dest    = flight.get("destination", "")  or "—"
-        std_raw = flight.get("std_etd", "")      or ""
+        flt     = flight.get("flight","")     or "—"
+        date    = flight.get("date","")       or "—"
+        dest    = flight.get("destination","")or "—"
+        std_raw = flight.get("std_etd","")    or ""
         std_val, etd_val = _format_std_etd(std_raw)
-        std  = std_val  or "—"
-        etd  = etd_val  or "—"
+        std = std_val or "—"
+        etd = etd_val or "—"
 
         items = flight.get("items", [])
-
-        # ── totals ──
-        total_pcs = 0
-        total_kgs = 0.0
-        real_items = [it for it in items if it.get("awb","").strip()]
+        real_items = [it for it in items if (it.get("awb","") or "").strip()]
+        total_pcs  = 0
+        total_kgs  = 0.0
         for it in real_items:
             try:    total_pcs += int(str(it.get("pcs","0") or "0").replace(",",""))
             except: pass
@@ -1568,186 +1559,144 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             except: pass
         total_shipments = len(real_items)
 
-        # ── table rows ──
         rows_html = ""
-        row_num   = 0
-        for it in items:
-            row_num += 1
+        for row_num, it in enumerate(items, 1):
             bg      = "#f0f5ff" if row_num % 2 == 1 else "#ffffff"
-            awb     = it.get("awb", "")         or "—"
-            pcs     = it.get("pcs", "")         or "—"
-            kgs     = it.get("kgs", "")         or "—"
-            desc    = it.get("description", "") or "—"
-            uld     = it.get("trolley", "")     or "—"
-            reason  = it.get("reason", "")      or ""
-            priority = it.get("class_", "")     or "—"
-
+            awb     = it.get("awb","")         or "—"
+            pcs     = it.get("pcs","")         or "—"
+            kgs     = it.get("kgs","")         or "—"
+            desc    = it.get("description","") or "—"
+            uld     = it.get("trolley","")     or "—"
+            reason  = it.get("reason","")      or ""
+            priority= it.get("class_","")      or "—"
             reason_badge = (
-                f'<span style="display:inline-block;padding:2px 8px;border-radius:4px;'
-                f'background:#fff3e0;border:1px solid #ffb74d;color:#e65100;'
-                f'font-size:10.5px;font-weight:700;white-space:nowrap;letter-spacing:.3px;">'
-                f'{reason.upper()}</span>'
+                f'<span style="display:inline-block;padding:2px 8px;border-radius:4px;'                f'background:#fff3e0;border:1px solid #ffb74d;color:#e65100;'                f'font-size:10.5px;font-weight:700;white-space:nowrap;letter-spacing:.3px;">'                f'{reason.upper()}</span>'
             ) if reason.strip() else "—"
 
             rows_html += f"""
         <tr style="background:{bg};">
-          <td style="padding:8px 7px;border:1px solid #dde6f5;text-align:center;
-                     font-weight:700;color:#1b1f2a;font-size:12px;">{row_num}</td>
-          <td style="padding:8px 7px;border:1px solid #dde6f5;font-family:'Courier New',monospace;
-                     font-size:12px;color:#0b3a78;font-weight:600;">{awb}</td>
-          <td style="padding:8px 7px;border:1px solid #dde6f5;font-weight:700;
-                     text-align:center;font-size:12px;">{pcs}</td>
-          <td style="padding:8px 7px;border:1px solid #dde6f5;text-align:center;
-                     font-size:12px;">{kgs}</td>
-          <td style="padding:8px 7px;border:1px solid #dde6f5;text-align:center;
-                     font-size:12px;">{priority}</td>
+          <td style="padding:8px 7px;border:1px solid #dde6f5;text-align:center;font-weight:700;font-size:12px;">{row_num}</td>
+          <td style="padding:8px 7px;border:1px solid #dde6f5;font-family:'Courier New',monospace;font-size:12px;color:#0b3a78;font-weight:600;">{awb}</td>
+          <td style="padding:8px 7px;border:1px solid #dde6f5;font-weight:700;text-align:center;font-size:12px;">{pcs}</td>
+          <td style="padding:8px 7px;border:1px solid #dde6f5;text-align:center;font-size:12px;">{kgs}</td>
+          <td style="padding:8px 7px;border:1px solid #dde6f5;text-align:center;font-size:12px;">{priority}</td>
           <td style="padding:8px 7px;border:1px solid #dde6f5;font-size:12px;">{desc}</td>
-          <td style="padding:8px 7px;border:1px solid #dde6f5;text-align:center;
-                     font-size:12px;color:#374151;">{uld}</td>
+          <td style="padding:8px 7px;border:1px solid #dde6f5;text-align:center;font-size:12px;">{uld}</td>
           <td style="padding:8px 7px;border:1px solid #dde6f5;">{reason_badge}</td>
         </tr>"""
 
         if not rows_html:
-            rows_html = """
-        <tr><td colspan="8" style="padding:12px;border:1px solid #dde6f5;
-            color:#64748b;text-align:center;font-size:12px;">
-          No items recorded.
-        </td></tr>"""
+            rows_html = '<tr><td colspan="8" style="padding:12px;border:1px solid #dde6f5;color:#64748b;text-align:center;">No items recorded.</td></tr>'
 
         cards_html += f"""
-    <!-- ═══ FLIGHT CARD: {flt} ═══ -->
-    <div style="margin-top:16px; border-radius:10px; overflow:hidden;
-                border:1px solid #c7d4f0; font-family:Calibri,Arial,sans-serif;">
-
-      <!-- Header bar -->
-      <div style="background:linear-gradient(90deg,#0b3a78,#1a56b0);
-                  padding:10px 14px; display:flex; align-items:center;
-                  justify-content:space-between; flex-wrap:wrap; gap:8px;">
-        <div style="display:flex; align-items:center; gap:18px; flex-wrap:wrap;">
+    <div style="margin-top:16px;border-radius:10px;overflow:hidden;border:1px solid #c7d4f0;font-family:Calibri,Arial,sans-serif;">
+      <div style="background:linear-gradient(90deg,#0b3a78,#1a56b0);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap;">
           <span style="color:#fff;font-weight:800;font-size:15px;">✈ {flt}</span>
-          <span style="color:#93c5fd;font-size:12px;">
-            <strong style="color:#fff;">Date:</strong> {date}
-          </span>
-          <span style="color:#93c5fd;font-size:12px;">
-            <strong style="color:#fff;">STD:</strong> {std}
-          </span>
-          <span style="color:#93c5fd;font-size:12px;">
-            <strong style="color:#fff;">ETD:</strong> {etd}
-          </span>
-          <span style="color:#93c5fd;font-size:12px;">
-            <strong style="color:#fff;">DEST:</strong>
-            <strong style="color:#fbbf24;font-size:13px;"> {dest}</strong>
-          </span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">Date:</strong> {date}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">STD:</strong> {std}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">ETD:</strong> {etd}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">DEST:</strong> <strong style="color:#fbbf24;font-size:13px;">{dest}</strong></span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <a href="{update_link}" target="_blank" rel="noopener"
-             style="background:#ef4444;color:#fff;padding:5px 14px;border-radius:6px;
-                    font-size:11px;font-weight:700;text-decoration:none;
-                    border:none;letter-spacing:.5px;">⟳ UPDATE</a>
+             style="background:#ef4444;color:#fff;padding:5px 14px;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;letter-spacing:.5px;">⟳ UPDATE</a>
           <span style="color:#bfdbfe;font-size:11px;">Updated: {now_str}</span>
         </div>
       </div>
-
-      <!-- Status bar -->
-      <div style="background:#f0f5ff; padding:8px 14px; border-bottom:1px solid #dde6f5;
-                  font-size:12px; color:#374151; display:flex; gap:20px; flex-wrap:wrap;">
+      <div style="background:#f0f5ff;padding:8px 14px;border-bottom:1px solid #dde6f5;font-size:12px;color:#374151;display:flex;gap:20px;flex-wrap:wrap;">
         <span>Email: <strong style="color:#f97316;">Pending</strong></span>
         <span>Ramp Received: <strong style="color:#f97316;">Pending</strong></span>
         <span>CMS Completed: <strong style="color:#f97316;">Pending</strong></span>
         <span>Pieces Verified: <strong style="color:#f97316;">Pending</strong></span>
         <span>Remarks: <strong style="color:#374151;">—</strong></span>
       </div>
-
-      <!-- Table -->
       <div style="overflow-x:auto;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0"
                style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:12px;">
           <tr style="background:#0b3a78;">
-            <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;
-                       text-align:center;width:32px;">#</td>
+            <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;width:32px;">#</td>
             <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;">AWB</td>
-            <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;
-                       text-align:center;">PCS</td>
-            <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;
-                       text-align:center;">KGS</td>
-            <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;
-                       text-align:center;">Priority</td>
+            <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">PCS</td>
+            <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">KGS</td>
+            <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">Priority</td>
             <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;">Description</td>
-            <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;
-                       text-align:center;">ULD</td>
+            <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">ULD</td>
             <td style="padding:8px 7px;color:#fff;font-weight:700;border:1px solid #0a3166;">Offloading Reason</td>
           </tr>
           {rows_html}
         </table>
       </div>
-
-      <!-- Footer totals -->
-      <div style="background:#f8faff; padding:9px 14px; border-top:1px solid #dde6f5;
-                  font-size:12px; color:#1b1f2a; font-weight:600;">
+      <div style="background:#f8faff;padding:9px 14px;border-top:1px solid #dde6f5;font-size:12px;color:#1b1f2a;font-weight:600;">
         Total Shipments: <strong style="color:#0b3a78;">{total_shipments}</strong>
-        &nbsp;|&nbsp;
-        Total PCS: <strong style="color:#0b3a78;">{total_pcs}</strong>
-        &nbsp;|&nbsp;
-        Total KGS: <strong style="color:#0b3a78;">{total_kgs:g}</strong>
+        &nbsp;|&nbsp; Total PCS: <strong style="color:#0b3a78;">{total_pcs}</strong>
+        &nbsp;|&nbsp; Total KGS: <strong style="color:#0b3a78;">{total_kgs:g}</strong>
       </div>
-
     </div>"""
 
     return cards_html
 
-
 def _render_manpower_section(roster: dict) -> str:
-    """Render Section 6 MANPOWER exactly like index1.html."""
-    on_duty  = roster.get("on_duty",  [])
-    on_leave = roster.get("on_leave", [])
+    """Render Section 6 MANPOWER with sections B-G."""
+    on_duty = roster.get("on_duty", [])
 
-    if not on_duty and not on_leave:
-        return """
-          <strong style="color:#0b3a78;">On Duty:</strong>
-          <ul style="margin:4px 0 10px 20px; padding:0;">
-            <li style="color:#64748b;">No roster data available for this date.</li>
-          </ul>"""
+    td_style  = "font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.8;"
+    hdr_style = "color:#0b3a78;font-weight:700;font-size:13px;"
+    ul_style  = "margin:3px 0 12px 20px;padding:0;"
+    nil       = '<li style="color:#64748b;">NIL</li>'
 
-    # Group on-duty by dept
-    from collections import OrderedDict
-    by_dept: dict[str, list] = OrderedDict()
-    for emp in on_duty:
-        by_dept.setdefault(emp["dept"], []).append(emp)
+    # B) CTU Staff — بدون Support
+    ctu_emps = [e for e in on_duty if "support" not in (e.get("name","") + e.get("dept","")).lower()]
+    ctu_li = ""
+    for emp in ctu_emps:
+        sn = f"SN {emp['sn']} — " if emp.get("sn") else ""
+        ctu_li += f"<li>{sn}{emp['name']} <em style='color:#64748b;'>({emp['dept']})</em></li>\n"
 
-    left_html = ""
-    for dept, emps in by_dept.items():
-        items_li = ""
-        for emp in emps:
-            sn = f"SN {emp['sn']} " if emp["sn"] else ""
-            items_li += f"<li>{sn}{emp['name']} — <em>{dept}</em></li>\n"
-        left_html += f"""
-          <strong style="color:#0b3a78;">{dept}:</strong>
-          <ul style="margin:4px 0 10px 20px; padding:0;">
-            {items_li}
-          </ul>"""
+    # C) Support Team
+    support_emps = [e for e in on_duty if "support" in (e.get("name","") + e.get("dept","")).lower()]
+    sup_li = ""
+    for emp in support_emps:
+        sn = f"SN {emp['sn']} — " if emp.get("sn") else ""
+        sup_li += f"<li>{sn}{emp['name']}</li>\n"
 
-    if not left_html:
-        left_html = '<p style="color:#64748b; margin:4px 0;">NIL</p>'
+    if not on_duty:
+        ctu_li = '<li style="color:#64748b;">No roster data available for this date.</li>'
 
-    leave_li = ""
-    for emp in on_leave:
-        sn = f"SN {emp['sn']} " if emp["sn"] else ""
-        leave_li += f"<li>{sn}{emp['name']} — <em>{emp.get('status','Leave')}</em></li>\n"
+    nil_item = nil
 
-    right_html = f"""
-          <strong style="color:#0b3a78;">Leave / Off Day:</strong>
-          <ul style="margin:4px 0 10px 20px; padding:0;">
-            {leave_li if leave_li else '<li>NIL</li>'}
-          </ul>"""
+    section_b = f'''
+      <strong style="{hdr_style}">B) CTU Staff On Duty:</strong>
+      <ul style="{ul_style}">{ctu_li if ctu_li else nil_item}</ul>'''
+
+    section_c = f'''
+      <strong style="{hdr_style}">C) Support Team:</strong>
+      <ul style="{ul_style}">{sup_li if sup_li else nil_item}</ul>'''
+
+    section_d = f'''
+      <strong style="{hdr_style}">D) Sick Leave / No Show / Others:</strong>
+      <ul style="{ul_style}">{nil_item}</ul>'''
+
+    section_e = f'''
+      <strong style="{hdr_style}">E) Annual Leave / Course / Off in Lieu:</strong>
+      <ul style="{ul_style}">{nil_item}</ul>'''
+
+    section_f = f'''
+      <strong style="{hdr_style}">F) Trainee:</strong>
+      <ul style="{ul_style}">{nil_item}</ul>'''
+
+    section_g = f'''
+      <strong style="{hdr_style}">G) Overtime Justification:</strong>
+      <ul style="{ul_style}">{nil_item}</ul>'''
 
     return f"""
-        <td width="50%" valign="top" style="padding-right:10px; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; line-height:1.7;">
-          {left_html}
-        </td>
-        <td width="50%" valign="top" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; line-height:1.7;">
-          {right_html}
+        <td colspan="2" valign="top" style="{td_style}">
+          {section_b}
+          {section_c}
+          {section_d}
+          {section_e}
+          {section_f}
+          {section_g}
         </td>"""
-
 
 def build_shift_report(date_dir: str, shift: str) -> None:
     folder = DATA_DIR / date_dir / shift
@@ -2151,8 +2100,8 @@ def build_root_index(now: datetime) -> None:
     if not DOCS_DIR.exists():
         return
 
-    today         = now.strftime("%Y-%m-%d")
-    last_updated  = now.strftime("%Y-%m-%d %H:%M")
+    today        = now.strftime("%Y-%m-%d")
+    last_updated = now.strftime("%Y-%m-%d %H:%M")
 
     day_dirs = sorted(
         (p for p in DOCS_DIR.iterdir()
@@ -2530,7 +2479,6 @@ def main() -> None:
         flights = flights_today
     else:
         print(f"WARNING: No flights match today ({today_iso}). Keeping all {len(flights)} flight(s) as fallback.")
-        # نكمل بكل الرحلات كـ fallback بدل ما تكون الصفحة فارغة
 
     # ── Enrich with AirLabs ──
     if os.environ.get("AIRLABS_API_KEY", "").strip():
