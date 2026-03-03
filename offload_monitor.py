@@ -1637,59 +1637,60 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     return cards_html
 
 def _render_manpower_section(roster: dict) -> str:
-    """Render Section 6 MANPOWER with sections B-G."""
+    """Render Section 6 MANPOWER — full list then B-G sections."""
     on_duty = roster.get("on_duty", [])
 
     td_style  = "font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.8;"
     hdr_style = "color:#0b3a78;font-weight:700;font-size:13px;"
     ul_style  = "margin:3px 0 12px 20px;padding:0;"
-    nil       = '<li style="color:#64748b;">NIL</li>'
+    nil_item  = '<li style="color:#64748b;">NIL</li>'
 
-    # B) CTU Staff — بدون Support
-    ctu_emps = [e for e in on_duty if "support" not in (e.get("name","") + e.get("dept","")).lower()]
-    ctu_li = ""
-    for emp in ctu_emps:
+    # ── القائمة الكاملة للموظفين (بدون عنوان) ──
+    all_li = ""
+    for emp in on_duty:
         sn = f"SN {emp['sn']} — " if emp.get("sn") else ""
-        ctu_li += f"<li>{sn}{emp['name']} <em style='color:#64748b;'>({emp['dept']})</em></li>\n"
+        all_li += f"<li>{sn}{emp['name']} <em style='color:#64748b;'>({emp['dept']})</em></li>\n"
 
-    # C) Support Team
+    if not all_li:
+        all_li = '<li style="color:#64748b;">No roster data available for this date.</li>'
+
+    all_staff_html = f"""
+      <ul style="{ul_style}">{all_li}</ul>"""
+
+    # ── C) Support Team ──
     support_emps = [e for e in on_duty if "support" in (e.get("name","") + e.get("dept","")).lower()]
     sup_li = ""
     for emp in support_emps:
         sn = f"SN {emp['sn']} — " if emp.get("sn") else ""
         sup_li += f"<li>{sn}{emp['name']}</li>\n"
 
-    if not on_duty:
-        ctu_li = '<li style="color:#64748b;">No roster data available for this date.</li>'
-
-    nil_item = nil
-
-    section_b = f'''
+    section_b = f"""
       <strong style="{hdr_style}">B) CTU Staff On Duty:</strong>
-      <ul style="{ul_style}">{ctu_li if ctu_li else nil_item}</ul>'''
+      <ul style="{ul_style}">{nil_item}</ul>"""
 
-    section_c = f'''
+    section_c = f"""
       <strong style="{hdr_style}">C) Support Team:</strong>
-      <ul style="{ul_style}">{sup_li if sup_li else nil_item}</ul>'''
+      <ul style="{ul_style}">{sup_li if sup_li else nil_item}</ul>"""
 
-    section_d = f'''
+    section_d = f"""
       <strong style="{hdr_style}">D) Sick Leave / No Show / Others:</strong>
-      <ul style="{ul_style}">{nil_item}</ul>'''
+      <ul style="{ul_style}">{nil_item}</ul>"""
 
-    section_e = f'''
+    section_e = f"""
       <strong style="{hdr_style}">E) Annual Leave / Course / Off in Lieu:</strong>
-      <ul style="{ul_style}">{nil_item}</ul>'''
+      <ul style="{ul_style}">{nil_item}</ul>"""
 
-    section_f = f'''
+    section_f = f"""
       <strong style="{hdr_style}">F) Trainee:</strong>
-      <ul style="{ul_style}">{nil_item}</ul>'''
+      <ul style="{ul_style}">{nil_item}</ul>"""
 
-    section_g = f'''
+    section_g = f"""
       <strong style="{hdr_style}">G) Overtime Justification:</strong>
-      <ul style="{ul_style}">{nil_item}</ul>'''
+      <ul style="{ul_style}">{nil_item}</ul>"""
 
     return f"""
         <td colspan="2" valign="top" style="{td_style}">
+          {all_staff_html}
           {section_b}
           {section_c}
           {section_d}
