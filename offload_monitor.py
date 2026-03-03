@@ -31,7 +31,7 @@ ONEDRIVE_URL: str = os.environ["ONEDRIVE_FILE_URL"]
 TIMEZONE: str     = "Asia/Muscat"
 
 # إذا كنت تريد إجبار بناء التقرير حتى لو الـ hash لم يتغير (مفيد للتجارب/التشخيص)
-FORCE_REBUILD: bool = os.getenv("FORCE_REBUILD", "").strip().lower() in ("1", "true", "yes", "y")
+FORCE_REBUILD: bool = True
 
 DATA_DIR:   Path = Path("data")
 STATE_FILE: Path = Path("state.txt")
