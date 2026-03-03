@@ -1523,90 +1523,162 @@ def _render_manpower(roster: dict) -> str:
 # ══════════════════════════════════════════════════════════════════
 
 def _render_offload_table(flights: list[dict], meta: dict) -> str:
-    """Render the compact offload table (Section 4 style from index1.html).
-    One row per shipment across all flights.
-    Columns: # | Date | Flight | STD | Dest | Email | Ramp | ULD | CMS | Pcs | Reason | Remarks
+    """Render offload as flight cards (same style as the monitor page).
+    Only rows with actual AWB or reason are shown — no empty rows.
     """
-    rows_html = ""
-    row_num = 0
+    if not flights:
+        return """
+    <div style="margin-top:10px; font-family:Calibri,Arial,sans-serif; font-size:12.5px; color:#64748b;">
+      NIL — No offload data recorded for this shift.
+    </div>"""
+
+    cards = ""
     for flight in flights:
-        flt  = flight.get("flight", "") or "—"
-        date = flight.get("date", "")   or "—"
-        dest = flight.get("destination", "") or "—"
+        flt     = flight.get("flight", "") or "—"
+        date    = flight.get("date", "")   or "—"
+        dest    = flight.get("destination", "") or "—"
         std_raw = flight.get("std_etd", "") or ""
-        std_val, _ = _format_std_etd(std_raw)
+        std_val, etd_val = _format_std_etd(std_raw)
         std = std_val or "—"
+        etd = etd_val or "—"
 
-        items = flight.get("items", [])
-        if not items:
-            # one empty row per flight even if no items
-            items = [{}]
+        # ops fields
+        email    = (flight.get("email_time") or flight.get("email") or "").strip() or "Pending"
+        physical = (flight.get("physical") or "").strip() or "Pending"
+        cms      = (flight.get("cms") or "").strip() or "Pending"
+        verified = (flight.get("trolley") or "").strip() or "Pending"
+        remarks  = (flight.get("remarks") or "").strip() or "—"
 
-        for it in items:
-            row_num += 1
-            bg = "#f0f5ff" if row_num % 2 == 1 else "#ffffff"
-            awb    = it.get("awb", "")         or "&nbsp;"
-            pcs    = it.get("pcs", "")         or "&nbsp;"
-            email  = it.get("email", "")       or "&nbsp;"
-            ramp   = it.get("physical", "")    or "&nbsp;"
-            uld    = it.get("trolley", "")     or "&nbsp;"
-            cms    = it.get("cms", "")         or "&nbsp;"
-            reason = it.get("reason", "")      or "&nbsp;"
-            rmk    = it.get("remarks", "")     or "&nbsp;"
+        def status_span(v):
+            if v and v not in ("Pending", "—"):
+                return f'<span style="font-weight:700;color:#1a7a3c;">{v}</span>'
+            if v == "—":
+                return f'<span style="font-weight:700;color:#1b1f2a;">—</span>'
+            return f'<span style="font-weight:700;color:#b26a00;">Pending</span>'
 
+        # Only real rows (have AWB or reason)
+        items = [it for it in flight.get("items", [])
+                 if (it.get("awb") or "").strip() or (it.get("reason") or "").strip()]
+
+        rows = ""
+        for idx, it in enumerate(items, 1):
+            bg  = "#ffffff" if idx % 2 == 1 else "#f8faff"
+            rsn = it.get("reason", "")
+            cls_ = it.get("class_", "")
             reason_cell = (
-                f'<span style="display:inline-block;padding:1px 5px;border-radius:4px;'
+                f'<span style="display:inline-block;padding:2px 6px;border-radius:6px;'
                 f'background:#fff7ed;border:1px solid #fed7aa;color:#c2410c;'
-                f'font-size:10px;font-weight:700;white-space:nowrap;">{reason}</span>'
-                if reason.strip() and reason != "&nbsp;" else "&nbsp;"
+                f'font-size:10.5px;font-weight:700;white-space:nowrap;">{rsn}</span>'
+                if rsn else "—"
             )
+            class_cell = (
+                f'<span style="display:inline-block;padding:2px 6px;border-radius:6px;'
+                f'background:#ede9fe;border:1px solid #c4b5fd;color:#5b21b6;'
+                f'font-size:10.5px;font-weight:700;">{cls_}</span>'
+                if cls_ else "—"
+            )
+            rows += f"""
+            <tr style="background-color:{bg};">
+              <td style="padding:7px 6px;border-bottom:1px solid #e4e9f5;">{idx}</td>
+              <td style="padding:7px 6px;border-bottom:1px solid #e4e9f5;">{it.get('awb','') or '—'}</td>
+              <td style="padding:7px 6px;border-bottom:1px solid #e4e9f5;font-weight:700;">{it.get('pcs','') or '—'}</td>
+              <td style="padding:7px 6px;border-bottom:1px solid #e4e9f5;">{it.get('kgs','') or '—'}</td>
+              <td style="padding:7px 6px;border-bottom:1px solid #e4e9f5;">{class_cell}</td>
+              <td style="padding:7px 6px;border-bottom:1px solid #e4e9f5;">{it.get('description','') or '—'}</td>
+              <td style="padding:7px 6px;border-bottom:1px solid #e4e9f5;">{it.get('trolley','') or '—'}</td>
+              <td style="padding:7px 6px;border-bottom:1px solid #e4e9f5;">{reason_cell}</td>
+            </tr>"""
 
-            rows_html += f"""
-      <tr style="background-color:{bg};">
-        <td style="padding:8px 6px; border:1px solid #d0d9ee; color:#1b1f2a; font-weight:700; text-align:center;">{row_num}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee; font-family:Calibri,Arial,sans-serif; font-size:11.5px;">{date}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee; font-weight:700; color:#0b3a78;">{flt}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee;">{std}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee; font-weight:700;">{dest}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee;">{email}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee;">{ramp}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee;">{uld}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee;">{cms}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee; font-weight:700;">{pcs}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee;">{reason_cell}</td>
-        <td style="padding:8px 6px; border:1px solid #d0d9ee;">{rmk}</td>
-      </tr>"""
+        if not rows:
+            rows = '<tr><td colspan="8" style="padding:10px 6px;color:#64748b;text-align:center;">No shipment data</td></tr>'
 
-    if not rows_html:
-        rows_html = """
-      <tr><td colspan="12" style="padding:14px 6px; border:1px solid #d0d9ee;
-          color:#64748b; text-align:center; font-family:Calibri,Arial,sans-serif;">
-        NIL — No offload data recorded for this shift.
-      </td></tr>"""
+        # totals
+        def safe_sum(key):
+            t = 0.0
+            for it in items:
+                try: t += float(re.sub(r"[^\d.]","", it.get(key,"") or "0") or 0)
+                except: pass
+            return t
+
+        real_shp = sum(1 for it in items if (it.get("awb") or "").strip())
+        tot_pcs  = int(safe_sum("pcs"))
+        tot_kgs  = safe_sum("kgs")
+
+        cards += f"""
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="border-collapse:collapse; margin-bottom:12px;">
+  <!-- Flight header -->
+  <tr>
+    <td style="background-color:#0b3a78; padding:8px 10px; border:1px solid #0a3166;
+               font-family:Calibri,Arial,sans-serif; color:#fff; font-size:12px; white-space:nowrap;">
+      <span style="font-weight:700;">✈ {flt}</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      Date: <span style="font-weight:700;">{date}</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      STD: <span style="font-weight:700;">{std}</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      ETD: <span style="font-weight:700;">{etd}</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      DEST: <span style="font-weight:700;">{dest}</span>
+    </td>
+  </tr>
+  <!-- Ops row -->
+  <tr>
+    <td style="background-color:#f8faff; padding:6px 10px;
+               border-left:1px solid #d0d9ee; border-right:1px solid #d0d9ee; border-bottom:1px solid #d0d9ee;
+               font-family:Calibri,Arial,sans-serif; font-size:10.5px; color:#1b1f2a;">
+      Email: {status_span(email)}
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      Ramp Received: {status_span(physical)}
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      CMS Completed: {status_span(cms)}
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      Pieces Verified: {status_span(verified)}
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      Remarks: <span style="font-weight:700;">{remarks}</span>
+    </td>
+  </tr>
+  <!-- Shipments -->
+  <tr>
+    <td style="padding:0; border-left:1px solid #d0d9ee; border-right:1px solid #d0d9ee;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; font-size:11.2px;">
+        <tr style="background-color:#eef3fc;">
+          <td style="padding:6px;border-bottom:1px solid #d0d9ee;color:#0b3a78;font-weight:700;">Item</td>
+          <td style="padding:6px;border-bottom:1px solid #d0d9ee;color:#0b3a78;font-weight:700;">AWB</td>
+          <td style="padding:6px;border-bottom:1px solid #d0d9ee;color:#0b3a78;font-weight:700;">PCS</td>
+          <td style="padding:6px;border-bottom:1px solid #d0d9ee;color:#0b3a78;font-weight:700;">KGS</td>
+          <td style="padding:6px;border-bottom:1px solid #d0d9ee;color:#0b3a78;font-weight:700;">Priority</td>
+          <td style="padding:6px;border-bottom:1px solid #d0d9ee;color:#0b3a78;font-weight:700;">Description</td>
+          <td style="padding:6px;border-bottom:1px solid #d0d9ee;color:#0b3a78;font-weight:700;">ULD</td>
+          <td style="padding:6px;border-bottom:1px solid #d0d9ee;color:#0b3a78;font-weight:700;">Offloading Reason</td>
+        </tr>
+        {rows}
+        <tr style="background-color:#eef3fc;">
+          <td colspan="8" style="padding:7px 10px;border-top:2px solid #0b3a78;
+              font-family:Calibri,Arial,sans-serif;font-size:11.5px;font-weight:700;color:#0b3a78;">
+            Total Shipments: {real_shp}
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            Total PCS: {tot_pcs or '—'}
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            Total KGS: {f"{tot_kgs:g}" or '—'}
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="border-left:1px solid #d0d9ee;border-right:1px solid #d0d9ee;
+               border-bottom:1px solid #d0d9ee;font-size:1px;line-height:1px;">&nbsp;</td>
+  </tr>
+</table>"""
 
     return f"""
-    <!-- Offload Table -->
-    <div style="margin-top:12px; font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; margin-bottom:6px;">
+    <div style="margin-top:12px; font-family:Calibri,Arial,sans-serif;
+                font-size:12px; font-weight:700; color:#0b3a78; margin-bottom:8px;">
       Offload Record:
     </div>
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; font-size:11.5px;">
-      <tr style="background-color:#0b3a78;">
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">#</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">Date</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">Flight</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">STD</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">Dest</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">Email Time</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">Ramp Time</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">ULD</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">CMS</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">Pcs</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">Reason</td>
-        <td style="padding:7px 6px; color:#fff; font-weight:700; border:1px solid #0a3166;">Remarks</td>
-      </tr>
-      {rows_html}
-    </table>"""
+    {cards}"""
 
 
 def _render_manpower_section(roster: dict) -> str:
