@@ -2500,7 +2500,11 @@ def main() -> None:
     if STATE_FILE.exists():
         old_hash = STATE_FILE.read_text(encoding="utf-8").strip()
         if old_hash == new_hash and not FORCE_REBUILD:
-            print("No change detected, but rebuilding reports anyway…")
+            print("No change detected — rebuilding all existing reports…")
+            for date_dir_p in sorted(p for p in DATA_DIR.iterdir() if p.is_dir()):
+                for shift in ("shift1", "shift2", "shift3"):
+                    if (date_dir_p / shift).exists():
+                        build_shift_report(date_dir_p.name, shift)
             build_root_index(now)
             STATE_FILE.write_text(new_hash, encoding="utf-8")
             return
