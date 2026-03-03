@@ -1,0 +1,12 @@
+{
+  "flights": {
+    "wy101_26-Feb_LHR.json": {
+      "flight": "wy101",
+      "date": "26-Feb",
+      "dest": "LHR",
+      "created_at": "2026-03-03T14:52:48.274540+04:00",
+      "updated_at": "2026-03-03T14:52:48.274540+04:00",
+      "updates": 0
+    }
+  }
+}
