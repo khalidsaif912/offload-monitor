@@ -1,559 +1,437 @@
-<!doctype html>
-<html lang="en">
+<!DOCTYPE html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Offload Monitor — 2026-03-02 — shift2</title>
-    <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
-
-    :root {
-        --bg:        #f1f5fb;
-        --card:      #ffffff;
-        --border:    #e2e8f4;
-        --blue:      #2563eb;
-        --blue-dk:   #1d4ed8;
-        --blue-hd:   #0f2660;
-        --navy:      #0a1f52;
-        --sky:       #e8f0fe;
-        --text:      #0f1f3d;
-        --muted:     #64748b;
-        --amber:     #f59e0b;
-        --amber-bg:  #fffbeb;
-        --amber-br:  #fde68a;
-        --row-alt:   #f8fafd;
-        --total-bg:  #eff6ff;
-        --green:     #059669;
-        --green-bg:  #ecfdf5;
-        --red:       #dc2626;
-        --shadow-sm: 0 1px 4px rgba(15,31,61,.07);
-        --shadow-md: 0 4px 20px rgba(15,31,61,.10);
-        --shadow-lg: 0 8px 32px rgba(15,31,61,.13);
-        --radius:    14px;
-    }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    body {
-        background: var(--bg);
-        font-family: 'Inter', system-ui, sans-serif;
-        color: var(--text);
-        font-size: 13px;
-        line-height: 1.5;
-        -webkit-font-smoothing: antialiased;
-    }
-
-    /* ─── TOP HEADER ─── */
-    .page-header {
-        background: linear-gradient(135deg, var(--navy) 0%, #1a3a8f 55%, #2251c9 100%);
-        color: #fff;
-        padding: 16px 20px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-        box-shadow: 0 2px 16px rgba(10,31,82,.35);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-    }
-
-    .hdr-left { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-
-    .btn-back {
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        background: rgba(255,255,255,.12);
-        border: 1px solid rgba(255,255,255,.22);
-        color: #fff;
-        text-decoration: none;
-        padding: 7px 12px;
-        border-radius: 9px;
-        font-size: 12px;
-        font-weight: 700;
-        white-space: nowrap;
-        transition: background .15s;
-    }
-    .btn-back:hover { background: rgba(255,255,255,.22); }
-
-    .page-header h1   { font-size: 17px; font-weight: 800; letter-spacing: -.2px; }
-    .page-header .sub { font-size: 11.5px; opacity: .7; margin-top: 2px; }
-
-    .hdr-stats { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-
-    .stat-box {
-        background: rgba(255,255,255,.12);
-        border: 1px solid rgba(255,255,255,.2);
-        border-radius: 10px;
-        padding: 6px 16px;
-        text-align: center;
-        font-size: 11px;
-        font-weight: 600;
-        color: rgba(255,255,255,.85);
-        white-space: nowrap;
-    }
-    .stat-box strong { display: block; font-size: 20px; font-weight: 800; color: #fff; line-height: 1.2; }
-
-    /* ─── MAIN WRAP ─── */
-    .wrap {
-        max-width: 1300px;
-        margin: 0 auto;
-        padding: 20px 14px 40px;
-        display: flex;
-        flex-direction: column;
-        gap: 18px;
-    }
-
-    /* ─── FLIGHT CARD ─── */
-    .flight-card {
-        background: var(--card);
-        border-radius: var(--radius);
-        border: 1px solid var(--border);
-        box-shadow: var(--shadow-md);
-        overflow: hidden;
-    }
-
-    /* ─── FLIGHT BANNER ─── */
-    .flt-banner {
-        background: linear-gradient(90deg, var(--navy) 0%, #1a3d8f 100%);
-        color: #fff;
-        padding: 11px 16px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-    }
-
-    .flt-banner-left {
-        display: flex;
-        align-items: center;
-        gap: 14px;
-        flex-wrap: wrap;
-    }
-
-    .flt-number {
-        font-family: 'JetBrains Mono', monospace;
-        font-size: 16px;
-        font-weight: 700;
-        letter-spacing: .3px;
-        white-space: nowrap;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .flt-number::before { content: "✈"; font-size: 13px; opacity: .8; }
-
-    .flt-chip {
-        background: rgba(255,255,255,.13);
-        border: 1px solid rgba(255,255,255,.2);
-        border-radius: 7px;
-        padding: 4px 10px;
-        font-size: 11.5px;
-        font-weight: 600;
-        display: inline-flex;
-        align-items: center;
-        gap: 5px;
-        white-space: nowrap;
-    }
-    .flt-chip .lbl {
-        color: rgba(255,255,255,.55);
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .5px;
-    }
-
-    .dest-chip {
-        background: rgba(37,99,235,.35);
-        border-color: rgba(96,165,250,.4);
-        font-size: 13px;
-        font-weight: 800;
-        letter-spacing: .5px;
-    }
-
-    .flt-banner-right {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-
-    .upd-flash {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        background: rgba(239,68,68,.15);
-        color: #fca5a5;
-        border: 1px solid rgba(239,68,68,.35);
-        font-size: 10px;
-        font-weight: 800;
-        padding: 3px 9px;
-        border-radius: 999px;
-        letter-spacing: .5px;
-        animation: updBlink 2.4s ease-in-out infinite;
-    }
-    @keyframes updBlink {
-        0%,25%  { opacity:0; }
-        35%,70% { opacity:1; }
-        80%,100%{ opacity:0; }
-    }
-
-    .last-upd {
-        font-size: 10px;
-        color: rgba(255,255,255,.45);
-        white-space: nowrap;
-    }
-
-    .stdtime { font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #fff; }
-    .etdsep  { color: rgba(255,255,255,.4); margin: 0 2px; }
-
-    .empty-field {
-        background: rgba(245,158,11,.15);
-        border: 1px dashed rgba(245,158,11,.5);
-        border-radius: 5px;
-        padding: 2px 7px;
-        font-size: 10.5px;
-        color: #fcd34d;
-        font-style: italic;
-    }
-
-    /* ─── CARGO TABLE ─── */
-    .cargo-table {
-        width: 100%;
-        border-collapse: collapse;
-    }
-
-    .cargo-table thead tr {
-        background: #f0f4fb;
-        border-bottom: 2px solid var(--border);
-    }
-    .cargo-table thead th {
-        padding: 7px 10px;
-        font-size: 10px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: .6px;
-        color: var(--muted);
-        text-align: center;
-        white-space: nowrap;
-        border-right: 1px solid var(--border);
-    }
-    .cargo-table thead th:last-child { border-right: none; }
-    .cargo-table thead th:first-child { text-align: left; }
-
-    .cargo-table tbody tr.row-cargo td {
-        padding: 8px 10px;
-        border-bottom: 1px solid #eef1f8;
-        border-right: 1px solid #eef1f8;
-        vertical-align: middle;
-        text-align: center;
-    }
-    .cargo-table tbody tr.row-cargo:last-child td { border-bottom: none; }
-    .cargo-table tbody tr.row-cargo td:last-child  { border-right: none; }
-    .cargo-table tbody tr.row-cargo td:first-child { text-align: left; padding-left: 14px; }
-    .cargo-table tbody tr.row-cargo:nth-child(even) td { background: var(--row-alt); }
-
-    /* ─── TOTALS ROW ─── */
-    .row-totals td {
-        background: var(--total-bg);
-        border-top: 2px solid #bfdbfe;
-        padding: 9px 14px;
-        font-weight: 700;
-        color: var(--blue-dk);
-        font-size: 12px;
-    }
-    .tot-stat {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        margin-right: 18px;
-    }
-    .tot-lbl { color: var(--muted); font-weight: 600; font-size: 11px; }
-    .tot-val { font-weight: 800; color: var(--blue-hd); }
-
-    /* ─── TAGS ─── */
-    .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
-    .dim  { color: var(--muted); }
-
-    .reason-tag {
-        display: inline-block;
-        background: #fff7ed;
-        color: #c2410c;
-        border: 1px solid #fed7aa;
-        border-radius: 6px;
-        padding: 2px 8px;
-        font-size: 11px;
-        font-weight: 700;
-        white-space: nowrap;
-    }
-
-    .class-tag {
-        display: inline-block;
-        background: #ede9fe;
-        color: #5b21b6;
-        border: 1px solid #c4b5fd;
-        border-radius: 6px;
-        padding: 2px 8px;
-        font-size: 11px;
-        font-weight: 700;
-    }
-
-    /* ─── FOOTER ─── */
-    .footer {
-        text-align: center;
-        color: var(--muted);
-        font-size: 11.5px;
-        padding-top: 4px;
-    }
-
-    /* ─── RESPONSIVE ─── */
-    @media (max-width: 700px) {
-        .page-header { padding: 12px 14px; }
-        .page-header h1 { font-size: 15px; }
-        .wrap { padding: 12px 10px 28px; gap: 14px; }
-        .flt-banner { padding: 10px 12px; }
-        .flt-number { font-size: 14px; }
-        .cargo-table thead { display: none; }
-        .cargo-table tbody tr.row-cargo {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0;
-            border-bottom: 2px solid var(--border);
-        }
-        .cargo-table tbody tr.row-cargo td {
-            text-align: left !important;
-            padding: 5px 10px;
-            border-right: none;
-        }
-        .cargo-table tbody tr.row-cargo td::before {
-            content: attr(data-label) " ";
-            font-size: 9px;
-            font-weight: 700;
-            color: var(--muted);
-            text-transform: uppercase;
-            display: block;
-        }
-        .row-totals td { padding: 8px 12px; }
-        .hdr-stats { display: none; }
-    }
-    </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Offload Report — 2026-03-02 — Afternoon</title>
 </head>
-<body>
-<div class="page-header">
-    <div class="hdr-left">
-        <a href="../../index.html" class="btn-back">← Back</a>
-        <div>
-            <h1>✈ Offload Monitor</h1>
-            <div class="sub">2026-03-02 &nbsp;·&nbsp; ظهر — 14:30 إلى 21:30</div>
-        </div>
-    </div>
-    <div class="hdr-stats">
-        <div class="stat-box"><strong>2</strong>Flights</div>
-        <div class="stat-box"><strong>12</strong>Shipments</div>
-    </div>
-</div>
-<div class="wrap">
-    
-<div class="flight-card">
-    <div class="flt-banner">
-        <div class="flt-banner-left">
-            <span class="flt-number">PC871</span>
-            <span class="flt-chip"><span class="lbl">DATE</span>26-Feb</span>
-            <span class="flt-chip"><span class="lbl">STD</span><span class="empty-field">STD…</span></span>
-            <span class="flt-chip dest-chip"><span class="lbl">DEST</span>SAW</span>
-        </div>
-        <div class="flt-banner-right">
-            
-            <span class="last-upd">Last: 2026-03-02 14:36</span>
-        </div>
-    </div>
-    <table class="cargo-table">
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>AWB</th>
-                <th>PCS</th>
-                <th>KGS</th>
-                <th>Priority</th>
-                <th style="text-align:left">Description</th>
-                <th>Trolley / ULD</th>
-                <th>Reason</th>
-            </tr>
-        </thead>
-        <tbody>
-            
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">1</td>
-                <td class="mono" data-label="AWB" style="text-align:left">624-51963730</td>
-                <td class="mono" data-label="PCS"><b>17</b></td>
-                <td class="mono" data-label="KGS">886.5</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">NICOTIANA TOBAC</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">OPERATIONAL REQUIREMENT</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">2</td>
-                <td class="mono" data-label="AWB" style="text-align:left">—</td>
-                <td class="mono" data-label="PCS"><b>—</b></td>
-                <td class="mono" data-label="KGS">—</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">—</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">CAPT APPROVED</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">3</td>
-                <td class="mono" data-label="AWB" style="text-align:left">624-52494142</td>
-                <td class="mono" data-label="PCS"><b>144</b></td>
-                <td class="mono" data-label="KGS">1015</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">MEN SHORT</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">OPERATIONAL REQUIREMENT</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">4</td>
-                <td class="mono" data-label="AWB" style="text-align:left">—</td>
-                <td class="mono" data-label="PCS"><b>—</b></td>
-                <td class="mono" data-label="KGS">—</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">—</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">CAPT APPROVED</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">5</td>
-                <td class="mono" data-label="AWB" style="text-align:left">703-13275835</td>
-                <td class="mono" data-label="PCS"><b>23</b></td>
-                <td class="mono" data-label="KGS">300</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">PANTS</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">OPERATIONAL REQUIREMENT</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">6</td>
-                <td class="mono" data-label="AWB" style="text-align:left">—</td>
-                <td class="mono" data-label="PCS"><b>—</b></td>
-                <td class="mono" data-label="KGS">—</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">—</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">CAPT APPROVED</span></td>
-            </tr>
-            <tr class="row-totals">
-                <td colspan="8">
-                    <span class="tot-stat"><span class="tot-lbl">SHIPMENTS</span><span class="tot-val">3</span></span>
-                    <span class="tot-stat"><span class="tot-lbl">TOTAL PCS</span><span class="tot-val">184</span></span>
-                    <span class="tot-stat"><span class="tot-lbl">TOTAL KGS</span><span class="tot-val">2201.5</span></span>
+<body style="margin:0; padding:0; background-color:#eef1f7; font-family:Calibri, Arial, sans-serif;">
+
+<!-- OUTER WRAPPER -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+       style="background-color:#eef1f7; padding:16px 0;">
+<tr><td align="left" style="padding:0 10px;">
+
+<!-- MAIN CONTAINER -->
+<table width="760" cellpadding="0" cellspacing="0" border="0"
+       style="width:760px; max-width:760px; background-color:#ffffff;
+              border:1px solid #d0d5e8;">
+
+  <!-- ═══ HEADER ═══ -->
+  <tr>
+    <td style="background-color:#0b3a78; padding:0;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td width="6" style="background-color:#1a6ecf; font-size:1px; line-height:1px;">&nbsp;</td>
+          <td style="padding:18px 22px 16px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <td>
+                  <div style="font-family:Calibri,Arial,sans-serif; font-size:19px; font-weight:700;
+                              color:#ffffff; letter-spacing:0.5px; line-height:1.2;">
+                    ✈&nbsp; Offload Monitor Report
+                  </div>
+                  <div style="font-family:Calibri,Arial,sans-serif; font-size:12.5px;
+                              color:#a8c4f0; margin-top:4px; letter-spacing:0.3px;">
+                    Date: <strong style="color:#d4e6ff;">2026-03-02</strong>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                    <strong style="color:#d4e6ff;">Afternoon Shift — 15:00 – 22:00</strong>
+                  </div>
                 </td>
-            </tr>
-        </tbody>
-    </table>
-</div>
-<div class="flight-card">
-    <div class="flt-banner">
-        <div class="flt-banner-left">
-            <span class="flt-number">wy101</span>
-            <span class="flt-chip"><span class="lbl">DATE</span>26-Feb</span>
-            <span class="flt-chip"><span class="lbl">STD</span><span class="empty-field">STD…</span></span>
-            <span class="flt-chip dest-chip"><span class="lbl">DEST</span>LHR</span>
-        </div>
-        <div class="flt-banner-right">
-            
-            <span class="last-upd">Last: 2026-03-02 15:22</span>
-        </div>
-    </div>
-    <table class="cargo-table">
-        <thead>
-            <tr>
-                <th>Item</th>
-                <th>AWB</th>
-                <th>PCS</th>
-                <th>KGS</th>
-                <th>Priority</th>
-                <th style="text-align:left">Description</th>
-                <th>Trolley / ULD</th>
-                <th>Reason</th>
-            </tr>
-        </thead>
-        <tbody>
-            
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">1</td>
-                <td class="mono" data-label="AWB" style="text-align:left">624-51963730</td>
-                <td class="mono" data-label="PCS"><b>17</b></td>
-                <td class="mono" data-label="KGS">886.5</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">NICOTIANA TOBAC</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">OPERATIONAL REQUIREMENT</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">2</td>
-                <td class="mono" data-label="AWB" style="text-align:left">—</td>
-                <td class="mono" data-label="PCS"><b>—</b></td>
-                <td class="mono" data-label="KGS">—</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">—</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">CAPT APPROVED</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">3</td>
-                <td class="mono" data-label="AWB" style="text-align:left">624-52494142</td>
-                <td class="mono" data-label="PCS"><b>144</b></td>
-                <td class="mono" data-label="KGS">1015</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">MEN SHORT</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">OPERATIONAL REQUIREMENT</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">4</td>
-                <td class="mono" data-label="AWB" style="text-align:left">—</td>
-                <td class="mono" data-label="PCS"><b>—</b></td>
-                <td class="mono" data-label="KGS">—</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">—</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">CAPT APPROVED</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">5</td>
-                <td class="mono" data-label="AWB" style="text-align:left">703-13275835</td>
-                <td class="mono" data-label="PCS"><b>23</b></td>
-                <td class="mono" data-label="KGS">300</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">PANTS</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">OPERATIONAL REQUIREMENT</span></td>
-            </tr>
-            <tr class="row-cargo">
-                <td class="mono" data-label="ITEM">6</td>
-                <td class="mono" data-label="AWB" style="text-align:left">—</td>
-                <td class="mono" data-label="PCS"><b>—</b></td>
-                <td class="mono" data-label="KGS">—</td>
-                <td data-label="PRIORITY"><span class="dim">—</span></td>
-                <td data-label="DESCRIPTION" style="text-align:left">—</td>
-                <td data-label="TROLLEY/ULD"><span class="dim">—</span></td>
-                <td data-label="REASON"><span class="reason-tag">CAPT APPROVED</span></td>
-            </tr>
-            <tr class="row-totals">
-                <td colspan="8">
-                    <span class="tot-stat"><span class="tot-lbl">SHIPMENTS</span><span class="tot-val">3</span></span>
-                    <span class="tot-stat"><span class="tot-lbl">TOTAL PCS</span><span class="tot-val">184</span></span>
-                    <span class="tot-stat"><span class="tot-lbl">TOTAL KGS</span><span class="tot-val">2201.5</span></span>
+                <td align="right" valign="middle" style="padding-right:4px; white-space:nowrap;">
+                  <div style="font-family:Calibri,Arial,sans-serif; font-size:11px;
+                              color:#6b9fd4; line-height:1.5; text-align:right;">
+                    <strong style="color:#a8c4f0;">2</strong>
+                    <span style="color:#6b9fd4;"> Flights</span><br>
+                    <strong style="color:#a8c4f0;">12</strong>
+                    <span style="color:#6b9fd4;"> Shipments</span><br>
+                    <strong style="color:#a8c4f0;">0</strong>
+                    <span style="color:#6b9fd4;"> On Duty</span>
+                  </div>
                 </td>
-            </tr>
-        </tbody>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ═══ BACK LINK + SUMMARY ═══ -->
+  <tr>
+    <td style="padding:12px 24px 8px 24px; background-color:#f8faff;
+               border-bottom:1px solid #e4e9f5;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td valign="middle">
+            <a href="../../index.html"
+               style="font-family:Calibri,Arial,sans-serif; font-size:12px;
+                      color:#0b3a78; font-weight:700; text-decoration:none;">
+              ← Back to Index
+            </a>
+          </td>
+          <td align="right" valign="middle" style="font-family:Calibri,Arial,sans-serif;
+              font-size:11.5px; color:#6b7a99;">
+            📦 Offload: <span id="shiftOffloadSummary">—</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ═══ SECTION: OFFLOAD RECORD ═══ -->
+  <tr><td style="padding:16px 24px 4px 24px;">
+
+    <!-- Section label -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#eef3fc;">
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700;
+                       color:#0b3a78; letter-spacing:1px; text-transform:uppercase;">
+            Offload Record
+          </span>
+        </td>
+      </tr>
     </table>
-</div>
-    <div class="footer">Generated automatically · 2026-03-02</div>
-</div>
+
+    <!-- Flight cards -->
+    <div style="margin-top:12px;">
+      
+<!-- ===== Flight Card: PC871 ===== -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="border-collapse:collapse; margin-bottom:14px;" data-offload-card="1" data-offload-flight="PC871">
+
+  <!-- Header row -->
+  <tr>
+    <td style="background-color:#0b3a78; padding:8px 10px; border:1px solid #0a3166;
+               font-family:Calibri,Arial,sans-serif; color:#ffffff; font-size:12px;
+               line-height:1.2; white-space:nowrap;">
+      <span style="font-weight:700;">✈ PC871</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      Date: <span style="font-weight:700;">26-Feb</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      STD: <span style="font-weight:700;">—</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      ETD: <span style="font-weight:700;">—</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      DEST: <span style="font-weight:700;">SAW</span>
+    </td>
+    <td align="right" style="background-color:#0b3a78; padding:8px 10px; border:1px solid #0a3166;
+               font-family:Calibri,Arial,sans-serif; color:#a8c4f0; font-size:11px; white-space:nowrap;">
+      Updated: <span style="color:#ffffff; font-weight:700;">2026-03-02 14:36</span>
+    </td>
+  </tr>
+
+  <!-- Ops status row -->
+  <tr>
+    <td colspan="2" style="background-color:#f8faff; padding:6px 10px;
+        border-left:1px solid #d0d9ee; border-right:1px solid #d0d9ee; border-bottom:1px solid #d0d9ee;
+        font-family:Calibri,Arial,sans-serif; font-size:10.5px; color:#1b1f2a;
+        white-space:nowrap; overflow:hidden;">
+      Email: <span style="font-weight:700; color:#b26a00;">Pending</span>
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      Ramp Received: <span style="font-weight:700; color:#b26a00;">Pending</span>
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      CMS Completed: <span style="font-weight:700; color:#b26a00;">Pending</span>
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      Pieces Verified: <span style="font-weight:700; color:#b26a00;">Pending</span>
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      Remarks: <span style="font-weight:700; color:#1b1f2a;">—</span>
+    </td>
+  </tr>
+
+  <!-- Shipments table -->
+  <tr>
+    <td colspan="2" style="padding:0; border-left:1px solid #d0d9ee; border-right:1px solid #d0d9ee;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; font-size:11.2px;">
+        <tr style="background-color:#eef3fc;">
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">Item</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">AWB</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">PCS</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">KGS</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">Priority</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">Description</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">ULD</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">Offloading Reason</td>
+        </tr>
+        
+            <tr data-offload-item="1" style="background-color:#ffffff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">1</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">624-51963730</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">17</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">886.5</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">NICOTIANA TOBAC</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">OPERATIONAL REQUIREMENT</span></td>
+            </tr>
+            <tr data-offload-item="2" style="background-color:#f8faff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">2</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">CAPT APPROVED</span></td>
+            </tr>
+            <tr data-offload-item="3" style="background-color:#ffffff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">3</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">624-52494142</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">144</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">1015</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">MEN SHORT</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">OPERATIONAL REQUIREMENT</span></td>
+            </tr>
+            <tr data-offload-item="4" style="background-color:#f8faff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">4</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">CAPT APPROVED</span></td>
+            </tr>
+            <tr data-offload-item="5" style="background-color:#ffffff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">5</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">703-13275835</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">23</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">300</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">PANTS</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">OPERATIONAL REQUIREMENT</span></td>
+            </tr>
+            <tr data-offload-item="6" style="background-color:#f8faff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">6</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">CAPT APPROVED</span></td>
+            </tr>
+        
+            <tr style="background-color:#eef3fc;">
+              <td colspan="8" style="padding:7px 10px; border-top:2px solid #0b3a78; font-family:Calibri,Arial,sans-serif; font-size:11.5px; font-weight:700; color:#0b3a78;">
+                Total Shipments: <span style="font-size:13px;">3</span>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                Total PCS: <span style="font-size:13px;">184</span>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                Total KGS: <span style="font-size:13px;">2201.5</span>
+              </td>
+            </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- Bottom border -->
+  <tr>
+    <td colspan="2" style="border-left:1px solid #d0d9ee; border-right:1px solid #d0d9ee;
+        border-bottom:1px solid #d0d9ee; font-size:1px; line-height:1px;">&nbsp;</td>
+  </tr>
+</table>
+<!-- ===== /Flight Card: PC871 ===== -->
+<!-- ===== Flight Card: wy101 ===== -->
+<table width="100%" cellpadding="0" cellspacing="0" border="0"
+  style="border-collapse:collapse; margin-bottom:14px;" data-offload-card="1" data-offload-flight="wy101">
+
+  <!-- Header row -->
+  <tr>
+    <td style="background-color:#0b3a78; padding:8px 10px; border:1px solid #0a3166;
+               font-family:Calibri,Arial,sans-serif; color:#ffffff; font-size:12px;
+               line-height:1.2; white-space:nowrap;">
+      <span style="font-weight:700;">✈ wy101</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      Date: <span style="font-weight:700;">26-Feb</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      STD: <span style="font-weight:700;">—</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      ETD: <span style="font-weight:700;">—</span>
+      <span style="color:#a8c4f0;">&nbsp;|&nbsp;</span>
+      DEST: <span style="font-weight:700;">LHR</span>
+    </td>
+    <td align="right" style="background-color:#0b3a78; padding:8px 10px; border:1px solid #0a3166;
+               font-family:Calibri,Arial,sans-serif; color:#a8c4f0; font-size:11px; white-space:nowrap;">
+      Updated: <span style="color:#ffffff; font-weight:700;">2026-03-02 15:22</span>
+    </td>
+  </tr>
+
+  <!-- Ops status row -->
+  <tr>
+    <td colspan="2" style="background-color:#f8faff; padding:6px 10px;
+        border-left:1px solid #d0d9ee; border-right:1px solid #d0d9ee; border-bottom:1px solid #d0d9ee;
+        font-family:Calibri,Arial,sans-serif; font-size:10.5px; color:#1b1f2a;
+        white-space:nowrap; overflow:hidden;">
+      Email: <span style="font-weight:700; color:#b26a00;">Pending</span>
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      Ramp Received: <span style="font-weight:700; color:#b26a00;">Pending</span>
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      CMS Completed: <span style="font-weight:700; color:#b26a00;">Pending</span>
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      Pieces Verified: <span style="font-weight:700; color:#b26a00;">Pending</span>
+      <span style="color:#8aa2c7;">&nbsp;&nbsp;|&nbsp;&nbsp;</span>
+      Remarks: <span style="font-weight:700; color:#1b1f2a;">—</span>
+    </td>
+  </tr>
+
+  <!-- Shipments table -->
+  <tr>
+    <td colspan="2" style="padding:0; border-left:1px solid #d0d9ee; border-right:1px solid #d0d9ee;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; font-size:11.2px;">
+        <tr style="background-color:#eef3fc;">
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">Item</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">AWB</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">PCS</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">KGS</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">Priority</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">Description</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">ULD</td>
+          <td style="padding:6px 6px; border-bottom:1px solid #d0d9ee; color:#0b3a78; font-weight:700;">Offloading Reason</td>
+        </tr>
+        
+            <tr data-offload-item="1" style="background-color:#ffffff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">1</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">624-51963730</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">17</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">886.5</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">NICOTIANA TOBAC</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">OPERATIONAL REQUIREMENT</span></td>
+            </tr>
+            <tr data-offload-item="2" style="background-color:#f8faff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">2</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">CAPT APPROVED</span></td>
+            </tr>
+            <tr data-offload-item="3" style="background-color:#ffffff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">3</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">624-52494142</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">144</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">1015</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">MEN SHORT</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">OPERATIONAL REQUIREMENT</span></td>
+            </tr>
+            <tr data-offload-item="4" style="background-color:#f8faff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">4</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">CAPT APPROVED</span></td>
+            </tr>
+            <tr data-offload-item="5" style="background-color:#ffffff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">5</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">703-13275835</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">23</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">300</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">PANTS</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">OPERATIONAL REQUIREMENT</span></td>
+            </tr>
+            <tr data-offload-item="6" style="background-color:#f8faff;">
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">6</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-weight:700;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5; font-family:Calibri,Arial,sans-serif;">—</td>
+              <td style="padding:7px 6px; border-bottom:1px solid #e4e9f5;"><span style="display:inline-block;padding:2px 6px;border-radius:6px;background-color:#fff7ed;border:1px solid #fed7aa;color:#c2410c;font-size:10.5px;font-weight:700;white-space:nowrap;">CAPT APPROVED</span></td>
+            </tr>
+        
+            <tr style="background-color:#eef3fc;">
+              <td colspan="8" style="padding:7px 10px; border-top:2px solid #0b3a78; font-family:Calibri,Arial,sans-serif; font-size:11.5px; font-weight:700; color:#0b3a78;">
+                Total Shipments: <span style="font-size:13px;">3</span>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                Total PCS: <span style="font-size:13px;">184</span>
+                &nbsp;&nbsp;|&nbsp;&nbsp;
+                Total KGS: <span style="font-size:13px;">2201.5</span>
+              </td>
+            </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- Bottom border -->
+  <tr>
+    <td colspan="2" style="border-left:1px solid #d0d9ee; border-right:1px solid #d0d9ee;
+        border-bottom:1px solid #d0d9ee; font-size:1px; line-height:1px;">&nbsp;</td>
+  </tr>
+</table>
+<!-- ===== /Flight Card: wy101 ===== -->
+    </div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:4px;"></div>
+  </td></tr>
+
+  
+
+  <!-- ═══ FOOTER ═══ -->
+  <tr>
+    <td style="padding:16px 24px 18px 24px; background-color:#f8faff;
+               border-top:2px solid #0b3a78;">
+      <div style="font-family:Calibri,Arial,sans-serif; font-size:11px;
+                  color:#8a9ab5; font-style:italic; text-align:center;">
+        Generated automatically · 2026-03-02 · Afternoon Shift — 15:00 – 22:00
+      </div>
+    </td>
+  </tr>
+
+  <!-- Bottom accent bar -->
+  <tr>
+    <td style="background-color:#0b3a78; height:5px; font-size:1px; line-height:1px;">&nbsp;</td>
+  </tr>
+
+</table><!-- /MAIN CONTAINER -->
+
+</td></tr>
+</table><!-- /OUTER WRAPPER -->
+
+<script>
+(function(){
+  var cards = document.querySelectorAll('[data-offload-card]');
+  var flights = new Set();
+  cards.forEach(function(c){
+    var f = c.getAttribute('data-offload-flight');
+    if (f) flights.add(f.trim());
+  });
+  var items = document.querySelectorAll('[data-offload-item]');
+  var missingAwb = 0;
+  items.forEach(function(row){
+    var cells = row.querySelectorAll('td');
+    var awb = (cells[1] && (cells[1].textContent||'').trim()) || '';
+    if (!awb || awb === '—') missingAwb++;
+  });
+  var el = document.getElementById('shiftOffloadSummary');
+  if (!el) return;
+  if (items.length === 0 && flights.size === 0) { el.textContent = 'NIL'; return; }
+  var fList = Array.from(flights);
+  el.textContent =
+    items.length + ' shipment' + (items.length !== 1 ? 's' : '') +
+    ' across ' + fList.length + ' flight' + (fList.length !== 1 ? 's' : '') +
+    ' (' + fList.join(', ') + ')' +
+    (missingAwb ? '. Missing AWB: ' + missingAwb : '');
+})();
+</script>
+
 </body>
 </html>
