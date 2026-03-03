@@ -2484,8 +2484,8 @@ def main() -> None:
     if STATE_FILE.exists():
         old_hash = STATE_FILE.read_text(encoding="utf-8").strip()
         if old_hash == new_hash and not FORCE_REBUILD:
-            print("No change detected. Exiting. (Set FORCE_REBUILD=1 to force rebuild)")
-            return
+            print("No change detected, but rebuilding reports anyway…")
+            build_root_index(now)
         if old_hash == new_hash and FORCE_REBUILD:
             print("No change detected, but FORCE_REBUILD=1 → continuing to rebuild.")
 
