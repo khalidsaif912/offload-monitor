@@ -33,7 +33,7 @@ jobs:
         env:
           ONEDRIVE_FILE_URL: ${{ secrets.ONEDRIVE_FILE_URL }}
           AIRLABS_API_KEY:   ${{ secrets.AIRLABS_API_KEY }}
-          FORCE_REBUILD:     ${{ github.event.inputs.force_rebuild || '0' }}
+          FORCE_REBUILD:     "${{ github.event.inputs.force_rebuild }}"
           RETRO_ENRICH:      ${{ github.event.inputs.retro_enrich  || '0' }}
         run: python offload_monitor.py
 
