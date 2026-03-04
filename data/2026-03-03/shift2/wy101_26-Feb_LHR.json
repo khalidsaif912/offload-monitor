@@ -1,7 +1,7 @@
 {
   "flight": "wy101",
   "date": "26-Feb",
-  "std_etd": "",
+  "std_etd": "14:25|14:29",
   "destination": "LHR",
   "format": "A",
   "items": [
@@ -66,5 +66,6 @@
       "trolley": ""
     }
   ],
-  "saved_at": "2026-03-03T15:38:32.482181+04:00"
+  "saved_at": "2026-03-03T15:38:32.482181+04:00",
+  "retro_enriched_at": "2026-03-04T17:13:15.244776+04:00"
 }
