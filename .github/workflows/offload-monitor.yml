@@ -31,10 +31,13 @@ jobs:
 
       - name: Run script
         env:
-          ONEDRIVE_FILE_URL: ${{ secrets.ONEDRIVE_FILE_URL }}
-          AIRLABS_API_KEY:   ${{ secrets.AIRLABS_API_KEY }}
-          FORCE_REBUILD:     "${{ github.event.inputs.force_rebuild }}"
-          RETRO_ENRICH:      "${{ github.event.inputs.retro_enrich }}"
+          ONEDRIVE_FILE_URL:   ${{ secrets.ONEDRIVE_FILE_URL }}
+          AIRLABS_API_KEY:     ${{ secrets.AIRLABS_API_KEY }}
+          FORCE_REBUILD:       "${{ github.event.inputs.force_rebuild }}"
+          RETRO_ENRICH:        "${{ github.event.inputs.retro_enrich }}"
+          EMAIL_SENDER:        ${{ secrets.EMAIL_SENDER }}
+          EMAIL_APP_PASSWORD:  ${{ secrets.EMAIL_APP_PASSWORD }}
+          EMAIL_RECIPIENTS:    ${{ secrets.EMAIL_RECIPIENTS }}
         run: python offload_monitor.py
 
       - name: Commit changes
