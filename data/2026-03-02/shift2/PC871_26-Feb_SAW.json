@@ -1,7 +1,7 @@
 {
   "flight": "PC871",
   "date": "26-Feb",
-  "std_etd": "",
+  "std_etd": "04:10",
   "destination": "SAW",
   "format": "A",
   "items": [
@@ -66,5 +66,6 @@
       "trolley": ""
     }
   ],
-  "saved_at": "2026-03-02T14:36:20.938489+04:00"
+  "saved_at": "2026-03-02T14:36:20.938489+04:00",
+  "retro_enriched_at": "2026-03-07T18:59:29.675577+04:00"
 }
