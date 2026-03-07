@@ -438,30 +438,103 @@
 <script>
 (function() {
   var copyBtn = document.getElementById('btn-copy');
+
+  function markCopied() {
+    if (!copyBtn) return;
+    copyBtn.innerText = '✅ Copied!';
+    copyBtn.style.background = '#059669';
+    setTimeout(function() {
+      copyBtn.innerText = '📋 Copy Report';
+      copyBtn.style.background = '#0b3a78';
+    }, 2500);
+  }
+
+  function markCopyFailed() {
+    if (!copyBtn) return;
+    copyBtn.innerText = '❌ Copy Failed';
+    copyBtn.style.background = '#dc2626';
+    setTimeout(function() {
+      copyBtn.innerText = '📋 Copy Report';
+      copyBtn.style.background = '#0b3a78';
+    }, 2500);
+  }
+
+  function buildCopyHtml() {
+    var report = document.getElementById('report-content');
+    if (!report) return '';
+    return ''
+      + '<table width="100%" cellpadding="0" cellspacing="0" border="0" '
+      + 'style="background-color:#eef1f7; border-collapse:collapse;">'
+      + '<tr><td align="left" style="padding:20px 10px;">'
+      + report.outerHTML
+      + '</td></tr></table>';
+  }
+
+  async function copyReportToClipboard() {
+    var report = document.getElementById('report-content');
+    if (!report) throw new Error('report-content not found');
+
+    var html = buildCopyHtml();
+    var text = (report.innerText || report.textContent || '').trim();
+
+    if (navigator.clipboard && window.ClipboardItem && navigator.clipboard.write) {
+      var item = new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([text], { type: 'text/plain' })
+      });
+      await navigator.clipboard.write([item]);
+      return;
+    }
+
+    var sandbox = document.createElement('div');
+    sandbox.setAttribute('contenteditable', 'true');
+    sandbox.style.position = 'fixed';
+    sandbox.style.left = '-99999px';
+    sandbox.style.top = '0';
+    sandbox.style.opacity = '0';
+    sandbox.style.pointerEvents = 'none';
+    sandbox.innerHTML = html;
+    document.body.appendChild(sandbox);
+
+    var selection = window.getSelection();
+    var range = document.createRange();
+    range.selectNodeContents(sandbox);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    var copied = false;
+    try {
+      copied = document.execCommand('copy');
+    } finally {
+      selection.removeAllRanges();
+      document.body.removeChild(sandbox);
+    }
+
+    if (copied) return;
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+
+    throw new Error('Clipboard API unavailable');
+  }
+
   if (copyBtn) {
     copyBtn.addEventListener('click', function() {
-      var el = document.getElementById('report-content');
-      var html = el ? el.outerHTML : document.body.innerHTML;
-      var full = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;}</style></head><body style="margin:0;padding:20px 0;background:#eef1f7;">' + html + '</body></html>';
+      copyBtn.disabled = true;
+      copyBtn.innerText = '⏳ Copying…';
+      copyBtn.style.background = '#64748b';
 
-      function markCopied() {
-        copyBtn.innerText = '✅ Copied!';
-        copyBtn.style.background = '#059669';
-        setTimeout(function() {
-          copyBtn.innerText = '📋 Copy Report';
-          copyBtn.style.background = '#0b3a78';
-        }, 2500);
-      }
-
-      navigator.clipboard.writeText(full).then(markCopied).catch(function() {
-        var ta = document.createElement('textarea');
-        ta.value = full;
-        document.body.appendChild(ta);
-        ta.select();
-        document.execCommand('copy');
-        document.body.removeChild(ta);
-        markCopied();
-      });
+      copyReportToClipboard()
+        .then(markCopied)
+        .catch(function(err) {
+          console.error('Copy failed:', err);
+          markCopyFailed();
+        })
+        .finally(function() {
+          copyBtn.disabled = false;
+        });
     });
   }
 
