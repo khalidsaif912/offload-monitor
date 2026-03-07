@@ -1,7 +1,7 @@
 {
   "flight": "WY171",
   "date": "03MAR26",
-  "std_etd": "14:55",
+  "std_etd": "14:55|14:58",
   "destination": "AMS",
   "format": "A",
   "items": [
@@ -17,5 +17,5 @@
     }
   ],
   "saved_at": "2026-03-03T15:46:57.881679+04:00",
-  "retro_enriched_at": "2026-03-07T14:38:12.885921+04:00"
+  "retro_enriched_at": "2026-03-08T01:03:52.340150+04:00"
 }

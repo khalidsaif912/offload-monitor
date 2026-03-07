@@ -1,7 +1,7 @@
 {
   "flight": "WY843",
   "date": "03MAR26",
-  "std_etd": "09:15|09:52",
+  "std_etd": "09:15",
   "destination": "MNL",
   "format": "A",
   "items": [
@@ -17,5 +17,5 @@
     }
   ],
   "saved_at": "2026-03-03T21:56:20.964365+04:00",
-  "retro_enriched_at": "2026-03-07T18:59:29.675577+04:00"
+  "retro_enriched_at": "2026-03-08T01:03:52.340150+04:00"
 }
