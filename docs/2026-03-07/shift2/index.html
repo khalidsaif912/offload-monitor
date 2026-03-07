@@ -194,12 +194,12 @@
           <span style="color:#fff;font-weight:800;font-size:15px;">✈ WY117</span>
           <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">Date:</strong> 04MAR26</span>
           <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">STD:</strong> 14:45</span>
-          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">ETD:</strong> 17:00</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">ETD:</strong> 16:55</span>
           <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">DEST:</strong> <strong style="color:#fbbf24;font-size:13px;">FRA</strong></span>
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="color:#b91c1c;font-size:12px;font-weight:700;">⟳ UPDATE</span>
-          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-07 12:50</span>
+          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-07 13:30</span>
         </div>
       </div>
       <!-- Status bar -->
@@ -451,23 +451,7 @@
 
   <!-- زر نسخ HTML المنسق -->
   <button id="btn-copy"
-    onclick="(function(){
-      var el = document.getElementById('report-content');
-      var html = el ? el.outerHTML : document.body.innerHTML;
-      var full = '<!DOCTYPE html><html><head><meta charset=utf-8><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;}</style></head><body style="margin:0;padding:20px 0;background:#eef1f7;">'+ html +'</body></html>';
-      navigator.clipboard.writeText(full).then(function(){
-        var b=document.getElementById('btn-copy');
-        b.innerText='✅ Copied!'; b.style.background='#059669';
-        setTimeout(function(){b.innerText='📋 Copy Report'; b.style.background='#0b3a78';},2500);
-      }).catch(function(){
-        var ta=document.createElement('textarea'); ta.value=full;
-        document.body.appendChild(ta); ta.select();
-        document.execCommand('copy'); document.body.removeChild(ta);
-        var b=document.getElementById('btn-copy');
-        b.innerText='✅ Copied!'; b.style.background='#059669';
-        setTimeout(function(){b.innerText='📋 Copy Report'; b.style.background='#0b3a78';},2500);
-      });
-    })()"
+    type="button"
     style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
            color:#fff; background:#0b3a78; border:none; border-radius:8px;
            padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(11,58,120,.25);">
@@ -476,41 +460,7 @@
 
   <!-- زر إرسال إيميل -->
   <button id="btn-email"
-    onclick="(function(){
-      if(!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift2\nDate: 2026-03-07')) return;
-      var b=document.getElementById('btn-email');
-      b.innerText='⏳ Sending…'; b.disabled=true; b.style.background='#64748b';
-      var pat=localStorage.getItem('gh_pat');
-      if(!pat){
-        pat=prompt('أدخل GitHub Personal Access Token (repo scope):');
-        if(!pat){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false; return;}
-        localStorage.setItem('gh_pat',pat);
-      }
-      fetch('https://api.github.com/repos/khalidsaif912/offload-monitor/dispatches',{
-        method:'POST',
-        headers:{
-          'Accept':'application/vnd.github+json',
-          'Authorization':'Bearer '+pat,
-          'Content-Type':'application/json'
-        },
-        body:JSON.stringify({
-          event_type:'send_report_now',
-          client_payload:{date_dir:'2026-03-07',shift:'shift2'}
-        })
-      }).then(function(r){
-        if(r.ok||r.status===204){
-          b.innerText='✅ Email Sent!'; b.style.background='#059669';
-          setTimeout(function(){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false;},4000);
-        }else{
-          if(r.status===401){localStorage.removeItem('gh_pat');}
-          b.innerText='❌ Failed ('+r.status+')'; b.style.background='#dc2626';
-          setTimeout(function(){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false;},3000);
-        }
-      }).catch(function(){
-        b.innerText='❌ Error'; b.style.background='#dc2626';
-        setTimeout(function(){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false;},3000);
-      });
-    })()"
+    type="button"
     style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
            color:#fff; background:#c2410c; border:none; border-radius:8px;
            padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(194,65,12,.25);">
@@ -519,5 +469,101 @@
 
 </div>
 
+<script>
+(function() {
+  var copyBtn = document.getElementById('btn-copy');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function() {
+      var el = document.getElementById('report-content');
+      var html = el ? el.outerHTML : document.body.innerHTML;
+      var full = '<!DOCTYPE html><html><head><meta charset="utf-8"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;}</style></head><body style="margin:0;padding:20px 0;background:#eef1f7;">' + html + '</body></html>';
+
+      function markCopied() {
+        copyBtn.innerText = '✅ Copied!';
+        copyBtn.style.background = '#059669';
+        setTimeout(function() {
+          copyBtn.innerText = '📋 Copy Report';
+          copyBtn.style.background = '#0b3a78';
+        }, 2500);
+      }
+
+      navigator.clipboard.writeText(full).then(markCopied).catch(function() {
+        var ta = document.createElement('textarea');
+        ta.value = full;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        markCopied();
+      });
+    });
+  }
+
+  var emailBtn = document.getElementById('btn-email');
+  if (emailBtn) {
+    emailBtn.addEventListener('click', function() {
+      if (!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift2\nDate: 2026-03-07')) return;
+
+      emailBtn.innerText = '⏳ Sending…';
+      emailBtn.disabled = true;
+      emailBtn.style.background = '#64748b';
+
+      var pat = localStorage.getItem('gh_pat');
+      if (!pat) {
+        pat = prompt('أدخل GitHub Personal Access Token (repo scope):');
+        if (!pat) {
+          emailBtn.innerText = '✉️ Send Email Now';
+          emailBtn.style.background = '#c2410c';
+          emailBtn.disabled = false;
+          return;
+        }
+        localStorage.setItem('gh_pat', pat);
+      }
+
+      fetch('https://api.github.com/repos/khalidsaif912/offload-monitor/dispatches', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': 'Bearer ' + pat,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          event_type: 'send_report_now',
+          client_payload: { date_dir: '2026-03-07', shift: 'shift2' }
+        })
+      }).then(function(r) {
+        if (r.ok || r.status === 204) {
+          emailBtn.innerText = '✅ Email Sent!';
+          emailBtn.style.background = '#059669';
+          setTimeout(function() {
+            emailBtn.innerText = '✉️ Send Email Now';
+            emailBtn.style.background = '#c2410c';
+            emailBtn.disabled = false;
+          }, 4000);
+        } else {
+          if (r.status === 401) {
+            localStorage.removeItem('gh_pat');
+          }
+          emailBtn.innerText = '❌ Failed (' + r.status + ')';
+          emailBtn.style.background = '#dc2626';
+          setTimeout(function() {
+            emailBtn.innerText = '✉️ Send Email Now';
+            emailBtn.style.background = '#c2410c';
+            emailBtn.disabled = false;
+          }, 3000);
+        }
+      }).catch(function() {
+        emailBtn.innerText = '❌ Error';
+        emailBtn.style.background = '#dc2626';
+        setTimeout(function() {
+          emailBtn.innerText = '✉️ Send Email Now';
+          emailBtn.style.background = '#c2410c';
+          emailBtn.disabled = false;
+        }, 3000);
+      });
+    });
+  }
+})();
+</script>
 </body>
 </html>
