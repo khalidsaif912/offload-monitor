@@ -1,7 +1,7 @@
 {
   "flight": "WY103",
   "date": "04MAR26",
-  "std_etd": "01:55",
+  "std_etd": "01:55|02:19",
   "destination": "LHR",
   "format": "A",
   "items": [
@@ -17,5 +17,5 @@
     }
   ],
   "saved_at": "2026-03-04T12:02:23.431873+04:00",
-  "retro_enriched_at": "2026-03-07T15:59:32.165265+04:00"
+  "retro_enriched_at": "2026-03-08T03:19:37.221356+04:00"
 }
