@@ -1,0 +1,20 @@
+{
+  "flight": "WY117",
+  "date": "04MAR26",
+  "std_etd": "14:45|16:55",
+  "destination": "FRA",
+  "format": "A",
+  "items": [
+    {
+      "awb": "910-60091356",
+      "pcs": "5",
+      "kgs": "500",
+      "description": "P. EFFECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "saved_at": "2026-03-08T01:39:38.792379+04:00"
+}
