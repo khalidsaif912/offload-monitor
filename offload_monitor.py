@@ -1866,6 +1866,9 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     except Exception:
         date_display = date_dir
 
+    recipient_seed = os.environ.get("EMAIL_RECIPIENTS_UI", "").strip() or os.environ.get("EMAIL_RECIPIENTS", "").strip()
+    default_recipients_json = json.dumps(_normalize_email_recipients(recipient_seed), ensure_ascii=False)
+
     html = f"""<!DOCTYPE html>
 <html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -2227,8 +2230,8 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 </td></tr>
 </table>
 
-<!-- ═══ BUTTONS BAR (خارج التقرير) ═══ -->
-<div style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end;">
+<!-- ═══ WEB ACTIONS (خارج التقرير) ═══ -->
+<div data-web-only="1" style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
 
   <!-- زر نسخ HTML المنسق -->
   <button id="btn-copy"
@@ -2239,7 +2242,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     📋 Copy Report
   </button>
 
-  <!-- زر إرسال إيميل -->
+  <!-- زر فتح نافذة إرسال الإيميل -->
   <button id="btn-email"
     type="button"
     style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
@@ -2250,9 +2253,218 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 
 </div>
 
+<!-- نافذة اختيار المستلمين -->
+<div id="send-modal-overlay" data-web-only="1"
+     style="display:none; position:fixed; inset:0; background:rgba(15,23,42,.58); z-index:9999;
+            align-items:center; justify-content:center; padding:18px;">
+  <div style="width:100%; max-width:560px; background:#ffffff; border-radius:16px; overflow:hidden;
+              border:1px solid #dbe4f0; box-shadow:0 20px 60px rgba(15,23,42,.28);">
+    <div style="padding:16px 18px; background:linear-gradient(90deg,#0b3a78,#2563eb); color:#ffffff;">
+      <div style="font-family:Calibri,Arial,sans-serif; font-size:18px; font-weight:700;">Send Shift Report</div>
+      <div style="font-family:Calibri,Arial,sans-serif; font-size:12px; opacity:.9; margin-top:4px;">
+        Date: {date_dir} &nbsp;|&nbsp; Shift: {shift}
+      </div>
+    </div>
+
+    <div style="padding:16px 18px 10px;">
+      <div style="font-family:Calibri,Arial,sans-serif; font-size:12.5px; color:#334155; line-height:1.7;">
+        اختر المستلمين من القائمة، أو أضف بريدًا جديدًا، ثم اضغط إرسال. يمكنك الإرسال للكل أو لبعضهم فقط.
+      </div>
+
+      <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:12px;">
+        <button id="btn-rec-select-all" type="button"
+                style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78;
+                       background:#eef4ff; border:1px solid #c8dafb; border-radius:8px; padding:8px 12px; cursor:pointer;">
+          Select All
+        </button>
+        <button id="btn-rec-clear-all" type="button"
+                style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#7c2d12;
+                       background:#fff7ed; border:1px solid #fed7aa; border-radius:8px; padding:8px 12px; cursor:pointer;">
+          Clear
+        </button>
+      </div>
+
+      <div id="recipient-list"
+           style="margin-top:12px; border:1px solid #dbe4f0; border-radius:12px; max-height:230px; overflow:auto; background:#f8fbff;"></div>
+
+      <div style="display:flex; gap:8px; margin-top:12px; flex-wrap:wrap;">
+        <input id="new-recipient-input" type="email" placeholder="Add new email address"
+               style="flex:1 1 280px; min-width:220px; font-family:Calibri,Arial,sans-serif; font-size:13px;
+                      border:1px solid #cbd5e1; border-radius:10px; padding:10px 12px; outline:none;">
+        <button id="btn-add-recipient" type="button"
+                style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#ffffff;
+                       background:#0b3a78; border:none; border-radius:10px; padding:10px 14px; cursor:pointer;">
+          Add Email
+        </button>
+      </div>
+
+      <div id="recipient-modal-msg"
+           style="min-height:18px; margin-top:10px; font-family:Calibri,Arial,sans-serif; font-size:12px; color:#64748b;"></div>
+    </div>
+
+    <div style="padding:14px 18px 18px; display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;
+                background:#f8fafc; border-top:1px solid #e5edf7;">
+      <button id="btn-cancel-send" type="button"
+              style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#334155;
+                     background:#e2e8f0; border:none; border-radius:10px; padding:10px 16px; cursor:pointer;">
+        Cancel
+      </button>
+      <button id="btn-confirm-send" type="button"
+              style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#ffffff;
+                     background:#c2410c; border:none; border-radius:10px; padding:10px 16px; cursor:pointer;">
+        ✉️ Send Selected
+      </button>
+    </div>
+  </div>
+</div>
+
 <script>
 (function() {{
   var copyBtn = document.getElementById('btn-copy');
+  var emailBtn = document.getElementById('btn-email');
+  var modalOverlay = document.getElementById('send-modal-overlay');
+  var recipientListEl = document.getElementById('recipient-list');
+  var btnSelectAll = document.getElementById('btn-rec-select-all');
+  var btnClearAll = document.getElementById('btn-rec-clear-all');
+  var btnAddRecipient = document.getElementById('btn-add-recipient');
+  var newRecipientInput = document.getElementById('new-recipient-input');
+  var btnCancelSend = document.getElementById('btn-cancel-send');
+  var btnConfirmSend = document.getElementById('btn-confirm-send');
+  var modalMsg = document.getElementById('recipient-modal-msg');
+
+  var defaultRecipients = {default_recipients_json};
+  var RECIPIENTS_STORAGE_KEY = 'offload_report_recipients_v1';
+  var TOKEN_STORAGE_KEY = 'gh_pat';
+  var recipientCatalog = [];
+
+  function uniqEmails(list) {{
+    var seen = Object.create(null);
+    var out = [];
+    (Array.isArray(list) ? list : []).forEach(function(item) {{
+      var email = String(item || '').trim().toLowerCase();
+      if (!email) return;
+      if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) return;
+      if (seen[email]) return;
+      seen[email] = true;
+      out.push(email);
+    }});
+    return out;
+  }}
+
+  function readSavedRecipients() {{
+    try {{
+      var raw = localStorage.getItem(RECIPIENTS_STORAGE_KEY);
+      if (!raw) return [];
+      return uniqEmails(JSON.parse(raw));
+    }} catch (e) {{
+      return [];
+    }}
+  }}
+
+  function saveRecipients(list) {{
+    var clean = uniqEmails(list);
+    try {{
+      localStorage.setItem(RECIPIENTS_STORAGE_KEY, JSON.stringify(clean));
+    }} catch (e) {{}}
+    return clean;
+  }}
+
+  function setModalMessage(text, color) {{
+    if (!modalMsg) return;
+    modalMsg.textContent = text || '';
+    modalMsg.style.color = color || '#64748b';
+  }}
+
+  function escapeHtml(text) {{
+    var map = {{ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }};
+    return String(text || '').replace(/[&<>"']/g, function(ch) {{
+      return map[ch] || ch;
+    }});
+  }}
+
+  function getSelectedRecipients() {{
+    if (!recipientListEl) return [];
+    return Array.prototype.slice.call(
+      recipientListEl.querySelectorAll('input[type="checkbox"][data-recipient]:checked')
+    ).map(function(cb) {{
+      return String(cb.getAttribute('data-recipient') || '').trim().toLowerCase();
+    }}).filter(Boolean);
+  }}
+
+  function updateConfirmButton() {{
+    if (!btnConfirmSend) return;
+    var count = getSelectedRecipients().length;
+    btnConfirmSend.innerText = count ? ('✉️ Send Selected (' + count + ')') : '✉️ Send Selected';
+  }}
+
+  function renderRecipientList(selectedRecipients) {{
+    if (!recipientListEl) return;
+
+    recipientCatalog = saveRecipients(recipientCatalog);
+
+    var selected = Array.isArray(selectedRecipients)
+      ? uniqEmails(selectedRecipients)
+      : recipientCatalog.slice();
+
+    var selectedMap = Object.create(null);
+    selected.forEach(function(email) {{
+      selectedMap[email] = true;
+    }});
+
+    if (!recipientCatalog.length) {{
+      recipientListEl.innerHTML = '<div style="padding:18px; color:#64748b; font-size:13px; text-align:center; font-family:Calibri,Arial,sans-serif;">No saved recipients yet. Add an email address below.</div>';
+      updateConfirmButton();
+      return;
+    }}
+
+    recipientListEl.innerHTML = recipientCatalog.map(function(email, idx) {{
+      var checked = selectedMap[email] ? ' checked' : '';
+      var border = idx === recipientCatalog.length - 1 ? 'none' : '1px solid #e2e8f0';
+      return ''
+        + '<label style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-bottom:' + border + '; cursor:pointer;">'
+        + '<input type="checkbox" data-recipient="' + escapeHtml(email) + '"' + checked + ' style="width:16px;height:16px;">'
+        + '<span style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#0f172a;">' + escapeHtml(email) + '</span>'
+        + '</label>';
+    }}).join('');
+
+    updateConfirmButton();
+  }}
+
+  function openRecipientModal() {{
+    recipientCatalog = uniqEmails(defaultRecipients.concat(readSavedRecipients(), recipientCatalog));
+    renderRecipientList(recipientCatalog);
+    setModalMessage('', '#64748b');
+    if (newRecipientInput) newRecipientInput.value = '';
+    if (modalOverlay) modalOverlay.style.display = 'flex';
+  }}
+
+  function closeRecipientModal() {{
+    if (modalOverlay) modalOverlay.style.display = 'none';
+    if (btnConfirmSend) btnConfirmSend.disabled = false;
+    if (btnCancelSend) btnCancelSend.disabled = false;
+  }}
+
+  function addRecipientFromInput() {{
+    if (!newRecipientInput) return;
+    var email = String(newRecipientInput.value || '').trim().toLowerCase();
+    if (!email) {{
+      setModalMessage('أدخل بريدًا إلكترونيًا أولاً.', '#c2410c');
+      newRecipientInput.focus();
+      return;
+    }}
+    if (!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)) {{
+      setModalMessage('صيغة البريد الإلكتروني غير صحيحة.', '#dc2626');
+      newRecipientInput.focus();
+      return;
+    }}
+
+    recipientCatalog = uniqEmails(recipientCatalog.concat([email]));
+    saveRecipients(recipientCatalog);
+    renderRecipientList(recipientCatalog);
+    setModalMessage('تمت إضافة البريد إلى القائمة.', '#059669');
+    newRecipientInput.value = '';
+    newRecipientInput.focus();
+  }}
 
   function markCopied() {{
     if (!copyBtn) return;
@@ -2335,6 +2547,83 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     throw new Error('Clipboard API unavailable');
   }}
 
+  function setEmailButtonState(text, bg, disabled) {{
+    if (!emailBtn) return;
+    emailBtn.innerText = text;
+    emailBtn.style.background = bg;
+    emailBtn.disabled = !!disabled;
+  }}
+
+  function askForToken() {{
+    var pat = '';
+    try {{
+      pat = localStorage.getItem(TOKEN_STORAGE_KEY) || '';
+    }} catch (e) {{}}
+
+    if (pat) return pat;
+
+    pat = prompt('أدخل GitHub Personal Access Token (repo scope):') || '';
+    pat = pat.trim();
+    if (pat) {{
+      try {{
+        localStorage.setItem(TOKEN_STORAGE_KEY, pat);
+      }} catch (e) {{}}
+    }}
+    return pat;
+  }}
+
+  function dispatchEmailSend(selectedRecipients) {{
+    var pat = askForToken();
+    if (!pat) {{
+      setModalMessage('لم يتم إدخال GitHub token.', '#dc2626');
+      setEmailButtonState('✉️ Send Email Now', '#c2410c', false);
+      return;
+    }}
+
+    setModalMessage('جارٍ إرسال الطلب…', '#475569');
+    if (btnConfirmSend) btnConfirmSend.disabled = true;
+    if (btnCancelSend) btnCancelSend.disabled = true;
+
+    fetch('https://api.github.com/repos/khalidsaif912/offload-monitor/dispatches', {{
+      method: 'POST',
+      headers: {{
+        'Accept': 'application/vnd.github+json',
+        'Authorization': 'Bearer ' + pat,
+        'Content-Type': 'application/json'
+      }},
+      body: JSON.stringify({{
+        event_type: 'send_report_now',
+        client_payload: {{
+          date_dir: '{date_dir}',
+          shift: '{shift}',
+          recipients: selectedRecipients
+        }}
+      }})
+    }}).then(function(r) {{
+      if (r.ok || r.status === 204) {{
+        closeRecipientModal();
+        setEmailButtonState('✅ Email Sent!', '#059669', true);
+        setTimeout(function() {{
+          setEmailButtonState('✉️ Send Email Now', '#c2410c', false);
+        }}, 4000);
+      }} else {{
+        if (r.status === 401) {{
+          try {{ localStorage.removeItem(TOKEN_STORAGE_KEY); }} catch (e) {{}}
+        }}
+        setModalMessage('فشل الإرسال (' + r.status + ').', '#dc2626');
+        if (btnConfirmSend) btnConfirmSend.disabled = false;
+        if (btnCancelSend) btnCancelSend.disabled = false;
+        setEmailButtonState('✉️ Send Email Now', '#c2410c', false);
+      }}
+    }}).catch(function(err) {{
+      console.error('Email send failed:', err);
+      setModalMessage('حدث خطأ أثناء إرسال الطلب.', '#dc2626');
+      if (btnConfirmSend) btnConfirmSend.disabled = false;
+      if (btnCancelSend) btnCancelSend.disabled = false;
+      setEmailButtonState('✉️ Send Email Now', '#c2410c', false);
+    }});
+  }}
+
   if (copyBtn) {{
     copyBtn.addEventListener('click', function() {{
       copyBtn.disabled = true;
@@ -2353,68 +2642,72 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     }});
   }}
 
-  var emailBtn = document.getElementById('btn-email');
   if (emailBtn) {{
     emailBtn.addEventListener('click', function() {{
-      if (!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\\n\\nShift: {shift}\\nDate: {date_dir}')) return;
+      openRecipientModal();
+    }});
+  }}
 
-      emailBtn.innerText = '⏳ Sending…';
-      emailBtn.disabled = true;
-      emailBtn.style.background = '#64748b';
+  if (btnAddRecipient) {{
+    btnAddRecipient.addEventListener('click', addRecipientFromInput);
+  }}
 
-      var pat = localStorage.getItem('gh_pat');
-      if (!pat) {{
-        pat = prompt('أدخل GitHub Personal Access Token (repo scope):');
-        if (!pat) {{
-          emailBtn.innerText = '✉️ Send Email Now';
-          emailBtn.style.background = '#c2410c';
-          emailBtn.disabled = false;
-          return;
-        }}
-        localStorage.setItem('gh_pat', pat);
+  if (newRecipientInput) {{
+    newRecipientInput.addEventListener('keydown', function(e) {{
+      if (e.key === 'Enter') {{
+        e.preventDefault();
+        addRecipientFromInput();
+      }}
+    }});
+  }}
+
+  if (btnSelectAll) {{
+    btnSelectAll.addEventListener('click', function() {{
+      renderRecipientList(recipientCatalog);
+      setModalMessage('تم تحديد جميع المستلمين.', '#059669');
+    }});
+  }}
+
+  if (btnClearAll) {{
+    btnClearAll.addEventListener('click', function() {{
+      renderRecipientList([]);
+      setModalMessage('تم إلغاء تحديد الجميع.', '#c2410c');
+    }});
+  }}
+
+  if (recipientListEl) {{
+    recipientListEl.addEventListener('change', function() {{
+      updateConfirmButton();
+      setModalMessage('', '#64748b');
+    }});
+  }}
+
+  if (btnCancelSend) {{
+    btnCancelSend.addEventListener('click', function() {{
+      closeRecipientModal();
+    }});
+  }}
+
+  if (modalOverlay) {{
+    modalOverlay.addEventListener('click', function(e) {{
+      if (e.target === modalOverlay) {{
+        closeRecipientModal();
+      }}
+    }});
+  }}
+
+  if (btnConfirmSend) {{
+    btnConfirmSend.addEventListener('click', function() {{
+      var selectedRecipients = getSelectedRecipients();
+      if (!selectedRecipients.length) {{
+        setModalMessage('اختر مستلمًا واحدًا على الأقل.', '#dc2626');
+        return;
       }}
 
-      fetch('https://api.github.com/repos/khalidsaif912/offload-monitor/dispatches', {{
-        method: 'POST',
-        headers: {{
-          'Accept': 'application/vnd.github+json',
-          'Authorization': 'Bearer ' + pat,
-          'Content-Type': 'application/json'
-        }},
-        body: JSON.stringify({{
-          event_type: 'send_report_now',
-          client_payload: {{ date_dir: '{date_dir}', shift: '{shift}' }}
-        }})
-      }}).then(function(r) {{
-        if (r.ok || r.status === 204) {{
-          emailBtn.innerText = '✅ Email Sent!';
-          emailBtn.style.background = '#059669';
-          setTimeout(function() {{
-            emailBtn.innerText = '✉️ Send Email Now';
-            emailBtn.style.background = '#c2410c';
-            emailBtn.disabled = false;
-          }}, 4000);
-        }} else {{
-          if (r.status === 401) {{
-            localStorage.removeItem('gh_pat');
-          }}
-          emailBtn.innerText = '❌ Failed (' + r.status + ')';
-          emailBtn.style.background = '#dc2626';
-          setTimeout(function() {{
-            emailBtn.innerText = '✉️ Send Email Now';
-            emailBtn.style.background = '#c2410c';
-            emailBtn.disabled = false;
-          }}, 3000);
-        }}
-      }}).catch(function() {{
-        emailBtn.innerText = '❌ Error';
-        emailBtn.style.background = '#dc2626';
-        setTimeout(function() {{
-          emailBtn.innerText = '✉️ Send Email Now';
-          emailBtn.style.background = '#c2410c';
-          emailBtn.disabled = false;
-        }}, 3000);
-      }});
+      recipientCatalog = uniqEmails(recipientCatalog.concat(selectedRecipients));
+      saveRecipients(recipientCatalog);
+      setEmailButtonState('⏳ Sending…', '#64748b', true);
+      dispatchEmailSend(selectedRecipients);
     }});
   }}
 }})();
@@ -2874,7 +3167,11 @@ def _prepare_email_report_html(html_content: str) -> tuple[str, bytes | None, st
     for script in soup.find_all("script"):
         script.decompose()
 
-    # Remove the buttons bar if present.
+    # Remove all web-only controls (buttons, modal, overlays, etc.).
+    for web_only in soup.find_all(attrs={"data-web-only": True}):
+        web_only.decompose()
+
+    # Fallback cleanup by button ids if any old markup remains.
     button_bar = None
     for btn_id in ("btn-copy", "btn-email"):
         btn = soup.find(id=btn_id)
@@ -2929,7 +3226,79 @@ def _prepare_email_report_html(html_content: str) -> tuple[str, bytes | None, st
 
 
 
-def send_shift_report_email(date_dir: str, shift: str) -> None:
+def _normalize_email_recipients(value) -> list[str]:
+    """Normalize recipients from a string/list into a unique validated email list."""
+    if value is None:
+        return []
+
+    items = []
+    if isinstance(value, str):
+        raw = value.strip()
+        if not raw:
+            return []
+        if raw.startswith("["):
+            try:
+                parsed = json.loads(raw)
+            except Exception:
+                parsed = None
+            if isinstance(parsed, list):
+                return _normalize_email_recipients(parsed)
+        items = re.split(r"[,;\n]+", raw)
+    elif isinstance(value, (list, tuple, set)):
+        items = list(value)
+    else:
+        items = [value]
+
+    out: list[str] = []
+    seen: set[str] = set()
+    for item in items:
+        email = str(item or "").strip().lower()
+        if not email:
+            continue
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", email):
+            continue
+        if email in seen:
+            continue
+        seen.add(email)
+        out.append(email)
+    return out
+
+
+def _load_dispatch_client_payload() -> dict:
+    """Read repository_dispatch client_payload directly from GitHub Actions event file."""
+    event_path = os.environ.get("GITHUB_EVENT_PATH", "").strip()
+    if not event_path:
+        return {}
+    try:
+        payload = json.loads(Path(event_path).read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+    if not isinstance(payload, dict):
+        return {}
+    client_payload = payload.get("client_payload")
+    return client_payload if isinstance(client_payload, dict) else {}
+
+
+def _get_force_send_request() -> tuple[str, str, list[str]]:
+    """Resolve manual send request from env vars and/or repository_dispatch payload."""
+    force_date = os.getenv("FORCE_SEND_DATE", "").strip()
+    force_shift = os.getenv("FORCE_SEND_SHIFT", "").strip()
+    force_recipients = _normalize_email_recipients(os.getenv("FORCE_SEND_RECIPIENTS", ""))
+
+    payload = _load_dispatch_client_payload()
+    if not force_date:
+        force_date = str(payload.get("date_dir") or "").strip()
+    if not force_shift:
+        force_shift = str(payload.get("shift") or "").strip()
+    if not force_recipients:
+        force_recipients = _normalize_email_recipients(
+            payload.get("recipients") or payload.get("emails") or ""
+        )
+
+    return force_date, force_shift, force_recipients
+
+
+def send_shift_report_email(date_dir: str, shift: str, recipients_override=None) -> None:
     """إرسال تقرير المناوبة بالبريد الإلكتروني كـ HTML كامل."""
     import smtplib
     from email.mime.image import MIMEImage
@@ -2940,11 +3309,14 @@ def send_shift_report_email(date_dir: str, shift: str) -> None:
     smtp_password  = os.environ.get("EMAIL_APP_PASSWORD", "").strip()
     recipients_raw = os.environ.get("EMAIL_RECIPIENTS", "").strip()
 
-    if not smtp_user or not smtp_password or not recipients_raw:
-        print("  [email] Skipping — EMAIL_SENDER / EMAIL_APP_PASSWORD / EMAIL_RECIPIENTS not set.")
-        return
+    if recipients_override is None:
+        recipients = _normalize_email_recipients(recipients_raw)
+    else:
+        recipients = _normalize_email_recipients(recipients_override)
 
-    recipients = [r.strip() for r in recipients_raw.split(",") if r.strip()]
+    if not smtp_user or not smtp_password or not recipients:
+        print("  [email] Skipping — EMAIL_SENDER / EMAIL_APP_PASSWORD / recipients not set.")
+        return
 
     report_file = DOCS_DIR / date_dir / shift / "index.html"
     if not report_file.exists():
@@ -3123,9 +3495,11 @@ def main() -> None:
     print(f"[{now.isoformat()}] Starting…")
 
     # ── وضع الإرسال الفوري (triggered من زر في الصفحة) ──
-    force_date  = os.getenv("FORCE_SEND_DATE",  "").strip()
-    force_shift = os.getenv("FORCE_SEND_SHIFT", "").strip()
-    print(f"[debug] FORCE_SEND_DATE={force_date!r}  FORCE_SEND_SHIFT={force_shift!r}")
+    force_date, force_shift, force_recipients = _get_force_send_request()
+    print(
+        f"[debug] FORCE_SEND_DATE={force_date!r}  FORCE_SEND_SHIFT={force_shift!r}  "
+        f"FORCE_SEND_RECIPIENTS={len(force_recipients)}"
+    )
     if force_date and force_shift:
         print(f"[force-send] Sending {force_shift} report for {force_date}…")
         report_file = DOCS_DIR / force_date / force_shift / "index.html"
@@ -3136,7 +3510,7 @@ def main() -> None:
         sent_file = _email_sent_key(force_date, force_shift)
         if sent_file.exists():
             sent_file.unlink()
-        send_shift_report_email(force_date, force_shift)
+        send_shift_report_email(force_date, force_shift, force_recipients or None)
         sent_file.write_text(now.isoformat(), encoding="utf-8")
         print("[force-send] Done. ✓")
         return
