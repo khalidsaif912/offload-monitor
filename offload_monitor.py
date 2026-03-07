@@ -1697,8 +1697,17 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", supervi
     MANUAL_DEPTS = {"supervisors"}
 
     grouped_html = ""
+<<<<<<< Updated upstream
     # أولاً: قسم Supervisors — يُعرض دائماً في الأعلى
     sup_in_roster = [e for e in on_duty if e.get("dept","").strip().lower() == "supervisors"]
+=======
+    # أولاً: قسم Supervisors — يُعرض دائماً في الأعلى (مع استثناء EXCLUDED_SNS)
+    sup_in_roster = [
+        e for e in on_duty
+        if e.get("dept","").strip().lower() == "supervisors"
+        and str(e.get("sn","")).strip() not in EXCLUDED_SNS
+    ]
+>>>>>>> Stashed changes
     if sup_in_roster:
         sup_li_roster = "".join(f"<li>{_fmt_name(e)}</li>\n" for e in sup_in_roster)
         # أضف Acting فقط إذا كان البديل فعلاً بديلاً (الأصلي غائب)
@@ -1842,6 +1851,19 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     # Empty = leave blank for manual entry (shown as underscores)
     supervisor_display = supervisor_name if supervisor_name else "____________________"
 
+<<<<<<< Updated upstream
+=======
+    # ── قاعدة مهمة: إذا كان هناك سوبرفايزر أصلي في الروستر → لا Acting ──
+    # بغض النظر عن نتيجة الأزواج أعلاه
+    any_supervisor_on_duty = any(
+        "supervisor" in e.get("dept", "").lower()
+        for e in on_duty_list
+        if str(e.get("sn", "")).strip() not in {"990737"}  # استثناء Said Al Amri
+    )
+    if any_supervisor_on_duty:
+        supervisor_is_acting = False
+
+>>>>>>> Stashed changes
     manpower_cols = _render_manpower_section(roster, supervisor_display, supervisor_is_acting)
 
     # Format date for display
