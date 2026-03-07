@@ -199,7 +199,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="color:#b91c1c;font-size:12px;font-weight:700;">⟳ UPDATE</span>
-          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-07 22:38</span>
+          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-07 22:49</span>
         </div>
       </div>
       <!-- Status bar -->
@@ -275,7 +275,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="color:#b91c1c;font-size:12px;font-weight:700;">⟳ UPDATE</span>
-          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-07 22:38</span>
+          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-07 22:49</span>
         </div>
       </div>
       <!-- Status bar -->
@@ -789,14 +789,14 @@
       if(items.length){
         window.open(RECIPIENTS_EDIT_URL, '_blank');
       } else {
-        var template = '{
+        var template = `{
   "recipients": [
     "example1@company.com",
     "example2@company.com"
   ],
   "updated_at": "",
   "source": "offload-monitor-ui"
-}';
+}`;
         var url = RECIPIENTS_NEW_URL + '&value=' + encodeURIComponent(template);
         window.open(url, '_blank');
       }
@@ -807,11 +807,7 @@
     if(!askSendSecret()) return;
     openRecipientsManager('send').then(function(result){
       if(!result || !result.selected || !result.selected.length) return;
-      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟
-
-Shift: shift2
-Date: 2026-03-02
-Recipients: ' + result.selected.join(', '));
+      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift2\nDate: 2026-03-02\nRecipients: ' + result.selected.join(', '));
       if(!ok) return;
 
       var btn = document.getElementById('btn-email');
