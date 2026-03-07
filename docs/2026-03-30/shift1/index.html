@@ -520,10 +520,10 @@
 
   function sendEmailNow(){
     if(!askSendSecret()) return;
-    var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن?
+    var ok = confirm(`إرسال تقرير هذه المناوبة بالإيميل الآن?
 
 Shift: shift1
-Date: 2026-03-30');
+Date: 2026-03-30`);
     if(!ok) return;
 
     var btn = document.getElementById('btn-email');
