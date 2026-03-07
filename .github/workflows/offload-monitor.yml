@@ -1,5 +1,4 @@
 name: Offload Monitor
-
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -13,6 +12,8 @@ on:
         description: "Re-fetch DEST/STD for all saved flights from AirLabs (1 = yes)"
         required: false
         default: "0"
+  repository_dispatch:
+    types: [send_report_now]
 
 jobs:
   build:
@@ -20,15 +21,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-
       - name: Install deps
         run: pip install requests beautifulsoup4
-
       - name: Run script
         env:
           ONEDRIVE_FILE_URL:   ${{ secrets.ONEDRIVE_FILE_URL }}
@@ -38,8 +36,9 @@ jobs:
           EMAIL_SENDER:        ${{ secrets.EMAIL_SENDER }}
           EMAIL_APP_PASSWORD:  ${{ secrets.EMAIL_APP_PASSWORD }}
           EMAIL_RECIPIENTS:    ${{ secrets.EMAIL_RECIPIENTS }}
+          FORCE_SEND_DATE:     "${{ github.event.client_payload.date_dir }}"
+          FORCE_SEND_SHIFT:    "${{ github.event.client_payload.shift }}"
         run: python offload_monitor.py
-
       - name: Commit changes
         run: |
           git config user.name  "github-actions"
