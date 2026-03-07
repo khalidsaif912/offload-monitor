@@ -11,7 +11,7 @@
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eef1f7; padding:20px 0;">
 <tr><td align="left" style="padding:0 10px;">
 
-<table width="760" cellpadding="0" cellspacing="0" border="0"
+<table width="760" cellpadding="0" cellspacing="0" border="0" id="report-content"
        style="width:760px; max-width:760px; background-color:#ffffff; border:1px solid #d0d5e8;">
 
   <!-- ═══ HEADER ═══ -->
@@ -49,13 +49,98 @@
     </td>
   </tr>
 
-  <!-- ═══ BACK LINK ═══ -->
+  <!-- ═══ ACTION BAR ═══ -->
   <tr>
-    <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
-      <a href="../../index.html"
-         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none;">
-        ← Back to Index
-      </a>
+    <td style="padding:10px 24px 10px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td valign="middle">
+            <a href="../../index.html"
+               style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none;">
+              ← Back to Index
+            </a>
+          </td>
+          <td align="right" valign="middle">
+            <span style="display:inline-flex; gap:8px; align-items:center;">
+
+              <!-- زر نسخ كنص عادي -->
+              <button id="btn-copy" onclick="(function(){
+                var lines = [];
+                var el = document.getElementById('report-content');
+                var all = el ? el.querySelectorAll('td, th, div, li, span, strong, a') : [];
+                var seen = new Set();
+                all.forEach(function(n){
+                  if(n.children.length === 0){
+                    var t = n.innerText.trim();
+                    if(t && !seen.has(t)){ seen.add(t); lines.push(t); }
+                  }
+                });
+                var text = lines.join('\n');
+                navigator.clipboard.writeText(text).then(function(){
+                  var b = document.getElementById('btn-copy');
+                  b.innerText='✅ Copied!'; b.style.background='#059669';
+                  setTimeout(function(){b.innerText='📋 Copy Report'; b.style.background='#0b3a78';},2500);
+                }).catch(function(){
+                  var ta=document.createElement('textarea');
+                  ta.value=text; document.body.appendChild(ta); ta.select();
+                  document.execCommand('copy'); document.body.removeChild(ta);
+                  var b=document.getElementById('btn-copy');
+                  b.innerText='✅ Copied!'; b.style.background='#059669';
+                  setTimeout(function(){b.innerText='📋 Copy Report'; b.style.background='#0b3a78';},2500);
+                });
+              })()"
+                style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700;
+                       color:#fff; background:#0b3a78; border:none; border-radius:7px;
+                       padding:7px 14px; cursor:pointer;">
+                📋 Copy Report
+              </button>
+
+              <!-- زر إرسال إيميل مع تأكيد -->
+              <button id="btn-email" onclick="(function(){
+                if(!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift2\nDate: 2026-03-20')) return;
+                var b = document.getElementById('btn-email');
+                b.innerText='⏳ Sending…'; b.disabled=true; b.style.background='#64748b';
+                var pat = localStorage.getItem('gh_pat');
+                if(!pat){
+                  pat = prompt('أدخل GitHub Personal Access Token (repo scope):');
+                  if(!pat){ b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false; return; }
+                  localStorage.setItem('gh_pat', pat);
+                }
+                fetch('https://api.github.com/repos/khalidsaif912/offload-monitor/dispatches',{
+                  method:'POST',
+                  headers:{
+                    'Accept':'application/vnd.github+json',
+                    'Authorization':'Bearer '+pat,
+                    'Content-Type':'application/json'
+                  },
+                  body:JSON.stringify({
+                    event_type:'send_report_now',
+                    client_payload:{date_dir:'2026-03-20',shift:'shift2'}
+                  })
+                }).then(function(r){
+                  if(r.ok||r.status===204){
+                    b.innerText='✅ Email Sent!'; b.style.background='#059669';
+                    setTimeout(function(){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false;},4000);
+                  }else{
+                    if(r.status===401){ localStorage.removeItem('gh_pat'); }
+                    b.innerText='❌ Failed ('+r.status+')'; b.style.background='#dc2626';
+                    setTimeout(function(){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false;},3000);
+                  }
+                }).catch(function(){
+                  b.innerText='❌ Error'; b.style.background='#dc2626';
+                  setTimeout(function(){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false;},3000);
+                });
+              })()"
+                style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700;
+                       color:#fff; background:#c2410c; border:none; border-radius:7px;
+                       padding:7px 14px; cursor:pointer;">
+                ✉️ Send Email Now
+              </button>
+
+            </span>
+          </td>
+        </tr>
+      </table>
     </td>
   </tr>
 
