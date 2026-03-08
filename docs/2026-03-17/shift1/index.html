@@ -5,16 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Export Warehouse Activity Report — 17 MAR 2026</title>
-  <style>
-    /* منع المتصفح من عرض رابط الـ href بجانب النص */
-    a::after, a::before { content: none !important; }
-    @media print { a[href]::after { content: none !important; } }
-    /* تحسين قراءة الجداول عند الطباعة */
-    @media print {
-      table { border-collapse: collapse !important; }
-      th, td { border: 1px solid #999 !important; }
-    }
-  </style>
 </head>
 <body style="margin:0; padding:0; background-color:#eef1f7; font-family:Calibri, Arial, sans-serif;">
 
@@ -62,10 +52,11 @@
   <!-- ═══ BACK LINK ═══ -->
   <tr>
     <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
-      <a href="../../index.html"
-         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none;">
+      <span onclick="window.location.href='../../index.html'"
+         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700;
+                text-decoration:none; cursor:pointer; display:inline-block;">
         ← Back to Index
-      </a>
+      </span>
     </td>
   </tr>
 
@@ -200,15 +191,15 @@
     <div style="margin-top:12px;overflow-x:auto;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0"
            style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:12px;">
-      <tr style="background:#1e40af;">
-        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;width:30px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">#</td>
-        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">AWB</td>
-        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">PCS</td>
-        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">KGS</td>
-        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Priority</td>
-        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Description</td>
-        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ULD</td>
-        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Offloading Reason</td>
+      <tr style="background:#1e40af;" bgcolor="#1e40af">
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;width:30px;">#</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;">AWB</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;">PCS</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;">KGS</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;">Priority</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;">Description</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;">ULD</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;">Offloading Reason</td>
       </tr>
       <tr>
         <td colspan="8" style="padding:14px 6px;border:1px solid #dde6f5;
@@ -489,7 +480,13 @@
     var el = document.getElementById('report-content');
     if(!el) return null;
     var html = el.outerHTML;
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}table{border-collapse:collapse;}img{max-width:100%;height:auto;display:block;}</style></head><body>' + html + '</body></html>';
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>'
+      + 'body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}'
+      + 'table{border-collapse:collapse;}img{max-width:100%;height:auto;display:block;}'
+      + 'a,span[onclick]{color:#0b3a78;text-decoration:none;cursor:pointer;}'
+      + 'tr[style*="background:#1e40af"] td, tr[style*="background:#1e40af"] th{background-color:#1e40af!important;color:#ffffff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+      + 'tr[style*="background:#0b3a78"] td, tr[style*="background:#0b3a78"] th{background-color:#0b3a78!important;color:#ffffff!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}'
+      + '</style></head><body>' + html + '</body></html>';
   }
 
   function onCopyReport(){
