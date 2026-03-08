@@ -12,6 +12,10 @@ on:
         description: "Re-fetch DEST/STD for all saved flights from AirLabs (1 = yes)"
         required: false
         default: "0"
+      rebuild_all:
+        description: "Rebuild ALL historical reports with new template (1 = yes)"
+        required: false
+        default: "0"
   repository_dispatch:
     types: [send_report_now]
 
@@ -33,6 +37,7 @@ jobs:
           AIRLABS_API_KEY:     ${{ secrets.AIRLABS_API_KEY }}
           FORCE_REBUILD:       "${{ github.event.inputs.force_rebuild }}"
           RETRO_ENRICH:        "${{ github.event.inputs.retro_enrich }}"
+          REBUILD_ALL:         "${{ github.event.inputs.rebuild_all }}"
           EMAIL_SENDER:        ${{ secrets.EMAIL_SENDER }}
           EMAIL_APP_PASSWORD:  ${{ secrets.EMAIL_APP_PASSWORD }}
           EMAIL_RECIPIENTS:    ${{ secrets.EMAIL_RECIPIENTS }}
