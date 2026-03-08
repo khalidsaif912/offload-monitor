@@ -1612,77 +1612,108 @@ def _render_offload_table(flights: list[dict], meta: dict, report_date: str = ""
             ) if reason else "—"
             rows += f"""
         <tr style="background:{bg}; color:#111827;">
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-weight:700;font-size:15px;color:#111827;">{i}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;font-family:'Courier New',monospace;font-size:15px;color:#1e40af;font-weight:700;">{awb}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-weight:700;font-size:15px;color:#111827;">{pcs}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-size:15px;color:#111827;">{kgs}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-size:15px;color:#111827;">{pri}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;font-size:15px;color:#111827;">{desc}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-size:15px;color:#111827;">{uld}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;font-size:15px;color:#111827;">{badge}</td>
+          <td style="padding:11px 10px;border:1px solid #d9e1f2;text-align:center;font-weight:700;font-size:16px;color:#111827;white-space:nowrap;">{i}</td>
+          <td style="padding:11px 10px;border:1px solid #d9e1f2;font-family:'Courier New',monospace;font-size:15px;color:#1e40af;font-weight:700;white-space:nowrap;">{awb}</td>
+          <td style="padding:11px 10px;border:1px solid #d9e1f2;text-align:center;font-weight:700;font-size:16px;color:#111827;white-space:nowrap;">{pcs}</td>
+          <td style="padding:11px 10px;border:1px solid #d9e1f2;text-align:center;font-size:16px;color:#111827;white-space:nowrap;">{kgs}</td>
+          <td style="padding:11px 10px;border:1px solid #d9e1f2;text-align:center;font-size:16px;color:#111827;white-space:nowrap;">{pri}</td>
+          <td style="padding:11px 10px;border:1px solid #d9e1f2;font-size:16px;color:#111827;">{desc}</td>
+          <td style="padding:11px 10px;border:1px solid #d9e1f2;text-align:center;font-size:15px;color:#111827;white-space:nowrap;">{uld}</td>
+          <td style="padding:11px 10px;border:1px solid #d9e1f2;font-size:16px;color:#111827;">{badge}</td>
         </tr>"""
 
         if not rows:
             rows = """
         <tr style="background:#ffffff; color:#111827;">
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;font-weight:700;color:#111827;">—</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;color:#111827;">&nbsp;</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;color:#64748b;font-style:italic;">NIL</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;color:#64748b;">No offload data for this shift.</td>
+          <td style="padding:18px 10px;border:1px solid #d9e1f2;text-align:center;font-weight:700;color:#111827;">—</td>
+          <td style="padding:18px 10px;border:1px solid #d9e1f2;color:#111827;">&nbsp;</td>
+          <td style="padding:18px 10px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
+          <td style="padding:18px 10px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
+          <td style="padding:18px 10px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
+          <td style="padding:18px 10px;border:1px solid #d9e1f2;color:#64748b;font-style:italic;font-size:16px;">NIL — No offload data for this shift.</td>
+          <td style="padding:18px 10px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
+          <td style="padding:18px 10px;border:1px solid #d9e1f2;color:#64748b;">&nbsp;</td>
         </tr>"""
 
         cards += f"""
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;border:1px solid #c7d4f0;border-radius:8px;overflow:hidden;background:#ffffff;font-family:Calibri,Arial,sans-serif;">
+    <div class="scroll-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;margin-top:14px;">
+    <table class="offload-table-wrap" cellpadding="0" cellspacing="0" border="0"
+           style="min-width:780px;width:100%;border:2px solid #0b3a78;border-radius:6px;overflow:hidden;background:#ffffff;font-family:Calibri,Arial,sans-serif;border-collapse:collapse;">
+      <!-- ── Flight header ── -->
       <tr>
-        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">✈ {flt}</td>
-        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">Date: {date_display}</td>
-        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">STD: {std}</td>
-        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">ETD: {etd}</td>
-        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">DEST: <span style="color:#fbbf24;">{dest}</span></td>
-        <td align="right" style="background:#0b3a78;padding:10px 12px;color:#dbeafe;font-size:12px;font-weight:600;">Updated: {now_str}</td>
-      </tr>
-      <tr>
-        <td colspan="6" style="background:#eef4ff;padding:10px 12px;border-bottom:1px solid #d9e1f2;color:#374151;font-size:14px;">
-          Email:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <span style="display:inline-block;width:18px;"></span>
-          Ramp Received:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <span style="display:inline-block;width:18px;"></span>
-          CMS Completed:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <span style="display:inline-block;width:18px;"></span>
-          Pieces Verified:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <span style="display:inline-block;width:18px;"></span>
-          Remarks: <strong style="color:#374151;">—</strong>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="6" style="padding:0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:15px;color:#111827;">
-            <tr style="background:#1e40af;">
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;width:36px;font-size:15px;">#</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:15px;">AWB</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">PCS</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">KGS</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">Priority</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:15px;">Description</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">ULD</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:15px;">Offloading Reason</td>
+        <td colspan="8" style="background:#0b3a78;padding:0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+            <tr>
+              <td style="padding:12px 14px;color:#ffffff;font-size:17px;font-weight:700;white-space:nowrap;">
+                ✈&nbsp;<span style="font-size:19px;">{flt}</span>
+              </td>
+              <td style="padding:12px 10px;color:#ffffff;font-size:16px;font-weight:700;white-space:nowrap;">
+                📅&nbsp;{date_display}
+              </td>
+              <td style="padding:12px 10px;color:#dbeafe;font-size:16px;font-weight:700;white-space:nowrap;">
+                STD:&nbsp;<span style="color:#ffffff;">{std}</span>
+              </td>
+              <td style="padding:12px 10px;color:#dbeafe;font-size:16px;font-weight:700;white-space:nowrap;">
+                ETD:&nbsp;<span style="color:#ffffff;">{etd}</span>
+              </td>
+              <td style="padding:12px 10px;color:#dbeafe;font-size:16px;font-weight:700;white-space:nowrap;">
+                DEST:&nbsp;<span style="color:#fbbf24;font-size:18px;">{dest}</span>
+              </td>
+              <td align="right" style="padding:12px 14px;color:#93c5fd;font-size:13px;white-space:nowrap;">
+                Updated:&nbsp;{now_str}
+              </td>
             </tr>
-            {rows}
           </table>
         </td>
       </tr>
+      <!-- ── Ops status row ── -->
       <tr>
-        <td colspan="6" style="background:#f8faff;padding:10px 14px;border-top:1px solid #dde6f5;font-size:15px;font-weight:700;color:#1b1f2a;">
-          Total Shipments: <strong style="color:#0b3a78;">{len(items)}</strong>
-          &nbsp;|&nbsp; Total PCS: <strong style="color:#0b3a78;">{total_pcs}</strong>
-          &nbsp;|&nbsp; Total KGS: <strong style="color:#0b3a78;">{total_kgs:g}</strong>
+        <td colspan="8" style="background:#eef4ff;padding:0;border-bottom:2px solid #c7d4f0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+            <tr>
+              <td style="padding:9px 14px;color:#374151;font-size:15px;white-space:nowrap;border-right:1px solid #d9e1f2;">
+                📧&nbsp;<strong>Email:</strong>&nbsp;&nbsp;——
+              </td>
+              <td style="padding:9px 14px;color:#374151;font-size:15px;white-space:nowrap;border-right:1px solid #d9e1f2;">
+                🚛&nbsp;<strong>Ramp&nbsp;Recv:</strong>&nbsp;&nbsp;——
+              </td>
+              <td style="padding:9px 14px;color:#374151;font-size:15px;white-space:nowrap;border-right:1px solid #d9e1f2;">
+                🖥&nbsp;<strong>CMS:</strong>&nbsp;&nbsp;——
+              </td>
+              <td style="padding:9px 14px;color:#374151;font-size:15px;white-space:nowrap;border-right:1px solid #d9e1f2;">
+                ✅&nbsp;<strong>PCS&nbsp;Verified:</strong>&nbsp;&nbsp;——
+              </td>
+              <td style="padding:9px 14px;color:#374151;font-size:15px;white-space:nowrap;">
+                📝&nbsp;<strong>Remarks:</strong>&nbsp;<span style="color:#1b1f2a;">—</span>
+              </td>
+            </tr>
+          </table>
         </td>
       </tr>
-    </table>"""
+      <!-- ── Table header ── -->
+      <tr style="background:#1e40af;">
+        <td style="padding:11px 10px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;width:40px;font-size:16px;white-space:nowrap;">#</td>
+        <td style="padding:11px 10px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:16px;white-space:nowrap;">AWB</td>
+        <td style="padding:11px 10px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:16px;white-space:nowrap;">PCS</td>
+        <td style="padding:11px 10px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:16px;white-space:nowrap;">KGS</td>
+        <td style="padding:11px 10px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:16px;white-space:nowrap;">Priority</td>
+        <td style="padding:11px 10px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:16px;">Description</td>
+        <td style="padding:11px 10px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:16px;white-space:nowrap;">ULD</td>
+        <td style="padding:11px 10px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:16px;white-space:nowrap;">Offloading&nbsp;Reason</td>
+      </tr>
+      {rows}
+      <!-- ── Totals row ── -->
+      <tr>
+        <td colspan="8" style="background:#eef3fc;padding:11px 16px;border-top:2px solid #0b3a78;font-size:16px;font-weight:700;color:#1b1f2a;">
+          📦&nbsp;Shipments:&nbsp;<strong style="color:#0b3a78;">{len(items)}</strong>
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          PCS:&nbsp;<strong style="color:#0b3a78;">{total_pcs}</strong>
+          &nbsp;&nbsp;|&nbsp;&nbsp;
+          KGS:&nbsp;<strong style="color:#0b3a78;">{total_kgs:g}</strong>
+        </td>
+      </tr>
+    </table>
+    </div>"""
 
     return cards
 
@@ -2995,17 +3026,17 @@ def _email_enlarge_inline_fonts(html: str) -> str:
     def repl(match):
         px = int(match.group(1))
         if px <= 10:
-            new_px = 18
-        elif px <= 12:
             new_px = 20
-        elif px <= 14:
+        elif px <= 12:
             new_px = 22
-        elif px <= 16:
+        elif px <= 14:
             new_px = 24
-        elif px <= 20:
+        elif px <= 16:
             new_px = 26
+        elif px <= 20:
+            new_px = 28
         else:
-            new_px = px + 6
+            new_px = px + 8
         return f'font-size:{new_px}px'
     return re.sub(r'font-size\s*:\s*(\d+)px', repl, html, flags=re.IGNORECASE)
 
@@ -3016,9 +3047,9 @@ def _build_email_html(page_html: str) -> str:
     report_html = report_html.replace('width="900"', 'width="100%"')
     report_html = report_html.replace('width="760"', 'width="100%"')
     report_html = report_html.replace('style="width:900px; max-width:900px; background-color:#ffffff; border:1px solid #d0d5e8;"',
-                                      'style="width:100%; max-width:1280px; background-color:#ffffff; border:1px solid #d0d5e8; margin:0 auto;"')
+                                      'style="width:100%; max-width:1400px; background-color:#ffffff; border:1px solid #d0d5e8; margin:0 auto;"')
     report_html = report_html.replace('style="width:760px; max-width:760px; background-color:#ffffff; border:1px solid #d0d5e8;"',
-                                      'style="width:100%; max-width:1280px; background-color:#ffffff; border:1px solid #d0d5e8; margin:0 auto;"')
+                                      'style="width:100%; max-width:1400px; background-color:#ffffff; border:1px solid #d0d5e8; margin:0 auto;"')
     report_html = report_html.replace('padding:20px 22px 18px 20px;', 'padding:24px 26px 22px 24px;')
     report_html = report_html.replace('padding:16px 24px 0 24px;', 'padding:18px 26px 0 26px;')
     report_html = report_html.replace('padding:14px 24px 0 24px;', 'padding:16px 26px 0 26px;')
@@ -3040,23 +3071,25 @@ def _build_email_html(page_html: str) -> str:
       -ms-text-size-adjust: 100%;
     }}
     body, table, td, div, p, a, li {{
-      font-size: 24px !important;
-      line-height: 1.9 !important;
+      font-size: 26px !important;
+      line-height: 2.0 !important;
     }}
     table {{ border-collapse: collapse; }}
     img {{ border: 0; display: block; max-width: 100%; height: auto; }}
     .mobile-wrap {{ width: 100%; padding: 10px 8px 18px; box-sizing: border-box; }}
+    .scroll-wrap {{ overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }}
     @media only screen and (max-width: 640px) {{
       body, table, td, div, p, a, li {{
-        font-size: 27px !important;
-        line-height: 2.0 !important;
+        font-size: 30px !important;
+        line-height: 2.1 !important;
       }}
       .mobile-wrap {{ padding: 6px 4px 14px !important; }}
       table[width="100%"] {{ width: 100% !important; }}
-      td[style*="font-size:20px"] div {{ font-size: 27px !important; }}
+      td[style*="font-size:20px"] div {{ font-size: 30px !important; }}
       td[style*="font-size:13.5px"], div[style*="font-size:13.5px"], span[style*="font-size:12px"], td[style*="font-size:12px"] {{
-        font-size: 24px !important;
+        font-size: 27px !important;
       }}
+      .offload-table-wrap {{ min-width: 900px; }}
     }}
   </style>
 </head>
