@@ -30,7 +30,7 @@
                   <div style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#a8c4f0; margin-top:5px; letter-spacing:0.3px;">
                     Shift Date: <strong style="color:#d4e6ff;">10 MAR 2026</strong>
                     &nbsp;&nbsp;|&nbsp;&nbsp;
-                    Time: <strong style="color:#d4e6ff;">15:00 – 22:00 LT</strong>
+                    Time: <strong style="color:#d4e6ff;">13:00 – 22:00 LT</strong>
                     &nbsp;&nbsp;|&nbsp;&nbsp;
                     <strong style="color:#d4e6ff;">Afternoon Shift</strong>
                   </div>
@@ -349,10 +349,10 @@
             <!-- Name + Title -->
             <div style="font-family:Calibri,Arial,sans-serif; margin-bottom:10px;">
               <div style="font-size:15px; font-weight:700; color:#0b3a78; line-height:1.3;">
-                Al Muthana Al Shamfari
+                Mohamed Al Amri
               </div>
               <div style="font-size:12.5px; font-weight:600; color:#444; margin-top:2px;">
-                Supervisor – Export Operation
+                Duty Supervisor – Export Operation
               </div>
             </div>
 
@@ -466,7 +466,30 @@
     }, delay || 3000);
   }
 
-  function plainCopyFallback(text){
+  function plainCopyFallback(text, html){
+    if(html){
+      var holder = document.createElement('div');
+      holder.innerHTML = html;
+      holder.style.position = 'fixed';
+      holder.style.left = '-99999px';
+      holder.style.top = '0';
+      document.body.appendChild(holder);
+      var range = document.createRange();
+      range.selectNodeContents(holder);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      try {
+        if(document.execCommand('copy')){
+          sel.removeAllRanges();
+          document.body.removeChild(holder);
+          return;
+        }
+      } catch (e) {}
+      sel.removeAllRanges();
+      document.body.removeChild(holder);
+    }
+
     var ta = document.createElement('textarea');
     ta.value = text;
     ta.style.position = 'fixed';
@@ -478,11 +501,104 @@
     document.body.removeChild(ta);
   }
 
+  function forceReadableContrast(node){
+    if(!node || node.nodeType !== 1) return;
+    var bg = (node.style.backgroundColor || '').toLowerCase().replace(/\s+/g, '');
+    var darkBgs = ['rgb(11,58,120)','#0b3a78','rgb(30,64,175)','#1e40af','rgb(37,99,235)','#2563eb','rgb(10,31,82)','#0a1f52'];
+    if(darkBgs.indexOf(bg) !== -1){
+      node.style.backgroundColor = '#eef3fc';
+      node.style.color = '#0b3a78';
+    }
+    var clr = (node.style.color || '').toLowerCase().replace(/\s+/g, '');
+    if(clr === '#ffffff' || clr === '#fff' || clr === 'rgb(255,255,255)'){
+      node.style.color = '#0b3a78';
+    }
+  }
+
+  function inlineComputedStyles(source, target){
+    if(!source || !target || source.nodeType !== 1 || target.nodeType !== 1) return;
+    var cs = window.getComputedStyle(source);
+    var props = [
+      'display','width','min-width','max-width','height','min-height','max-height',
+      'box-sizing','margin','margin-top','margin-right','margin-bottom','margin-left',
+      'padding','padding-top','padding-right','padding-bottom','padding-left',
+      'border','border-top','border-right','border-bottom','border-left',
+      'border-collapse','border-spacing','table-layout','vertical-align',
+      'background','background-color','color','font','font-family','font-size','font-weight',
+      'font-style','line-height','letter-spacing','text-align','text-transform','text-decoration',
+      'white-space','word-break','overflow-wrap','opacity','border-radius','box-shadow'
+    ];
+    props.forEach(function(prop){
+      var val = cs.getPropertyValue(prop);
+      if(val) target.style.setProperty(prop, val);
+    });
+    forceReadableContrast(target);
+
+    if(target.tagName === 'TABLE'){
+      target.setAttribute('cellpadding', target.getAttribute('cellpadding') || '0');
+      target.setAttribute('cellspacing', target.getAttribute('cellspacing') || '0');
+      target.setAttribute('border', target.getAttribute('border') || '0');
+      target.setAttribute('role', 'presentation');
+    }
+
+    var sChildren = source.children || [];
+    var tChildren = target.children || [];
+    for(var i = 0; i < sChildren.length; i++){
+      if(tChildren[i]) inlineComputedStyles(sChildren[i], tChildren[i]);
+    }
+  }
+
   function buildReportHtml(){
     var el = document.getElementById('report-content');
     if(!el) return null;
-    var html = el.outerHTML;
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}table{border-collapse:collapse;}img{max-width:100%;height:auto;display:block;}</style></head><body>' + html + '</body></html>';
+    var clone = el.cloneNode(true);
+    inlineComputedStyles(el, clone);
+
+    /* ── Outlook fix: convert dark backgrounds to light ── */
+    var darkBgs = ['rgb(11, 58, 120)','rgb(11,58,120)','#0b3a78',
+                   'rgb(30, 64, 175)','rgb(30,64,175)','#1e40af',
+                   'rgb(37, 99, 235)','rgb(37,99,235)','#2563eb',
+                   'rgb(10, 31, 82)','rgb(10,31,82)','#0a1f52'];
+    function isDarkBg(bg){
+      bg = bg.replace(/\s+/g,'');
+      for(var i=0;i<darkBgs.length;i++){ if(bg===darkBgs[i].replace(/\s+/g,'')) return true; }
+      return false;
+    }
+    clone.querySelectorAll('td,th,tr,div,span,strong').forEach(function(el2){
+      var bg2 = (el2.style.backgroundColor || '').toLowerCase();
+      if(isDarkBg(bg2)){
+        el2.style.backgroundColor = '#eef3fc';
+        el2.style.color = '#0b3a78';
+        el2.querySelectorAll('*').forEach(function(child){
+          var c = (child.style.color || '').toLowerCase().replace(/\s+/g,'');
+          if(c === '#ffffff' || c === '#fff' || c === 'rgb(255,255,255)'){
+            child.style.color = '#0b3a78';
+          }
+        });
+      }
+      /* Remove linear-gradient from background */
+      var bgFull = (el2.style.background || '').toLowerCase();
+      if(bgFull.indexOf('linear-gradient') !== -1){
+        el2.style.background = '';
+        el2.style.backgroundColor = '#eef3fc';
+        el2.style.color = '#0b3a78';
+      }
+      /* Fix white text globally */
+      var clr2 = (el2.style.color || '').toLowerCase().replace(/\s+/g,'');
+      if(clr2 === '#ffffff' || clr2 === '#fff' || clr2 === 'rgb(255,255,255)'){
+        el2.style.color = '#0b3a78';
+      }
+    });
+
+    clone.querySelectorAll('table').forEach(function(tbl){
+      tbl.style.borderCollapse = 'collapse';
+      if(!tbl.style.tableLayout) tbl.style.tableLayout = 'fixed';
+      if(!tbl.style.width) tbl.style.width = '100%';
+    });
+    clone.querySelectorAll('td,th').forEach(function(cell){
+      if(!cell.style.verticalAlign) cell.style.verticalAlign = 'top';
+    });
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}table{border-collapse:collapse;table-layout:fixed;}img{max-width:100%;height:auto;display:block;}</style></head><body>' + clone.outerHTML + '</body></html>';
   }
 
   function onCopyReport(){
@@ -507,16 +623,16 @@
       navigator.clipboard.write([item]).then(markCopied).catch(function(){
         if(navigator.clipboard && navigator.clipboard.writeText){
           navigator.clipboard.writeText(el.innerText).then(markCopied).catch(function(){
-            plainCopyFallback(el.innerText);
+            plainCopyFallback(el.innerText, full);
             markCopied();
           });
         } else {
-          plainCopyFallback(el.innerText);
+          plainCopyFallback(el.innerText, full);
           markCopied();
         }
       });
     } else {
-      plainCopyFallback(el.innerText);
+      plainCopyFallback(el.innerText, full);
       markCopied();
     }
   }
