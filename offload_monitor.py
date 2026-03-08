@@ -292,11 +292,55 @@ def fetch_std_etd_airlabs(
 
 def get_shift(now: datetime) -> str:
     mins = now.hour * 60 + now.minute
-    if 6 * 60 <= mins < 14 * 60 + 30:
+    if 6 * 60 <= mins < 15 * 60:
         return "shift1"
-    if 14 * 60 + 30 <= mins < 21 * 60 + 30:
+    if 15 * 60 <= mins < 22 * 60:
         return "shift2"
     return "shift3"
+
+
+def _parse_time_from_std_etd(raw: str) -> tuple[int, int] | None:
+    s = (raw or "").strip()
+    if not s:
+        return None
+    m = re.search(r"(\d{1,2}):(\d{2})", s)
+    if not m:
+        return None
+    hh = int(m.group(1))
+    mm = int(m.group(2))
+    if not (0 <= hh <= 23 and 0 <= mm <= 59):
+        return None
+    return hh, mm
+
+
+def _bucket_from_date_and_time(date_iso: str, hh: int | None, mm: int | None, fallback_now: datetime) -> tuple[str, str]:
+    tz = ZoneInfo(TIMEZONE)
+    base_date = datetime.fromisoformat(date_iso).date()
+
+    if hh is None or mm is None:
+        if base_date == fallback_now.astimezone(tz).date():
+            return date_iso, get_shift(fallback_now)
+        return date_iso, "shift1"
+
+    mins = hh * 60 + mm
+    if 6 * 60 <= mins < 15 * 60:
+        return date_iso, "shift1"
+    if 15 * 60 <= mins < 22 * 60:
+        return date_iso, "shift2"
+    if mins < 6 * 60:
+        return ((base_date - timedelta(days=1)).isoformat(), "shift3")
+    return date_iso, "shift3"
+
+
+def resolve_flight_bucket(flight: dict, now: datetime) -> tuple[str, str]:
+    raw_date = (flight.get("date") or "").strip()
+    date_iso = normalize_flight_date(raw_date, now) if raw_date else now.strftime("%Y-%m-%d")
+    if not date_iso:
+        date_iso = now.strftime("%Y-%m-%d")
+
+    parsed = _parse_time_from_std_etd(flight.get("std_etd", ""))
+    hh, mm = parsed if parsed else (None, None)
+    return _bucket_from_date_and_time(date_iso, hh, mm, now)
 
 
 def slugify(text: str, max_length: int = 80) -> str:
@@ -673,42 +717,59 @@ def _parse_type_c(soup: BeautifulSoup) -> list[dict]:
 #  التخزين
 # ══════════════════════════════════════════════════════════════════
 
-def save_flights(flights: list[dict], now: datetime) -> tuple[str, str, dict]:
-    date_dir = now.strftime("%Y-%m-%d")
-    shift    = get_shift(now)
-    folder   = DATA_DIR / date_dir / shift
-    folder.mkdir(parents=True, exist_ok=True)
-
-    meta_path = folder / "meta.json"
-    meta      = load_json(meta_path, {"flights": {}})
-    if not isinstance(meta, dict) or "flights" not in meta:
-        meta = {"flights": {}}
+def save_flights(flights: list[dict], now: datetime) -> list[tuple[str, str]]:
+    metas_by_bucket: dict[tuple[str, str], dict] = {}
+    touched: list[tuple[str, str]] = []
 
     for flight in flights:
-        filename  = slugify(
-            f"{flight['flight']}_{flight.get('date','')}_{flight.get('destination','')}"
+        date_dir, shift = resolve_flight_bucket(flight, now)
+        folder = DATA_DIR / date_dir / shift
+        folder.mkdir(parents=True, exist_ok=True)
+
+        meta_path = folder / "meta.json"
+        meta = metas_by_bucket.get((date_dir, shift))
+        if meta is None:
+            meta = load_json(meta_path, {"flights": {}})
+            if not isinstance(meta, dict) or "flights" not in meta:
+                meta = {"flights": {}}
+            metas_by_bucket[(date_dir, shift)] = meta
+
+        filename = slugify(
+            f"{flight.get('flight','')}_{flight.get('date','')}_{flight.get('destination','')}"
         ) + ".json"
         file_path = folder / filename
-        existed   = file_path.exists()
+        existed = file_path.exists()
 
-        payload = {**flight, "saved_at": now.isoformat()}
+        payload = {
+            **flight,
+            "saved_at": now.isoformat(),
+            "archive_date": date_dir,
+            "archive_shift": shift,
+        }
         file_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
         entry = meta["flights"].get(filename, {
-            "flight":     flight["flight"],
-            "date":       flight.get("date", ""),
-            "dest":       flight.get("destination", ""),
+            "flight": flight.get("flight", ""),
+            "date": flight.get("date", ""),
+            "dest": flight.get("destination", ""),
             "created_at": now.isoformat(),
             "updated_at": now.isoformat(),
-            "updates":    0,
+            "updates": 0,
         })
         if existed:
             entry["updates"] = int(entry.get("updates", 0)) + 1
-        entry["updated_at"]       = now.isoformat()
+        entry["updated_at"] = now.isoformat()
+        entry["archive_date"] = date_dir
+        entry["archive_shift"] = shift
         meta["flights"][filename] = entry
 
-    write_json(meta_path, meta)
-    return date_dir, shift, meta
+        if (date_dir, shift) not in touched:
+            touched.append((date_dir, shift))
+
+    for (date_dir, shift), meta in metas_by_bucket.items():
+        write_json(DATA_DIR / date_dir / shift / "meta.json", meta)
+
+    return touched
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -1525,42 +1586,131 @@ def _render_manpower(roster: dict) -> str:
 # ══════════════════════════════════════════════════════════════════
 
 def _render_offload_table(flights: list[dict], meta: dict) -> str:
-    """Render offload cards using the detailed blue/white layout."""
+    """Render offload — one card per flight matching screenshot design."""
+    from datetime import datetime as _dt
+    onedrive_url = os.environ.get("ONEDRIVE_FILE_URL","").strip()
+    update_link  = onedrive_url if onedrive_url else "#"
+    now_str      = _dt.now().strftime("%Y-%m-%d %H:%M")
+
     if not flights:
         return """
     <div style="margin-top:12px;overflow-x:auto;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0"
            style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:12px;">
       <tr style="background:#0b3a78;">
-        <td style="padding:8px 6px;color:#ffffff !important;font-weight:700;border:1px solid #0a3166;text-align:center;width:30px;">#</td>
-        <td style="padding:8px 6px;color:#ffffff !important;font-weight:700;border:1px solid #0a3166;">AWB</td>
-        <td style="padding:8px 6px;color:#ffffff !important;font-weight:700;border:1px solid #0a3166;text-align:center;">PCS</td>
-        <td style="padding:8px 6px;color:#ffffff !important;font-weight:700;border:1px solid #0a3166;text-align:center;">KGS</td>
-        <td style="padding:8px 6px;color:#ffffff !important;font-weight:700;border:1px solid #0a3166;text-align:center;">Priority</td>
-        <td style="padding:8px 6px;color:#ffffff !important;font-weight:700;border:1px solid #0a3166;">Description</td>
-        <td style="padding:8px 6px;color:#ffffff !important;font-weight:700;border:1px solid #0a3166;text-align:center;">ULD</td>
-        <td style="padding:8px 6px;color:#ffffff !important;font-weight:700;border:1px solid #0a3166;">Offloading Reason</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;width:30px;">#</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">AWB</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">PCS</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">KGS</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">Priority</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">Description</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">ULD</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">Offloading Reason</td>
       </tr>
       <tr>
-        <td colspan="8" style="padding:14px 6px;border:1px solid #dde6f5;color:#64748b;text-align:center;font-weight:600;">
+        <td colspan="8" style="padding:14px 6px;border:1px solid #dde6f5;
+            color:#64748b;text-align:center;font-weight:600;">
           NIL — No offload data recorded for this shift.
         </td>
       </tr>
     </table>
     </div>"""
 
-    parts = []
+    cards = ""
     for flight in flights:
-        flt = flight.get("flight", "") or "—"
-        meta_key = None
-        for filename, entry in (meta.get("flights") or {}).items():
-            if (entry.get("flight") or "") == flt and (entry.get("date") or "") == (flight.get("date") or ""):
-                meta_key = entry
-                break
-        if not meta_key:
-            meta_key = {"updated_at": flight.get("saved_at", ""), "updates": 0}
-        parts.append(_render_flight(flight, meta_key))
-    return '<div style="margin-top:12px;">' + ''.join(parts) + '</div>'
+        flt     = flight.get("flight","")      or "—"
+        date    = flight.get("date","")        or "—"
+        dest    = flight.get("destination","") or "—"
+        std_raw = flight.get("std_etd","")     or ""
+        std_val, etd_val = _format_std_etd(std_raw)
+        std = std_val or "—"
+        etd = etd_val or "—"
+
+        items = [it for it in flight.get("items",[]) if (it.get("awb","") or "").strip()]
+        total_pcs = 0; total_kgs = 0.0
+        for it in items:
+            try: total_pcs += int(str(it.get("pcs","0") or "0").replace(",",""))
+            except: pass
+            try: total_kgs += float(str(it.get("kgs","0") or "0").replace(",",""))
+            except: pass
+
+        rows = ""
+        for i, it in enumerate(items, 1):
+            bg     = "#f3f4f6" if i%2 else "#ffffff"
+            awb    = it.get("awb","")         or "—"
+            pcs    = it.get("pcs","")         or "—"
+            kgs    = it.get("kgs","")         or "—"
+            desc   = it.get("description","") or "—"
+            uld    = it.get("trolley","")     or "—"
+            reason = (it.get("reason","")     or "").strip()
+            pri    = it.get("class_","")      or "—"
+            badge  = (
+                f'<span style="display:inline-block;padding:2px 8px;border-radius:4px;'                f'background:#fff3e0;border:1px solid #ffb74d;color:#e65100;'                f'font-size:10.5px;font-weight:700;">{reason.upper()}</span>'
+            ) if reason else "—"
+            rows += f"""
+        <tr style="background:{bg};">
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-weight:700;font-size:13px;">{i}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;font-family:'Courier New',monospace;font-size:12px;color:#1e40af;font-weight:600;">{awb}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-weight:700;font-size:13px;">{pcs}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-size:13px;">{kgs}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-size:13px;">{pri}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;font-size:13px;">{desc}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-size:13px;">{uld}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;font-size:13px;">{badge}</td>
+        </tr>"""
+
+        if not rows:
+            rows = '<tr><td colspan="8" style="padding:12px;border:1px solid #dde6f5;color:#64748b;text-align:center;">No items recorded.</td></tr>'
+
+        cards += f"""
+    <div style="margin-top:14px;border-radius:8px;overflow:hidden;border:1px solid #c7d4f0;font-family:Calibri,Arial,sans-serif;">
+      <!-- Flight header -->
+      <div style="background:linear-gradient(90deg,#1e40af,#2563eb);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <span style="color:#fff;font-weight:800;font-size:15px;">✈ {flt}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">Date:</strong> {date}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">STD:</strong> {std}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">ETD:</strong> {etd}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">DEST:</strong> <strong style="color:#fbbf24;font-size:13px;">{dest}</strong></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="color:#b91c1c;font-size:12px;font-weight:700;">⟳ UPDATE</span>
+          <span style="color:#bfdbfe;font-size:11px;">Updated: {now_str}</span>
+        </div>
+      </div>
+      <!-- Status bar -->
+      <div style="background:#f0f5ff;padding:8px 14px;border-bottom:1px solid #dde6f5;font-size:12px;color:#374151;display:flex;gap:20px;flex-wrap:wrap;">
+        <span>Email: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>Ramp Received: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>CMS Completed: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>Pieces Verified: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>Remarks: <strong style="color:#374151;">—</strong></span>
+      </div>
+      <!-- Table -->
+      <div style="overflow-x:auto;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:13px;">
+          <tr style="background:#1e40af;">
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;width:30px;font-size:13px;">#</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">AWB</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">PCS</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">KGS</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">Priority</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">Description</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">ULD</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">Offloading Reason</td>
+          </tr>
+          {rows}
+        </table>
+      </div>
+      <!-- Footer -->
+      <div style="background:#f8faff;padding:8px 14px;border-top:1px solid #dde6f5;font-size:12px;font-weight:600;color:#1b1f2a;">
+        Total Shipments: <strong style="color:#0b3a78;">{len(items)}</strong>
+        &nbsp;|&nbsp; Total PCS: <strong style="color:#0b3a78;">{total_pcs}</strong>
+        &nbsp;|&nbsp; Total KGS: <strong style="color:#0b3a78;">{total_kgs:g}</strong>
+      </div>
+    </div>"""
+
+    return cards
 
 def _render_manpower_section(roster: dict, supervisor_display: str = "", supervisor_is_acting: bool = False) -> str:
     """Render Section 6 MANPOWER — grouped by dept, sections B-G."""
@@ -1682,9 +1832,9 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     flights      = [json.loads(p.read_text(encoding="utf-8")) for p in flight_files]
 
     shift_labels = {
-        "shift1": {"ar": "صباح",     "en": "Morning",   "time": "06:00 > 15:00"},
-        "shift2": {"ar": "ظهر/مساء", "en": "Afternoon", "time": "15:00 > 22:00"},
-        "shift3": {"ar": "ليل",      "en": "Night",      "time": "21:00 > 06:00"},
+        "shift1": {"ar": "صباح",     "en": "Morning",   "time": "06:00 – 15:00"},
+        "shift2": {"ar": "ظهر/مساء", "en": "Afternoon", "time": "15:00 – 22:00"},
+        "shift3": {"ar": "ليل",      "en": "Night",      "time": "22:00 – 06:00"},
     }
     sl            = shift_labels.get(shift, {"ar": shift, "en": shift, "time": ""})
     shift_label   = f"{sl['en']} Shift — {sl['time']}"
@@ -1825,6 +1975,16 @@ def build_shift_report(date_dir: str, shift: str) -> None:
           </td>
         </tr>
       </table>
+    </td>
+  </tr>
+
+  <!-- ═══ BACK LINK ═══ -->
+  <tr>
+    <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
+      <a href="../../index.html"
+         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none;">
+        ← Back to Index
+      </a>
     </td>
   </tr>
 
@@ -2129,123 +2289,325 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 </table>
 
 <!-- ═══ BUTTONS BAR (خارج التقرير) ═══ -->
-<div style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end;">
+<div style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+
   <button id="btn-copy"
     type="button"
-    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
-           color:#fff; background:#0b3a78; border:none; border-radius:8px;
-           padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(11,58,120,.25);">
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#0b3a78; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(11,58,120,.25);">
     📋 Copy Report
+  </button>
+
+  <button id="btn-manage-emails"
+    type="button"
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#475569; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(71,85,105,.25);">
+    📝 Edit Email List
   </button>
 
   <button id="btn-email"
     type="button"
-    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
-           color:#fff; background:#c2410c; border:none; border-radius:8px;
-           padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(194,65,12,.25);">
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#c2410c; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(194,65,12,.25);">
     ✉️ Send Email Now
   </button>
+
 </div>
 
 <script>
-(function() {{
-  function setBtnState(btn, label, bg, disabled) {{
-    if (!btn) return;
-    btn.innerText = label;
-    btn.style.background = bg;
-    btn.disabled = !!disabled;
+(function(){{
+  var REPORT_SECRET = '887155';
+  var COPY_SUCCESS_MS = 2500;
+  var REPO_OWNER = 'khalidsaif912';
+  var REPO_NAME = 'offload-monitor';
+  var RECIPIENTS_PATH = 'docs/data/email_recipients.json';
+  var RECIPIENTS_RAW_URL = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main/' + RECIPIENTS_PATH;
+  var RECIPIENTS_EDIT_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/edit/main/' + RECIPIENTS_PATH;
+  var RECIPIENTS_NEW_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/new/main?filename=' + encodeURIComponent(RECIPIENTS_PATH);
+  var DEFAULT_RECIPIENTS = [];
+
+  function askSendSecret(){{
+    var entered = prompt('Enter send password:');
+    if(entered === null) return false;
+    if((entered || '').trim() !== REPORT_SECRET){{
+      alert('Wrong password');
+      return false;
+    }}
+    return true;
   }}
 
-  var copyBtn = document.getElementById("btn-copy");
-  if (copyBtn) {{
-    copyBtn.addEventListener("click", async function() {{
-      var report = document.getElementById("report-content");
-      var html = report ? report.outerHTML : "";
-      var wrapped = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:20px 0;background:#eef1f7;">' + html + '</body></html>';
-      var plain = report ? (report.innerText || report.textContent || "") : document.body.innerText;
+  function resetButton(btn, text, color, delay){{
+    setTimeout(function(){{
+      btn.innerText = text;
+      btn.style.background = color;
+      btn.disabled = false;
+    }}, delay || 3000);
+  }}
 
-      try {{
-        if (navigator.clipboard && window.ClipboardItem) {{
-          var item = new ClipboardItem({{
-            "text/html": new Blob([wrapped], {{type: "text/html"}}),
-            "text/plain": new Blob([plain], {{type: "text/plain"}})
+  function plainCopyFallback(text){{
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {{ document.execCommand('copy'); }} catch (e) {{}}
+    document.body.removeChild(ta);
+  }}
+
+  function buildReportHtml(){{
+    var el = document.getElementById('report-content');
+    if(!el) return null;
+    var html = el.outerHTML;
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}}table{{border-collapse:collapse;}}img{{max-width:100%;height:auto;display:block;}}</style></head><body>' + html + '</body></html>';
+  }}
+
+  function onCopyReport(){{
+    var btn = document.getElementById('btn-copy');
+    var el = document.getElementById('report-content');
+    if(!btn || !el) return;
+
+    var full = buildReportHtml();
+    if(!full) return;
+
+    function markCopied(){{
+      btn.innerText = '✅ Copied!';
+      btn.style.background = '#059669';
+      resetButton(btn, '📋 Copy Report', '#0b3a78', COPY_SUCCESS_MS);
+    }}
+
+    if(navigator.clipboard && window.ClipboardItem){{
+      var item = new ClipboardItem({{
+        'text/html': new Blob([full], {{type:'text/html'}}),
+        'text/plain': new Blob([el.innerText], {{type:'text/plain'}})
+      }});
+      navigator.clipboard.write([item]).then(markCopied).catch(function(){{
+        if(navigator.clipboard && navigator.clipboard.writeText){{
+          navigator.clipboard.writeText(el.innerText).then(markCopied).catch(function(){{
+            plainCopyFallback(el.innerText);
+            markCopied();
           }});
-          await navigator.clipboard.write([item]);
-        }} else if (navigator.clipboard && navigator.clipboard.writeText) {{
-          await navigator.clipboard.writeText(plain);
         }} else {{
-          var ta = document.createElement("textarea");
-          ta.value = plain;
-          document.body.appendChild(ta);
-          ta.select();
-          document.execCommand("copy");
-          document.body.removeChild(ta);
+          plainCopyFallback(el.innerText);
+          markCopied();
         }}
-        setBtnState(copyBtn, "✅ Copied!", "#059669", false);
-      }} catch (e) {{
-        setBtnState(copyBtn, "❌ Copy failed", "#dc2626", false);
-      }}
-      setTimeout(function() {{
-        setBtnState(copyBtn, "📋 Copy Report", "#0b3a78", false);
-      }}, 2500);
+      }});
+    }} else {{
+      plainCopyFallback(el.innerText);
+      markCopied();
+    }}
+  }}
+
+  function normalizeRecipients(items){{
+    var seen = {{}};
+    var out = [];
+    (items || []).forEach(function(v){{
+      var s = String(v || '').trim().toLowerCase();
+      if(!s) return;
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return;
+      if(seen[s]) return;
+      seen[s] = true;
+      out.push(s);
+    }});
+    return out;
+  }}
+
+  function getLocalRecipients(){{
+    try {{
+      return normalizeRecipients(JSON.parse(localStorage.getItem('saved_recipients') || '[]'));
+    }} catch(e) {{
+      return [];
+    }}
+  }}
+
+  function setLocalRecipients(items){{
+    localStorage.setItem('saved_recipients', JSON.stringify(normalizeRecipients(items)));
+  }}
+
+  function loadRecipients(){{
+    var fallback = getLocalRecipients();
+    if(fallback.length) return Promise.resolve(fallback);
+    return fetch(RECIPIENTS_RAW_URL + '?t=' + Date.now(), {{cache:'no-store'}})
+      .then(function(r){{
+        if(!r.ok) throw new Error('missing');
+        return r.json();
+      }})
+      .then(function(data){{
+        var arr = normalizeRecipients((data && data.recipients) || DEFAULT_RECIPIENTS);
+        if(arr.length) setLocalRecipients(arr);
+        return arr;
+      }})
+      .catch(function(){{
+        return normalizeRecipients(DEFAULT_RECIPIENTS);
+      }});
+  }}
+
+  function renderRecipientList(container, recipients){{
+    if(!container) return;
+    if(!recipients.length){{
+      container.innerHTML = '<div style="padding:10px;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;">No saved recipients yet.</div>';
+      return;
+    }}
+    container.innerHTML = recipients.map(function(email, idx){{
+      return '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;background:#fff;">'
+        + '<span style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">'
+        + '<input type="checkbox" data-email="' + email.replace(/"/g,'&quot;') + '" checked>'
+        + '<span style="word-break:break-all;">' + email + '</span>'
+        + '</span>'
+        + '<button type="button" data-del="' + idx + '" style="border:none;background:#dc2626;color:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;font-weight:700;">Delete</button>'
+        + '</label>';
+    }}).join('');
+  }}
+
+  function openRecipientsManager(mode){{
+    return loadRecipients().then(function(initial){{
+      var recipients = initial.slice();
+      return new Promise(function(resolve){{
+        var backdrop = document.createElement('div');
+        backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+        var box = document.createElement('div');
+        box.style.cssText = 'width:min(560px,100%);max-height:90vh;overflow:auto;background:#f8fafc;border-radius:16px;box-shadow:0 20px 60px rgba(15,23,42,.35);padding:18px;font-family:Calibri,Arial,sans-serif;';
+        backdrop.appendChild(box);
+        box.innerHTML = ''
+          + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">'
+          + '<div><div style="font-size:22px;font-weight:800;color:#0f172a;">Email Recipients</div><div style="font-size:13px;color:#64748b;">Choose all, some, or add a new email.</div></div>'
+          + '<button type="button" id="picker-close" style="border:none;background:#e2e8f0;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Close</button>'
+          + '</div>'
+          + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
+          + '<button type="button" id="picker-all" style="border:none;background:#0b3a78;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Select All</button>'
+          + '<button type="button" id="picker-none" style="border:none;background:#64748b;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Unselect All</button>'
+          + '<button type="button" id="picker-open-gh" style="border:none;background:#475569;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Open on GitHub</button>'
+          + '</div>'
+          + '<div style="display:flex;gap:8px;margin-bottom:12px;">'
+          + '<input id="picker-new-email" type="email" placeholder="new@example.com" style="flex:1;min-width:0;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;">'
+          + '<button type="button" id="picker-add" style="border:none;background:#059669;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:700;">Add</button>'
+          + '</div>'
+          + '<div id="picker-list"></div>'
+          + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">'
+          + (mode === 'send' ? '<button type="button" id="picker-send" style="border:none;background:#c2410c;color:#fff;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:800;">Send Now</button>' : '')
+          + '<button type="button" id="picker-save-only" style="border:none;background:#0b3a78;color:#fff;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:800;">Save</button>'
+          + '</div>';
+        document.body.appendChild(backdrop);
+        var list = box.querySelector('#picker-list');
+        function rerender(){{ renderRecipientList(list, recipients); }}
+        function close(result){{ document.body.removeChild(backdrop); resolve(result || null); }}
+        rerender();
+        box.querySelector('#picker-close').onclick = function(){{ close(null); }};
+        box.querySelector('#picker-all').onclick = function(){{ list.querySelectorAll('input[type="checkbox"]').forEach(function(cb){{ cb.checked = true; }}); }};
+        box.querySelector('#picker-none').onclick = function(){{ list.querySelectorAll('input[type="checkbox"]').forEach(function(cb){{ cb.checked = false; }}); }};
+        box.querySelector('#picker-open-gh').onclick = function(){{ window.open(RECIPIENTS_EDIT_URL, '_blank'); }};
+        box.querySelector('#picker-add').onclick = function(){{
+          var input = box.querySelector('#picker-new-email');
+          var val = String(input.value || '').trim().toLowerCase();
+          if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){{ alert('Enter a valid email address'); return; }}
+          recipients = normalizeRecipients(recipients.concat([val]));
+          input.value = '';
+          rerender();
+        }};
+        list.addEventListener('click', function(ev){{
+          var idx = ev.target && ev.target.getAttribute('data-del');
+          if(idx === null) return;
+          recipients.splice(Number(idx), 1);
+          rerender();
+        }});
+        box.querySelector('#picker-save-only').onclick = function(){{
+          var selected = normalizeRecipients(recipients);
+          setLocalRecipients(selected);
+          alert('Saved locally in this browser. To save on GitHub, use Open on GitHub.');
+          close({{selected:selected, saved:true}});
+        }};
+        if(mode === 'send'){{
+          box.querySelector('#picker-send').onclick = function(){{
+            var selected = Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(cb){{ return cb.getAttribute('data-email'); }});
+            selected = normalizeRecipients(selected);
+            if(!selected.length){{ alert('Choose at least one recipient'); return; }}
+            setLocalRecipients(normalizeRecipients(recipients));
+            close({{selected:selected, saved:true}});
+          }};
+        }}
+      }});
     }});
   }}
 
-  var emailBtn = document.getElementById("btn-email");
-  if (emailBtn) {{
-    emailBtn.addEventListener("click", async function() {{
-      var ok = window.confirm("إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: {shift}\nDate: {date_dir}");
-      if (!ok) return;
+  function openRecipientsFile(){{
+    if(!askSendSecret()) return;
+    loadRecipients().then(function(items){{
+      if(items.length){{
+        window.open(RECIPIENTS_EDIT_URL, '_blank');
+      }} else {{
+        var template = `{{
+  "recipients": [
+    "example1@company.com",
+    "example2@company.com"
+  ],
+  "updated_at": "",
+  "source": "offload-monitor-ui"
+}}`;
+        var url = RECIPIENTS_NEW_URL + '&value=' + encodeURIComponent(template);
+        window.open(url, '_blank');
+      }}
+    }});
+  }}
 
-      setBtnState(emailBtn, "⏳ Sending…", "#64748b", true);
+  function sendEmailNow(){{
+    if(!askSendSecret()) return;
+    openRecipientsManager('send').then(function(result){{
+      if(!result || !result.selected || !result.selected.length) return;
+      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\\n\\nShift: {shift}\\nDate: {date_dir}\\nRecipients: ' + result.selected.join(', '));
+      if(!ok) return;
 
-      var pat = localStorage.getItem("gh_pat");
-      if (!pat) {{
-        pat = window.prompt("أدخل GitHub Personal Access Token (repo scope):");
-        if (!pat) {{
-          setBtnState(emailBtn, "✉️ Send Email Now", "#c2410c", false);
+      var btn = document.getElementById('btn-email');
+      if(!btn) return;
+      btn.innerText = '⏳ Sending…';
+      btn.disabled = true;
+      btn.style.background = '#64748b';
+
+      var pat = localStorage.getItem('gh_pat');
+      if(!pat){{
+        pat = prompt('أدخل GitHub Personal Access Token (repo scope):');
+        if(!pat){{
+          btn.innerText = '✉️ Send Email Now';
+          btn.style.background = '#c2410c';
+          btn.disabled = false;
           return;
         }}
-        localStorage.setItem("gh_pat", pat);
+        localStorage.setItem('gh_pat', pat);
       }}
 
-      try {{
-        var resp = await fetch("https://api.github.com/repos/khalidsaif912/offload-monitor/dispatches", {{
-          method: "POST",
-          headers: {{
-            "Accept": "application/vnd.github+json",
-            "Authorization": "Bearer " + pat,
-            "Content-Type": "application/json"
-          }},
-          body: JSON.stringify({{
-            event_type: "send_report_now",
-            client_payload: {{
-              date_dir: "{date_dir}",
-              shift: "{shift}"
-            }}
-          }})
-        }});
-
-        if (resp.ok || resp.status === 204) {{
-          setBtnState(emailBtn, "✅ Email Sent!", "#059669", true);
-          setTimeout(function() {{
-            setBtnState(emailBtn, "✉️ Send Email Now", "#c2410c", false);
-          }}, 4000);
+      fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {{
+        method:'POST',
+        headers:{{
+          'Accept':'application/vnd.github+json',
+          'Authorization':'Bearer ' + pat,
+          'Content-Type':'application/json'
+        }},
+        body:JSON.stringify({{
+          event_type:'send_report_now',
+          client_payload:{{date_dir:'{date_dir}', shift:'{shift}', recipients: result.selected}}
+        }})
+      }}).then(function(r){{
+        if(r.ok || r.status === 204){{
+          btn.innerText = '✅ Email Sent!';
+          btn.style.background = '#059669';
+          resetButton(btn, '✉️ Send Email Now', '#c2410c', 4000);
         }} else {{
-          if (resp.status === 401) localStorage.removeItem("gh_pat");
-          setBtnState(emailBtn, "❌ Failed (" + resp.status + ")", "#dc2626", false);
-          setTimeout(function() {{
-            setBtnState(emailBtn, "✉️ Send Email Now", "#c2410c", false);
-          }}, 3000);
+          if(r.status === 401){{ localStorage.removeItem('gh_pat'); }}
+          btn.innerText = '❌ Failed (' + r.status + ')';
+          btn.style.background = '#dc2626';
+          resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
         }}
-      }} catch (err) {{
-        setBtnState(emailBtn, "❌ Error", "#dc2626", false);
-        setTimeout(function() {{
-          setBtnState(emailBtn, "✉️ Send Email Now", "#c2410c", false);
-        }}, 3000);
-      }}
+      }}).catch(function(){{
+        btn.innerText = '❌ Error';
+        btn.style.background = '#dc2626';
+        resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
+      }});
     }});
   }}
+
+  var copyBtn = document.getElementById('btn-copy');
+  var manageBtn = document.getElementById('btn-manage-emails');
+  var emailBtn = document.getElementById('btn-email');
+  if(copyBtn) copyBtn.addEventListener('click', onCopyReport);
+  if(manageBtn) manageBtn.addEventListener('click', openRecipientsFile);
+  if(emailBtn) emailBtn.addEventListener('click', sendEmailNow);
 }})();
 </script>
 
@@ -2711,15 +3073,11 @@ def send_shift_report_email(date_dir: str, shift: str) -> None:
         return
 
     html_content = report_file.read_text(encoding="utf-8")
-    html_content = re.sub(r"<script\b.*?</script>", "", html_content, flags=re.S|re.I)
-    html_content = re.sub(r"<button\b.*?</button>", "", html_content, flags=re.S|re.I)
-    html_content = re.sub(r'<a[^>]*href="\.\./\.\./index\.html"[^>]*>.*?</a>', '', html_content, flags=re.S|re.I)
-    html_content = re.sub(r"<!-- ═══ BACK LINK ═══ -->.*?</tr>", "", html_content, flags=re.S|re.I)
 
     shift_names = {
-        "shift1": "Morning Shift (06:00>15:00)",
-        "shift2": "Afternoon Shift (15:00>22:00)",
-        "shift3": "Night Shift (21:00>06:00)",
+        "shift1": "Morning Shift (06:00–15:00)",
+        "shift2": "Afternoon Shift (15:00–22:00)",
+        "shift3": "Night Shift (22:00–06:00)",
     }
     subject = f"Export Warehouse Activity Report — {date_dir} | {shift_names.get(shift, shift)}"
 
@@ -2794,9 +3152,9 @@ def _shift_window_for(ref_dt: datetime) -> tuple[datetime, datetime]:
     """إرجاع (start, end) للمناوبة التي تنتمي إليها ref_dt بالتوقيت المحلي.
 
     المناوبات:
-      shift1 : 06:00 – 14:30
-      shift2 : 14:30 – 21:30
-      shift3 : 21:30 – 06:00 (اليوم التالي)
+      shift1 : 06:00 – 15:00
+      shift2 : 15:00 – 22:00
+      shift3 : 21:00 – 06:00 (اليوم التالي)
     """
     tz  = ZoneInfo(TIMEZONE)
     loc = ref_dt.astimezone(tz)
@@ -2804,19 +3162,18 @@ def _shift_window_for(ref_dt: datetime) -> tuple[datetime, datetime]:
 
     base = loc.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    if 6 * 60 <= mins < 14 * 60 + 30:          # shift1
-        start = base.replace(hour=6)
-        end   = base.replace(hour=14, minute=30)
-    elif 14 * 60 + 30 <= mins < 21 * 60 + 30:  # shift2
-        start = base.replace(hour=14, minute=30)
-        end   = base.replace(hour=21, minute=30)
-    else:                                        # shift3 يعبر منتصف الليل
+    if 6 * 60 <= mins < 15 * 60:
+        start = base.replace(hour=6, minute=0)
+        end   = base.replace(hour=15, minute=0)
+    elif 15 * 60 <= mins < 22 * 60:
+        start = base.replace(hour=15, minute=0)
+        end   = base.replace(hour=22, minute=0)
+    else:
         if loc.hour < 6:
-            # بعد منتصف الليل — المناوبة بدأت أمس
-            start = (base - timedelta(days=1)).replace(hour=21, minute=30)
+            start = (base - timedelta(days=1)).replace(hour=21, minute=0)
         else:
-            start = base.replace(hour=21, minute=30)
-        end = (start + timedelta(hours=8, minutes=30))
+            start = base.replace(hour=21, minute=0)
+        end = (start + timedelta(hours=9))
 
     return start, end
 
@@ -2928,11 +3285,10 @@ def main() -> None:
         STATE_FILE.write_text(new_hash, encoding="utf-8")
         return
 
-    # ── فلترة الرحلات القديمة بناءً على تاريخ الإيميل والمناوبة ──
-    flights = filter_flights_by_shift(flights, now)
-
+    # ── لا نربط الأوفلود بوقت تشغيل الـ workflow فقط.
+    #     كل رحلة تُؤرشف حسب تاريخها ووقت STD/ETD إلى التقرير/المناوبة المناسبة.
     if not flights:
-        print("WARNING: All flights filtered out as old/stale — no data for this shift.")
+        print("WARNING: No flights available after parsing.")
         STATE_FILE.write_text(new_hash, encoding="utf-8")
         build_root_index(now)
         return
@@ -2961,14 +3317,15 @@ def main() -> None:
         print("AIRLABS_API_KEY not set — STD/ETD will remain blank.")
 
     print(f"Extracted {len(flights)} flight(s). Saving…")
-    date_dir, shift, _ = save_flights(flights, now)
+    touched_buckets = save_flights(flights, now)
 
-    print(f"Building report: {date_dir}/{shift}…")
-    build_shift_report(date_dir, shift)
+    for date_dir, shift in touched_buckets:
+        print(f"Building report: {date_dir}/{shift}…")
+        build_shift_report(date_dir, shift)
     build_root_index(now)
 
     STATE_FILE.write_text(new_hash, encoding="utf-8")
-    print(f"Done. ✓  ({len(flights)} flights saved)")
+    print(f"Done. ✓  ({len(flights)} flights saved into {len(touched_buckets)} bucket(s))")
 
     # ── إرسال البريد قبل نهاية المناوبة ──
     today_str = now.strftime("%Y-%m-%d")
