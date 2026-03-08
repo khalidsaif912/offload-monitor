@@ -1551,15 +1551,15 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     <div style="margin-top:12px;overflow-x:auto;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0"
            style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:12px;">
-      <tr style="background:#0b3a78;">
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;width:30px;">#</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">AWB</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">PCS</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">KGS</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">Priority</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">Description</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">ULD</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">Offloading Reason</td>
+      <tr style="background:#1e40af;">
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;width:30px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">#</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">AWB</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">PCS</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">KGS</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Priority</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Description</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ULD</td>
+        <td style="padding:7px 6px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Offloading Reason</td>
       </tr>
       <tr>
         <td colspan="8" style="padding:14px 6px;border:1px solid #dde6f5;
@@ -1644,14 +1644,14 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
       <div style="overflow-x:auto;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:13px;">
           <tr style="background:#1e40af;">
-            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;width:30px;font-size:13px;">#</td>
-            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">AWB</td>
-            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">PCS</td>
-            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">KGS</td>
-            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">Priority</td>
-            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">Description</td>
-            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">ULD</td>
-            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">Offloading Reason</td>
+            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;width:30px;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">#</td>
+            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">AWB</td>
+            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">PCS</td>
+            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">KGS</td>
+            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Priority</td>
+            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Description</td>
+            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">ULD</td>
+            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;font-size:13px;-webkit-print-color-adjust:exact;print-color-adjust:exact;">Offloading Reason</td>
           </tr>
           {rows}
         </table>
@@ -1888,6 +1888,16 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Export Warehouse Activity Report — {date_display}</title>
+  <style>
+    /* منع المتصفح من عرض رابط الـ href بجانب النص */
+    a::after, a::before {{ content: none !important; }}
+    @media print {{ a[href]::after {{ content: none !important; }} }}
+    /* تحسين قراءة الجداول عند الطباعة */
+    @media print {{
+      table {{ border-collapse: collapse !important; }}
+      th, td {{ border: 1px solid #999 !important; }}
+    }}
+  </style>
 </head>
 <body style="margin:0; padding:0; background-color:#eef1f7; font-family:Calibri, Arial, sans-serif;">
 
