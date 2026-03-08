@@ -1559,7 +1559,9 @@ def _render_manpower(roster: dict) -> str:
 # ══════════════════════════════════════════════════════════════════
 
 def _render_offload_table(flights: list[dict], meta: dict, report_date: str = "") -> str:
-    """Render offload cards. When NIL, keep the same table structure with empty rows."""
+    """Render offload cards. When NIL, keep the same table structure with empty rows.
+    Uses a table-based header so it renders correctly in Outlook and on mobile.
+    """
     from datetime import datetime as _dt
     now_str = _dt.now().strftime("%Y-%m-%d %H:%M")
 
@@ -1606,79 +1608,83 @@ def _render_offload_table(flights: list[dict], meta: dict, report_date: str = ""
             reason = (it.get("reason", "") or "").strip()
             pri = it.get("class_", "") or "—"
             badge = (
-                f'<span style="display:inline-block;padding:2px 8px;border-radius:4px;background:#fff3e0;border:1px solid #ffb74d;color:#e65100;font-size:10.5px;font-weight:700;">{reason.upper()}</span>'
+                f'<span style="display:inline-block;padding:3px 8px;border-radius:4px;background:#fff3e0;border:1px solid #ffb74d;color:#e65100;font-size:11px;font-weight:700;">{reason.upper()}</span>'
             ) if reason else "—"
             rows += f"""
         <tr style="background:{bg}; color:#111827;">
-          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-weight:700;font-size:13px;color:#111827;">{i}</td>
-          <td style="padding:9px 8px;border:1px solid #e5e7eb;font-family:'Courier New',monospace;font-size:12px;color:#1e40af;font-weight:700;">{awb}</td>
-          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-weight:700;font-size:13px;color:#111827;">{pcs}</td>
-          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-size:13px;color:#111827;">{kgs}</td>
-          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-size:13px;color:#111827;">{pri}</td>
-          <td style="padding:9px 8px;border:1px solid #e5e7eb;font-size:13px;color:#111827;">{desc}</td>
-          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-size:13px;color:#111827;">{uld}</td>
-          <td style="padding:9px 8px;border:1px solid #e5e7eb;font-size:13px;color:#111827;">{badge}</td>
+          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-weight:700;font-size:15px;color:#111827;">{i}</td>
+          <td style="padding:10px 8px;border:1px solid #d9e1f2;font-family:'Courier New',monospace;font-size:15px;color:#1e40af;font-weight:700;">{awb}</td>
+          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-weight:700;font-size:15px;color:#111827;">{pcs}</td>
+          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-size:15px;color:#111827;">{kgs}</td>
+          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-size:15px;color:#111827;">{pri}</td>
+          <td style="padding:10px 8px;border:1px solid #d9e1f2;font-size:15px;color:#111827;">{desc}</td>
+          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-size:15px;color:#111827;">{uld}</td>
+          <td style="padding:10px 8px;border:1px solid #d9e1f2;font-size:15px;color:#111827;">{badge}</td>
         </tr>"""
 
         if not rows:
             rows = """
         <tr style="background:#ffffff; color:#111827;">
-          <td style="padding:14px 8px;border:1px solid #e5e7eb;text-align:center;font-weight:700;color:#111827;">—</td>
-          <td style="padding:14px 8px;border:1px solid #e5e7eb;color:#111827;">&nbsp;</td>
-          <td style="padding:14px 8px;border:1px solid #e5e7eb;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:14px 8px;border:1px solid #e5e7eb;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:14px 8px;border:1px solid #e5e7eb;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:14px 8px;border:1px solid #e5e7eb;color:#64748b; font-style:italic;">NIL</td>
-          <td style="padding:14px 8px;border:1px solid #e5e7eb;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:14px 8px;border:1px solid #e5e7eb;color:#64748b;">No offload data for this shift.</td>
+          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;font-weight:700;color:#111827;">—</td>
+          <td style="padding:16px 8px;border:1px solid #d9e1f2;color:#111827;">&nbsp;</td>
+          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
+          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
+          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
+          <td style="padding:16px 8px;border:1px solid #d9e1f2;color:#64748b;font-style:italic;">NIL</td>
+          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
+          <td style="padding:16px 8px;border:1px solid #d9e1f2;color:#64748b;">No offload data for this shift.</td>
         </tr>"""
 
         cards += f"""
-    <div style="margin-top:14px;border-radius:8px;overflow:hidden;border:1px solid #c7d4f0;font-family:Calibri,Arial,sans-serif;">
-      <div style="background:linear-gradient(90deg,#1e40af,#2563eb);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
-        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-          <span style="color:#ffffff;font-weight:800;font-size:15px;">✈ {flt}</span>
-          <span style="color:#dbeafe;font-size:12px;"><strong style="color:#ffffff;">Date:</strong> <span style="color:#ffffff;">{date_display}</span></span>
-          <span style="color:#dbeafe;font-size:12px;"><strong style="color:#ffffff;">STD:</strong> <span style="color:#ffffff;">{std}</span></span>
-          <span style="color:#dbeafe;font-size:12px;"><strong style="color:#ffffff;">ETD:</strong> <span style="color:#ffffff;">{etd}</span></span>
-          <span style="color:#dbeafe;font-size:12px;"><strong style="color:#ffffff;">DEST:</strong> <strong style="color:#fbbf24;font-size:13px;">{dest}</strong></span>
-        </div>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <span style="color:#fecaca;font-size:12px;font-weight:700;">⟳ UPDATE</span>
-          <span style="color:#dbeafe;font-size:11px;">Updated: {now_str}</span>
-        </div>
-      </div>
-      <div style="background:#f0f5ff;padding:8px 14px;border-bottom:1px solid #dde6f5;font-size:12px;color:#374151;display:flex;gap:20px;flex-wrap:wrap;">
-        <span>Email: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-        <span>Ramp Received: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-        <span>CMS Completed: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-        <span>Pieces Verified: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
-        <span>Remarks: <strong style="color:#374151;">—</strong></span>
-      </div>
-      <div style="overflow-x:auto;">
-        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:13px;color:#111827;">
-          <tr style="background:#1e40af;">
-            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;width:30px;font-size:13px;">#</td>
-            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">AWB</td>
-            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">PCS</td>
-            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">KGS</td>
-            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">Priority</td>
-            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">Description</td>
-            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">ULD</td>
-            <td style="padding:9px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">Offloading Reason</td>
-          </tr>
-          {rows}
-        </table>
-      </div>
-      <div style="background:#f8faff;padding:8px 14px;border-top:1px solid #dde6f5;font-size:12px;font-weight:600;color:#1b1f2a;">
-        Total Shipments: <strong style="color:#0b3a78;">{len(items)}</strong>
-        &nbsp;|&nbsp; Total PCS: <strong style="color:#0b3a78;">{total_pcs}</strong>
-        &nbsp;|&nbsp; Total KGS: <strong style="color:#0b3a78;">{total_kgs:g}</strong>
-      </div>
-    </div>"""
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;border:1px solid #c7d4f0;border-radius:8px;overflow:hidden;background:#ffffff;font-family:Calibri,Arial,sans-serif;">
+      <tr>
+        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">✈ {flt}</td>
+        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">Date: {date_display}</td>
+        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">STD: {std}</td>
+        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">ETD: {etd}</td>
+        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">DEST: <span style="color:#fbbf24;">{dest}</span></td>
+        <td align="right" style="background:#0b3a78;padding:10px 12px;color:#dbeafe;font-size:12px;font-weight:600;">Updated: {now_str}</td>
+      </tr>
+      <tr>
+        <td colspan="6" style="background:#eef4ff;padding:10px 12px;border-bottom:1px solid #d9e1f2;color:#374151;font-size:14px;">
+          Email:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <span style="display:inline-block;width:18px;"></span>
+          Ramp Received:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <span style="display:inline-block;width:18px;"></span>
+          CMS Completed:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <span style="display:inline-block;width:18px;"></span>
+          Pieces Verified:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+          <span style="display:inline-block;width:18px;"></span>
+          Remarks: <strong style="color:#374151;">—</strong>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="padding:0;">
+          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:15px;color:#111827;">
+            <tr style="background:#1e40af;">
+              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;width:36px;font-size:15px;">#</td>
+              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:15px;">AWB</td>
+              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">PCS</td>
+              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">KGS</td>
+              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">Priority</td>
+              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:15px;">Description</td>
+              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">ULD</td>
+              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:15px;">Offloading Reason</td>
+            </tr>
+            {rows}
+          </table>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="6" style="background:#f8faff;padding:10px 14px;border-top:1px solid #dde6f5;font-size:15px;font-weight:700;color:#1b1f2a;">
+          Total Shipments: <strong style="color:#0b3a78;">{len(items)}</strong>
+          &nbsp;|&nbsp; Total PCS: <strong style="color:#0b3a78;">{total_pcs}</strong>
+          &nbsp;|&nbsp; Total KGS: <strong style="color:#0b3a78;">{total_kgs:g}</strong>
+        </td>
+      </tr>
+    </table>"""
 
     return cards
-
 
 def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
     """Render Section 6 MANPOWER — grouped by dept, sections B-G."""
@@ -2985,19 +2991,21 @@ def _extract_report_content_html(page_html: str) -> str:
 
 
 def _email_enlarge_inline_fonts(html: str) -> str:
-    """Increase inline font sizes for Outlook/mobile email clients."""
+    """Increase inline font sizes aggressively for Outlook/mobile email clients."""
     def repl(match):
         px = int(match.group(1))
         if px <= 10:
-            new_px = 15
-        elif px <= 12:
-            new_px = 17
-        elif px <= 14:
             new_px = 18
-        elif px <= 16:
+        elif px <= 12:
             new_px = 20
+        elif px <= 14:
+            new_px = 22
+        elif px <= 16:
+            new_px = 24
+        elif px <= 20:
+            new_px = 26
         else:
-            new_px = px + 3
+            new_px = px + 6
         return f'font-size:{new_px}px'
     return re.sub(r'font-size\s*:\s*(\d+)px', repl, html, flags=re.IGNORECASE)
 
@@ -3008,9 +3016,9 @@ def _build_email_html(page_html: str) -> str:
     report_html = report_html.replace('width="900"', 'width="100%"')
     report_html = report_html.replace('width="760"', 'width="100%"')
     report_html = report_html.replace('style="width:900px; max-width:900px; background-color:#ffffff; border:1px solid #d0d5e8;"',
-                                      'style="width:100%; max-width:1100px; background-color:#ffffff; border:1px solid #d0d5e8; margin:0 auto;"')
+                                      'style="width:100%; max-width:1280px; background-color:#ffffff; border:1px solid #d0d5e8; margin:0 auto;"')
     report_html = report_html.replace('style="width:760px; max-width:760px; background-color:#ffffff; border:1px solid #d0d5e8;"',
-                                      'style="width:100%; max-width:1100px; background-color:#ffffff; border:1px solid #d0d5e8; margin:0 auto;"')
+                                      'style="width:100%; max-width:1280px; background-color:#ffffff; border:1px solid #d0d5e8; margin:0 auto;"')
     report_html = report_html.replace('padding:20px 22px 18px 20px;', 'padding:24px 26px 22px 24px;')
     report_html = report_html.replace('padding:16px 24px 0 24px;', 'padding:18px 26px 0 26px;')
     report_html = report_html.replace('padding:14px 24px 0 24px;', 'padding:16px 26px 0 26px;')
@@ -3032,22 +3040,22 @@ def _build_email_html(page_html: str) -> str:
       -ms-text-size-adjust: 100%;
     }}
     body, table, td, div, p, a, li {{
-      font-size: 20px !important;
-      line-height: 1.7 !important;
+      font-size: 24px !important;
+      line-height: 1.9 !important;
     }}
     table {{ border-collapse: collapse; }}
     img {{ border: 0; display: block; max-width: 100%; height: auto; }}
     .mobile-wrap {{ width: 100%; padding: 10px 8px 18px; box-sizing: border-box; }}
     @media only screen and (max-width: 640px) {{
       body, table, td, div, p, a, li {{
-        font-size: 21px !important;
-        line-height: 1.8 !important;
+        font-size: 27px !important;
+        line-height: 2.0 !important;
       }}
       .mobile-wrap {{ padding: 6px 4px 14px !important; }}
       table[width="100%"] {{ width: 100% !important; }}
-      td[style*="font-size:20px"] div {{ font-size: 21px !important; }}
+      td[style*="font-size:20px"] div {{ font-size: 27px !important; }}
       td[style*="font-size:13.5px"], div[style*="font-size:13.5px"], span[style*="font-size:12px"], td[style*="font-size:12px"] {{
-        font-size: 20px !important;
+        font-size: 24px !important;
       }}
     }}
   </style>
@@ -3214,18 +3222,16 @@ def _shift_window_for(ref_dt: datetime) -> tuple[datetime, datetime]:
 
 
 def filter_flights_by_shift(flights: list[dict], now: datetime) -> list[dict]:
-    """احتفظ فقط بالرحلات التي تاريخها يقع داخل نافذة مناوبة وقت الإيميل (now).
+    """Keep only flights that belong to the current shift date window.
 
-    المنطق:
-    - نحوّل تاريخ الرحلة (مثل '27FEB' أو '2025-02-27') إلى ISO.
-    - نقارنه بتاريخ نافذة المناوبة الحالية.
-    - إذا كان تاريخ الرحلة **قبل** تاريخ بداية المناوبة → قديم → نتجاهله.
-    - إذا كان بدون تاريخ أو لم يُوزَّع → نُبقيه (لا نحذفه).
+    Day shifts keep only flights dated today.
+    Night shift keeps flights dated either the shift start date or the next date.
+    Flights with missing or unparseable dates are kept.
     """
     shift_start, shift_end = _shift_window_for(now)
-    tz = ZoneInfo(TIMEZONE)
+    valid_dates = {shift_start.date().isoformat(), shift_end.date().isoformat()}
 
-    kept    = []
+    kept = []
     skipped = []
 
     for f in flights:
@@ -3239,23 +3245,13 @@ def filter_flights_by_shift(flights: list[dict], now: datetime) -> list[dict]:
             kept.append(f)
             continue
 
-        try:
-            flight_date = datetime.fromisoformat(iso).replace(tzinfo=tz)
-        except ValueError:
+        if iso in valid_dates:
             kept.append(f)
-            continue
-
-        # الرحلة تنتمي لنفس يوم المناوبة أو أحدث → احتفظ بها
-        # الرحلة أقدم من بداية المناوبة بأكثر من يوم كامل → قديمة
-        age_hours = (shift_start - flight_date).total_seconds() / 3600
-
-        if age_hours > 24:
-            skipped.append(f.get("flight","?") + "/" + raw_date)
         else:
-            kept.append(f)
+            skipped.append(f.get("flight", "?") + "/" + raw_date)
 
     if skipped:
-        print(f"  [filter] Skipped {len(skipped)} old flight(s): {', '.join(skipped)}")
+        print(f"  [filter] Skipped {len(skipped)} out-of-date flight(s): {', '.join(skipped)}")
     print(f"  [filter] Kept {len(kept)} flight(s) for this shift window.")
     return kept
 
