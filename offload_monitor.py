@@ -37,21 +37,6 @@ DATA_DIR:   Path = Path("data")
 STATE_FILE: Path = Path("state.txt")
 DOCS_DIR:   Path = Path("docs")
 
-RECIPIENTS_FILE: Path = DOCS_DIR / "data" / "email_recipients.json"
-
-def ensure_email_recipients_file() -> None:
-    try:
-        if not RECIPIENTS_FILE.exists():
-            RECIPIENTS_FILE.parent.mkdir(parents=True, exist_ok=True)
-            RECIPIENTS_FILE.write_text(json.dumps({
-                "recipients": [],
-                "updated_at": "",
-                "source": "offload-monitor"
-            }, ensure_ascii=False, indent=2), encoding="utf-8")
-    except Exception as exc:
-        print(f"  [recipients] could not ensure file: {exc}")
-
-
 # روابط الروستر (بدون نسخ أي ملف داخل صفحة الروستر)
 ROSTER_PAGE_URL: str = "https://khalidsaif912.github.io/roster-site/"
 ROSTER_JSON_RAW: str = "https://raw.githubusercontent.com/khalidsaif912/roster-site/main/docs/data/roster.json"
@@ -1165,25 +1150,6 @@ def _std_etd_display(raw: str) -> str:
 
 
 
-
-def _safe_offload_date_display(raw_date: str, report_date: str) -> str:
-    """Show flight date only when it matches report date; otherwise show report date."""
-    rd = (report_date or "").strip()
-    raw = (raw_date or "").strip()
-    if not rd:
-        return raw or "—"
-    if not raw:
-        return rd
-    try:
-        now = datetime.fromisoformat(rd + "T12:00:00")
-        iso = normalize_flight_date(raw, now)
-        if iso == rd:
-            return raw
-    except Exception:
-        pass
-    return rd
-
-
 def _render_std_etd(value: str) -> str:
     """Render STD/ETD in banner without dates.
 
@@ -1558,135 +1524,134 @@ def _render_manpower(roster: dict) -> str:
 #  بناء صفحات HTML
 # ══════════════════════════════════════════════════════════════════
 
-def _render_offload_table(flights: list[dict], meta: dict, report_date: str = "") -> str:
-    """Render offload cards. When NIL, keep the same table structure with empty rows.
-    Uses a table-based header so it renders correctly in Outlook and on mobile.
-    """
+def _render_offload_table(flights: list[dict], meta: dict) -> str:
+    """Render offload — one card per flight matching screenshot design."""
     from datetime import datetime as _dt
-    now_str = _dt.now().strftime("%Y-%m-%d %H:%M")
+    onedrive_url = os.environ.get("ONEDRIVE_FILE_URL","").strip()
+    update_link  = onedrive_url if onedrive_url else "#"
+    now_str      = _dt.now().strftime("%Y-%m-%d %H:%M")
 
     if not flights:
-        flights = [{
-            "flight": "—",
-            "date": report_date or "—",
-            "destination": "—",
-            "std_etd": "",
-            "items": [],
-        }]
+        return """
+    <div style="margin-top:12px;overflow-x:auto;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:12px;">
+      <tr style="background:#0b3a78;">
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;width:30px;">#</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">AWB</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">PCS</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">KGS</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">Priority</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">Description</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">ULD</td>
+        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">Offloading Reason</td>
+      </tr>
+      <tr>
+        <td colspan="8" style="padding:14px 6px;border:1px solid #dde6f5;
+            color:#64748b;text-align:center;font-weight:600;">
+          NIL — No offload data recorded for this shift.
+        </td>
+      </tr>
+    </table>
+    </div>"""
 
     cards = ""
     for flight in flights:
-        flt = flight.get("flight", "") or "—"
-        date_display = _safe_offload_date_display(flight.get("date", "") or "", report_date)
-        dest = flight.get("destination", "") or "—"
-        std_raw = flight.get("std_etd", "") or ""
+        flt     = flight.get("flight","")      or "—"
+        date    = flight.get("date","")        or "—"
+        dest    = flight.get("destination","") or "—"
+        std_raw = flight.get("std_etd","")     or ""
         std_val, etd_val = _format_std_etd(std_raw)
         std = std_val or "—"
         etd = etd_val or "—"
 
-        items = [it for it in flight.get("items", []) if (it.get("awb", "") or "").strip()]
-        total_pcs = 0
-        total_kgs = 0.0
+        items = [it for it in flight.get("items",[]) if (it.get("awb","") or "").strip()]
+        total_pcs = 0; total_kgs = 0.0
         for it in items:
-            try:
-                total_pcs += int(str(it.get("pcs", "0") or "0").replace(",", ""))
-            except Exception:
-                pass
-            try:
-                total_kgs += float(str(it.get("kgs", "0") or "0").replace(",", ""))
-            except Exception:
-                pass
+            try: total_pcs += int(str(it.get("pcs","0") or "0").replace(",",""))
+            except: pass
+            try: total_kgs += float(str(it.get("kgs","0") or "0").replace(",",""))
+            except: pass
 
         rows = ""
         for i, it in enumerate(items, 1):
-            bg = "#f3f4f6" if i % 2 else "#ffffff"
-            awb = it.get("awb", "") or "—"
-            pcs = it.get("pcs", "") or "—"
-            kgs = it.get("kgs", "") or "—"
-            desc = it.get("description", "") or "—"
-            uld = it.get("trolley", "") or "—"
-            reason = (it.get("reason", "") or "").strip()
-            pri = it.get("class_", "") or "—"
-            badge = (
-                f'<span style="display:inline-block;padding:3px 8px;border-radius:4px;background:#fff3e0;border:1px solid #ffb74d;color:#e65100;font-size:11px;font-weight:700;">{reason.upper()}</span>'
+            bg     = "#f3f4f6" if i%2 else "#ffffff"
+            awb    = it.get("awb","")         or "—"
+            pcs    = it.get("pcs","")         or "—"
+            kgs    = it.get("kgs","")         or "—"
+            desc   = it.get("description","") or "—"
+            uld    = it.get("trolley","")     or "—"
+            reason = (it.get("reason","")     or "").strip()
+            pri    = it.get("class_","")      or "—"
+            badge  = (
+                f'<span style="display:inline-block;padding:2px 8px;border-radius:4px;'                f'background:#fff3e0;border:1px solid #ffb74d;color:#e65100;'                f'font-size:10.5px;font-weight:700;">{reason.upper()}</span>'
             ) if reason else "—"
             rows += f"""
-        <tr style="background:{bg}; color:#111827;">
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-weight:700;font-size:15px;color:#111827;">{i}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;font-family:'Courier New',monospace;font-size:15px;color:#1e40af;font-weight:700;">{awb}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-weight:700;font-size:15px;color:#111827;">{pcs}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-size:15px;color:#111827;">{kgs}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-size:15px;color:#111827;">{pri}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;font-size:15px;color:#111827;">{desc}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;text-align:center;font-size:15px;color:#111827;">{uld}</td>
-          <td style="padding:10px 8px;border:1px solid #d9e1f2;font-size:15px;color:#111827;">{badge}</td>
+        <tr style="background:{bg};">
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-weight:700;font-size:13px;">{i}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;font-family:'Courier New',monospace;font-size:12px;color:#1e40af;font-weight:600;">{awb}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-weight:700;font-size:13px;">{pcs}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-size:13px;">{kgs}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-size:13px;">{pri}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;font-size:13px;">{desc}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;text-align:center;font-size:13px;">{uld}</td>
+          <td style="padding:9px 8px;border:1px solid #e5e7eb;font-size:13px;">{badge}</td>
         </tr>"""
 
         if not rows:
-            rows = """
-        <tr style="background:#ffffff; color:#111827;">
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;font-weight:700;color:#111827;">—</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;color:#111827;">&nbsp;</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;color:#64748b;font-style:italic;">NIL</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;text-align:center;color:#111827;">&nbsp;</td>
-          <td style="padding:16px 8px;border:1px solid #d9e1f2;color:#64748b;">No offload data for this shift.</td>
-        </tr>"""
+            rows = '<tr><td colspan="8" style="padding:12px;border:1px solid #dde6f5;color:#64748b;text-align:center;">No items recorded.</td></tr>'
 
         cards += f"""
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;border:1px solid #c7d4f0;border-radius:8px;overflow:hidden;background:#ffffff;font-family:Calibri,Arial,sans-serif;">
-      <tr>
-        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">✈ {flt}</td>
-        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">Date: {date_display}</td>
-        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">STD: {std}</td>
-        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">ETD: {etd}</td>
-        <td style="background:#0b3a78;padding:10px 12px;color:#ffffff;font-size:14px;font-weight:700;">DEST: <span style="color:#fbbf24;">{dest}</span></td>
-        <td align="right" style="background:#0b3a78;padding:10px 12px;color:#dbeafe;font-size:12px;font-weight:600;">Updated: {now_str}</td>
-      </tr>
-      <tr>
-        <td colspan="6" style="background:#eef4ff;padding:10px 12px;border-bottom:1px solid #d9e1f2;color:#374151;font-size:14px;">
-          Email:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <span style="display:inline-block;width:18px;"></span>
-          Ramp Received:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <span style="display:inline-block;width:18px;"></span>
-          CMS Completed:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <span style="display:inline-block;width:18px;"></span>
-          Pieces Verified:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-          <span style="display:inline-block;width:18px;"></span>
-          Remarks: <strong style="color:#374151;">—</strong>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="6" style="padding:0;">
-          <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:15px;color:#111827;">
-            <tr style="background:#1e40af;">
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;width:36px;font-size:15px;">#</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:15px;">AWB</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">PCS</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">KGS</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">Priority</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:15px;">Description</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:15px;">ULD</td>
-              <td style="padding:10px 8px;color:#ffffff;font-weight:700;border:1px solid #3b5fd9;font-size:15px;">Offloading Reason</td>
-            </tr>
-            {rows}
-          </table>
-        </td>
-      </tr>
-      <tr>
-        <td colspan="6" style="background:#f8faff;padding:10px 14px;border-top:1px solid #dde6f5;font-size:15px;font-weight:700;color:#1b1f2a;">
-          Total Shipments: <strong style="color:#0b3a78;">{len(items)}</strong>
-          &nbsp;|&nbsp; Total PCS: <strong style="color:#0b3a78;">{total_pcs}</strong>
-          &nbsp;|&nbsp; Total KGS: <strong style="color:#0b3a78;">{total_kgs:g}</strong>
-        </td>
-      </tr>
-    </table>"""
+    <div style="margin-top:14px;border-radius:8px;overflow:hidden;border:1px solid #c7d4f0;font-family:Calibri,Arial,sans-serif;">
+      <!-- Flight header -->
+      <div style="background:linear-gradient(90deg,#1e40af,#2563eb);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+          <span style="color:#fff;font-weight:800;font-size:15px;">✈ {flt}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">Date:</strong> {date}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">STD:</strong> {std}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">ETD:</strong> {etd}</span>
+          <span style="color:#93c5fd;font-size:12px;"><strong style="color:#fff;">DEST:</strong> <strong style="color:#fbbf24;font-size:13px;">{dest}</strong></span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span style="color:#b91c1c;font-size:12px;font-weight:700;">⟳ UPDATE</span>
+          <span style="color:#bfdbfe;font-size:11px;">Updated: {now_str}</span>
+        </div>
+      </div>
+      <!-- Status bar -->
+      <div style="background:#f0f5ff;padding:8px 14px;border-bottom:1px solid #dde6f5;font-size:12px;color:#374151;display:flex;gap:20px;flex-wrap:wrap;">
+        <span>Email: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>Ramp Received: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>CMS Completed: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>Pieces Verified: &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        <span>Remarks: <strong style="color:#374151;">—</strong></span>
+      </div>
+      <!-- Table -->
+      <div style="overflow-x:auto;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:13px;">
+          <tr style="background:#1e40af;">
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;width:30px;font-size:13px;">#</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">AWB</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">PCS</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">KGS</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">Priority</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">Description</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;text-align:center;font-size:13px;">ULD</td>
+            <td style="padding:9px 8px;color:#fff;font-weight:700;border:1px solid #3b5fd9;font-size:13px;">Offloading Reason</td>
+          </tr>
+          {rows}
+        </table>
+      </div>
+      <!-- Footer -->
+      <div style="background:#f8faff;padding:8px 14px;border-top:1px solid #dde6f5;font-size:12px;font-weight:600;color:#1b1f2a;">
+        Total Shipments: <strong style="color:#0b3a78;">{len(items)}</strong>
+        &nbsp;|&nbsp; Total PCS: <strong style="color:#0b3a78;">{total_pcs}</strong>
+        &nbsp;|&nbsp; Total KGS: <strong style="color:#0b3a78;">{total_kgs:g}</strong>
+      </div>
+    </div>"""
 
     return cards
 
-def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
+def _render_manpower_section(roster: dict, supervisor_display: str = "", supervisor_is_acting: bool = False) -> str:
     """Render Section 6 MANPOWER — grouped by dept, sections B-G."""
     import re as _re
     on_duty = roster.get("on_duty", [])
@@ -1740,14 +1705,25 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
     ]
     if sup_in_roster:
         sup_li_roster = "".join(f"<li>{_fmt_name(e)}</li>\n" for e in sup_in_roster)
+        # أضف Acting فقط إذا كان البديل فعلاً بديلاً (الأصلي غائب)
+        # وليس موجوداً أصلاً في قائمة الـ roster
+        if (supervisor_is_acting
+                and supervisor_display
+                and supervisor_display != "____________________"
+                and supervisor_display not in [e.get("name","").strip() for e in sup_in_roster]):
+            sup_li_roster += f'<li><strong style="color:#c2410c;">{supervisor_display} (Acting)</strong></li>\n'
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
       <ul style="{ul_style}">{sup_li_roster}</ul>"""
-    elif supervisor_display:
+    elif supervisor_display and supervisor_display != "____________________":
+        # لا يوجد سوبرفايزر في roster
+        label = f'{supervisor_display} (Acting)' if supervisor_is_acting else supervisor_display
+        color = "color:#c2410c;" if supervisor_is_acting else ""
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
-      <ul style="{ul_style}"><li><strong>{supervisor_display}</strong></li></ul>"""
+      <ul style="{ul_style}"><li><strong style="{color}">{label}</strong></li></ul>"""
     else:
+        # لا شيء — مسافة للكتابة اليدوية
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
       <ul style="{ul_style}"><li>&nbsp;</li></ul>"""
@@ -1795,9 +1771,9 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     flights      = [json.loads(p.read_text(encoding="utf-8")) for p in flight_files]
 
     shift_labels = {
-        "shift1": {"ar": "صباح",     "en": "Morning",   "time": "06:00 > 15:00"},
-        "shift2": {"ar": "ظهر/مساء", "en": "Afternoon", "time": "15:00 > 22:00"},
-        "shift3": {"ar": "ليل",      "en": "Night",      "time": "21:00 > 06:00"},
+        "shift1": {"ar": "صباح",     "en": "Morning",   "time": "06:00 – 15:00"},
+        "shift2": {"ar": "ظهر/مساء", "en": "Afternoon", "time": "15:00 – 22:00"},
+        "shift3": {"ar": "ليل",      "en": "Night",      "time": "22:00 – 06:00"},
     }
     sl            = shift_labels.get(shift, {"ar": shift, "en": shift, "time": ""})
     shift_label   = f"{sl['en']} Shift — {sl['time']}"
@@ -1805,7 +1781,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     total_items   = sum(len(f.get("items", [])) for f in flights)
 
     # Build offload table (Section 4)
-    offload_table_html = _render_offload_table(flights, meta, date_dir)
+    offload_table_html = _render_offload_table(flights, meta)
 
     # Offload summary text for Shift Summary card
     flt_names = list({f.get("flight","") for f in flights if f.get("flight","")})
@@ -1836,17 +1812,51 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         return None
 
     supervisor_name = ""
+    supervisor_is_acting = False  # True فقط عند غياب الأصلي
 
-    # اعرض فقط السوبرفايزر الموجود فعلياً في هذه الشفت.
-    # إذا لم يوجد، اترك المكان فارغاً للكتابة اليدوية.
-    for emp in on_duty_list:
-        if "supervisor" in emp.get("dept", "").lower() and str(emp.get("sn", "")).strip() not in {"990737"}:
-            supervisor_name = emp.get("name", "").strip()
+    for pri_sn, pri_name, bak_sn, bak_name in SUPERVISOR_PAIRS:
+        pri_emp = _find_emp_by_sn(pri_sn, on_duty_list)
+        if pri_emp:
+            # Primary is on duty — no acting needed
+            supervisor_name = pri_emp.get("name", pri_name).strip()
+            supervisor_is_acting = False
+            break
+        # Primary not on duty — check if backup is on duty this shift
+        bak_emp = _find_emp_by_sn(bak_sn, on_duty_list)
+        if bak_emp:
+            supervisor_name = bak_emp.get("name", bak_name).strip()
+            supervisor_is_acting = True
+            break
+        # Neither found yet — check if primary is absent (on leave list)
+        pri_absent = _find_emp_by_sn(pri_sn, on_leave_list)
+        if pri_absent:
+            # Primary is absent; backup takes over even if not in roster
+            supervisor_name = bak_name
+            supervisor_is_acting = True
             break
 
-    supervisor_display = supervisor_name
+    # If no pair matched at all, fallback: any supervisor role in on_duty
+    if not supervisor_name:
+        for emp in on_duty_list:
+            if "supervisor" in emp.get("dept", "").lower():
+                supervisor_name = emp.get("name", "").strip()
+                supervisor_is_acting = False
+                break
 
-    manpower_cols = _render_manpower_section(roster, supervisor_display)
+    # Empty = leave blank for manual entry (shown as underscores)
+    supervisor_display = supervisor_name if supervisor_name else "____________________"
+
+    # ── قاعدة مهمة: إذا كان هناك سوبرفايزر أصلي في الروستر → لا Acting ──
+    # بغض النظر عن نتيجة الأزواج أعلاه
+    any_supervisor_on_duty = any(
+        "supervisor" in e.get("dept", "").lower()
+        for e in on_duty_list
+        if str(e.get("sn", "")).strip() not in {"990737"}  # استثناء Said Al Amri
+    )
+    if any_supervisor_on_duty:
+        supervisor_is_acting = False
+
+    manpower_cols = _render_manpower_section(roster, supervisor_display, supervisor_is_acting)
 
     # Format date for display
     try:
@@ -1869,8 +1879,8 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eef1f7; padding:20px 0;">
 <tr><td align="left" style="padding:0 10px;">
 
-<table width="900" cellpadding="0" cellspacing="0" border="0" id="report-content"
-       style="width:900px; max-width:900px; background-color:#ffffff; border:1px solid #d0d5e8;">
+<table width="760" cellpadding="0" cellspacing="0" border="0" id="report-content"
+       style="width:760px; max-width:760px; background-color:#ffffff; border:1px solid #d0d5e8;">
 
   <!-- ═══ HEADER ═══ -->
   <tr>
@@ -1904,6 +1914,16 @@ def build_shift_report(date_dir: str, shift: str) -> None:
           </td>
         </tr>
       </table>
+    </td>
+  </tr>
+
+  <!-- ═══ BACK LINK ═══ -->
+  <tr>
+    <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
+      <a href="../../index.html"
+         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none;">
+        ← Back to Index
+      </a>
     </td>
   </tr>
 
@@ -2143,7 +2163,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
             <!-- Name + Title -->
             <div style="font-family:Calibri,Arial,sans-serif; margin-bottom:10px;">
               <div style="font-size:15px; font-weight:700; color:#0b3a78; line-height:1.3;">
-                {(supervisor_display or "&nbsp;")}
+                {supervisor_display}
               </div>
               <div style="font-size:12.5px; font-weight:600; color:#444; margin-top:2px;">
                 Supervisor – Export Operation
@@ -2154,17 +2174,17 @@ def build_shift_report(date_dir: str, shift: str) -> None:
             <div style="border-top:1px solid #d0d8ea; margin-bottom:10px;"></div>
 
             <!-- Company block -->
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" style="table-layout:fixed; max-width:820px;">
+            <table cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <!-- TRANSOM logo text -->
-                <td valign="top" width="180" style="width:180px; padding-right:18px; border-right:2px solid #cc0000; white-space:nowrap;">
+                <td valign="top" style="padding-right:18px; border-right:2px solid #cc0000;">
                   <div style="font-family:Arial Black,Arial,sans-serif; font-size:22px; font-weight:900;
                               color:#aa0000; letter-spacing:1.5px; line-height:1;">TRANSOM</div>
                   <div style="font-family:Arial,sans-serif; font-size:10px; font-weight:600;
                               color:#888; letter-spacing:3px; margin-top:1px; text-transform:uppercase;">Cargo</div>
                 </td>
                 <!-- Contact info -->
-                <td valign="top" width="460" style="padding-left:16px; width:460px;">
+                <td valign="top" style="padding-left:16px;">
                   <div style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
                               color:#1b1f2a; line-height:1.3; margin-bottom:5px;">
                     Transom Cargo LLC.
@@ -2174,7 +2194,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
                     Sultanate of Oman<br>
                     Phone No. 97297474<br>
                     <a href="http://www.transomcargo.om"
-                       style="color:#0b3a78; text-decoration:none; font-weight:600; white-space:nowrap;">
+                       style="color:#0b3a78; text-decoration:none; font-weight:600;">
                       www.transomcargo.om
                     </a>
                   </div>
@@ -2208,327 +2228,95 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 </table>
 
 <!-- ═══ BUTTONS BAR (خارج التقرير) ═══ -->
-<div style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+<div style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end;">
 
+  <!-- زر نسخ HTML المنسق -->
   <button id="btn-copy"
-    type="button"
-    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#0b3a78; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(11,58,120,.25);">
+    onclick="(function(){{
+      var el = document.getElementById('report-content');
+      var html = el ? el.outerHTML : document.body.innerHTML;
+      var full = '<!DOCTYPE html><html><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1.0"><style>body{{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:20px 0;-webkit-text-size-adjust:100%;}}table{{border-collapse:collapse;}}img{{max-width:100%;height:auto;display:block;}}</style></head><body style="margin:0;padding:20px 0;background:#eef1f7;">'+ html +'</body></html>';
+      var plain = el ? (el.innerText || el.textContent || '') : (document.body.innerText || '');
+      var done = function(){{
+        var b=document.getElementById('btn-copy');
+        b.innerText='✅ Copied!'; b.style.background='#059669';
+        setTimeout(function(){{b.innerText='📋 Copy Report'; b.style.background='#0b3a78';}},2500);
+      }};
+      function plainFallback(){{
+        var ta=document.createElement('textarea'); ta.value=plain;
+        document.body.appendChild(ta); ta.select();
+        try{{document.execCommand('copy');}}catch(e){{}}
+        document.body.removeChild(ta);
+        done();
+      }}
+      if(navigator.clipboard && window.ClipboardItem){{
+        var item = new ClipboardItem({{
+          'text/html': new Blob([full], {{type:'text/html'}}),
+          'text/plain': new Blob([plain], {{type:'text/plain'}})
+        }});
+        navigator.clipboard.write([item]).then(done).catch(function(){{
+          if(navigator.clipboard && navigator.clipboard.writeText){{
+            navigator.clipboard.writeText(plain).then(done).catch(plainFallback);
+          }} else {{
+            plainFallback();
+          }}
+        }});
+      }} else if(navigator.clipboard && navigator.clipboard.writeText){{
+        navigator.clipboard.writeText(plain).then(done).catch(plainFallback);
+      }} else {{
+        plainFallback();
+      }}
+    }})()"
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
+           color:#fff; background:#0b3a78; border:none; border-radius:8px;
+           padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(11,58,120,.25);">
     📋 Copy Report
   </button>
 
-  <button id="btn-manage-emails"
-    type="button"
-    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#475569; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(71,85,105,.25);">
-    📝 Edit Email List
-  </button>
-
+  <!-- زر إرسال إيميل -->
   <button id="btn-email"
-    type="button"
-    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#c2410c; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(194,65,12,.25);">
+    onclick="(function(){{
+      if(!confirm(\'إرسال تقرير هذه المناوبة بالإيميل الآن؟\\n\\nShift: {shift}\\nDate: {date_dir}\')) return;
+      var b=document.getElementById(\'btn-email\');
+      b.innerText=\'⏳ Sending…\'; b.disabled=true; b.style.background=\'#64748b\';
+      var pat=localStorage.getItem(\'gh_pat\');
+      if(!pat){{
+        pat=prompt(\'أدخل GitHub Personal Access Token (repo scope):\');
+        if(!pat){{b.innerText=\'✉️ Send Email Now\'; b.style.background=\'#c2410c\'; b.disabled=false; return;}}
+        localStorage.setItem(\'gh_pat\',pat);
+      }}
+      fetch(\'https://api.github.com/repos/khalidsaif912/offload-monitor/dispatches\',{{
+        method:\'POST\',
+        headers:{{
+          \'Accept\':\'application/vnd.github+json\',
+          \'Authorization\':\'Bearer \'+pat,
+          \'Content-Type\':\'application/json\'
+        }},
+        body:JSON.stringify({{
+          event_type:\'send_report_now\',
+          client_payload:{{date_dir:\'{date_dir}\',shift:\'{shift}\'}}
+        }})
+      }}).then(function(r){{
+        if(r.ok||r.status===204){{
+          b.innerText=\'✅ Email Sent!\'; b.style.background=\'#059669\';
+          setTimeout(function(){{b.innerText=\'✉️ Send Email Now\'; b.style.background=\'#c2410c\'; b.disabled=false;}},4000);
+        }}else{{
+          if(r.status===401){{localStorage.removeItem(\'gh_pat\');}}
+          b.innerText=\'❌ Failed (\'+r.status+\')\'; b.style.background=\'#dc2626\';
+          setTimeout(function(){{b.innerText=\'✉️ Send Email Now\'; b.style.background=\'#c2410c\'; b.disabled=false;}},3000);
+        }}
+      }}).catch(function(){{
+        b.innerText=\'❌ Error\'; b.style.background=\'#dc2626\';
+        setTimeout(function(){{b.innerText=\'✉️ Send Email Now\'; b.style.background=\'#c2410c\'; b.disabled=false;}},3000);
+      }});
+    }})()"
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
+           color:#fff; background:#c2410c; border:none; border-radius:8px;
+           padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(194,65,12,.25);">
     ✉️ Send Email Now
   </button>
 
 </div>
-
-<script>
-(function(){{
-  var REPORT_SECRET = '887155';
-  var COPY_SUCCESS_MS = 2500;
-  var REPO_OWNER = 'khalidsaif912';
-  var REPO_NAME = 'offload-monitor';
-  var RECIPIENTS_PATH = 'docs/data/email_recipients.json';
-  var RECIPIENTS_RAW_URL = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main/' + RECIPIENTS_PATH;
-  var RECIPIENTS_EDIT_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/edit/main/' + RECIPIENTS_PATH;
-  var RECIPIENTS_NEW_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/new/main?filename=' + encodeURIComponent(RECIPIENTS_PATH);
-  var DEFAULT_RECIPIENTS = [];
-
-  function askSendSecret(){{
-    var entered = prompt('Enter send password:');
-    if(entered === null) return false;
-    if((entered || '').trim() !== REPORT_SECRET){{
-      alert('Wrong password');
-      return false;
-    }}
-    return true;
-  }}
-
-  function resetButton(btn, text, color, delay){{
-    setTimeout(function(){{
-      btn.innerText = text;
-      btn.style.background = color;
-      btn.disabled = false;
-    }}, delay || 3000);
-  }}
-
-  function plainCopyFallback(text){{
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try {{ document.execCommand('copy'); }} catch (e) {{}}
-    document.body.removeChild(ta);
-  }}
-
-  function buildReportHtml(){{
-    var el = document.getElementById('report-content');
-    if(!el) return null;
-    var html = el.outerHTML;
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}}table{{border-collapse:collapse;}}img{{max-width:100%;height:auto;display:block;}}</style></head><body>' + html + '</body></html>';
-  }}
-
-  function onCopyReport(){{
-    var btn = document.getElementById('btn-copy');
-    var el = document.getElementById('report-content');
-    if(!btn || !el) return;
-
-    var full = buildReportHtml();
-    if(!full) return;
-
-    function markCopied(){{
-      btn.innerText = '✅ Copied!';
-      btn.style.background = '#059669';
-      resetButton(btn, '📋 Copy Report', '#0b3a78', COPY_SUCCESS_MS);
-    }}
-
-    if(navigator.clipboard && window.ClipboardItem){{
-      var item = new ClipboardItem({{
-        'text/html': new Blob([full], {{type:'text/html'}}),
-        'text/plain': new Blob([el.innerText], {{type:'text/plain'}})
-      }});
-      navigator.clipboard.write([item]).then(markCopied).catch(function(){{
-        if(navigator.clipboard && navigator.clipboard.writeText){{
-          navigator.clipboard.writeText(el.innerText).then(markCopied).catch(function(){{
-            plainCopyFallback(el.innerText);
-            markCopied();
-          }});
-        }} else {{
-          plainCopyFallback(el.innerText);
-          markCopied();
-        }}
-      }});
-    }} else {{
-      plainCopyFallback(el.innerText);
-      markCopied();
-    }}
-  }}
-
-  function normalizeRecipients(items){{
-    var seen = {{}};
-    var out = [];
-    (items || []).forEach(function(v){{
-      var s = String(v || '').trim().toLowerCase();
-      if(!s) return;
-      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return;
-      if(seen[s]) return;
-      seen[s] = true;
-      out.push(s);
-    }});
-    return out;
-  }}
-
-  function getLocalRecipients(){{
-    try {{
-      return normalizeRecipients(JSON.parse(localStorage.getItem('saved_recipients') || '[]'));
-    }} catch(e) {{
-      return [];
-    }}
-  }}
-
-  function setLocalRecipients(items){{
-    localStorage.setItem('saved_recipients', JSON.stringify(normalizeRecipients(items)));
-  }}
-
-  function loadRecipients(){{
-    var fallback = getLocalRecipients();
-    if(fallback.length) return Promise.resolve(fallback);
-    return fetch(RECIPIENTS_RAW_URL + '?t=' + Date.now(), {{cache:'no-store'}})
-      .then(function(r){{
-        if(!r.ok) throw new Error('missing');
-        return r.json();
-      }})
-      .then(function(data){{
-        var arr = normalizeRecipients((data && data.recipients) || DEFAULT_RECIPIENTS);
-        if(arr.length) setLocalRecipients(arr);
-        return arr;
-      }})
-      .catch(function(){{
-        return normalizeRecipients(DEFAULT_RECIPIENTS);
-      }});
-  }}
-
-  function renderRecipientList(container, recipients){{
-    if(!container) return;
-    if(!recipients.length){{
-      container.innerHTML = '<div style="padding:10px;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;">No saved recipients yet.</div>';
-      return;
-    }}
-    container.innerHTML = recipients.map(function(email, idx){{
-      return '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;background:#fff;">'
-        + '<span style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">'
-        + '<input type="checkbox" data-email="' + email.replace(/"/g,'&quot;') + '" checked>'
-        + '<span style="word-break:break-all;">' + email + '</span>'
-        + '</span>'
-        + '<button type="button" data-del="' + idx + '" style="border:none;background:#dc2626;color:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;font-weight:700;">Delete</button>'
-        + '</label>';
-    }}).join('');
-  }}
-
-  function openRecipientsManager(mode){{
-    return loadRecipients().then(function(initial){{
-      var recipients = initial.slice();
-      return new Promise(function(resolve){{
-        var backdrop = document.createElement('div');
-        backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-        var box = document.createElement('div');
-        box.style.cssText = 'width:min(560px,100%);max-height:90vh;overflow:auto;background:#f8fafc;border-radius:16px;box-shadow:0 20px 60px rgba(15,23,42,.35);padding:18px;font-family:Calibri,Arial,sans-serif;';
-        backdrop.appendChild(box);
-        box.innerHTML = ''
-          + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">'
-          + '<div><div style="font-size:22px;font-weight:800;color:#0f172a;">Email Recipients</div><div style="font-size:13px;color:#64748b;">Choose all, some, or add a new email.</div></div>'
-          + '<button type="button" id="picker-close" style="border:none;background:#e2e8f0;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Close</button>'
-          + '</div>'
-          + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
-          + '<button type="button" id="picker-all" style="border:none;background:#0b3a78;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Select All</button>'
-          + '<button type="button" id="picker-none" style="border:none;background:#64748b;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Unselect All</button>'
-          + '<button type="button" id="picker-open-gh" style="border:none;background:#475569;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Open on GitHub</button>'
-          + '</div>'
-          + '<div style="display:flex;gap:8px;margin-bottom:12px;">'
-          + '<input id="picker-new-email" type="email" placeholder="new@example.com" style="flex:1;min-width:0;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;">'
-          + '<button type="button" id="picker-add" style="border:none;background:#059669;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:700;">Add</button>'
-          + '</div>'
-          + '<div id="picker-list"></div>'
-          + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">'
-          + (mode === 'send' ? '<button type="button" id="picker-send" style="border:none;background:#c2410c;color:#fff;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:800;">Send Now</button>' : '')
-          + '<button type="button" id="picker-save-only" style="border:none;background:#0b3a78;color:#fff;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:800;">Save</button>'
-          + '</div>';
-        document.body.appendChild(backdrop);
-        var list = box.querySelector('#picker-list');
-        function rerender(){{ renderRecipientList(list, recipients); }}
-        function close(result){{ document.body.removeChild(backdrop); resolve(result || null); }}
-        rerender();
-        box.querySelector('#picker-close').onclick = function(){{ close(null); }};
-        box.querySelector('#picker-all').onclick = function(){{ list.querySelectorAll('input[type="checkbox"]').forEach(function(cb){{ cb.checked = true; }}); }};
-        box.querySelector('#picker-none').onclick = function(){{ list.querySelectorAll('input[type="checkbox"]').forEach(function(cb){{ cb.checked = false; }}); }};
-        box.querySelector('#picker-open-gh').onclick = function(){{ window.open(RECIPIENTS_EDIT_URL, '_blank'); }};
-        box.querySelector('#picker-add').onclick = function(){{
-          var input = box.querySelector('#picker-new-email');
-          var val = String(input.value || '').trim().toLowerCase();
-          if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){{ alert('Enter a valid email address'); return; }}
-          recipients = normalizeRecipients(recipients.concat([val]));
-          input.value = '';
-          rerender();
-        }};
-        list.addEventListener('click', function(ev){{
-          var idx = ev.target && ev.target.getAttribute('data-del');
-          if(idx === null) return;
-          recipients.splice(Number(idx), 1);
-          rerender();
-        }});
-        box.querySelector('#picker-save-only').onclick = function(){{
-          var selected = normalizeRecipients(recipients);
-          setLocalRecipients(selected);
-          alert('Saved locally in this browser. To save on GitHub, use Open on GitHub.');
-          close({{selected:selected, saved:true}});
-        }};
-        if(mode === 'send'){{
-          box.querySelector('#picker-send').onclick = function(){{
-            var selected = Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(cb){{ return cb.getAttribute('data-email'); }});
-            selected = normalizeRecipients(selected);
-            if(!selected.length){{ alert('Choose at least one recipient'); return; }}
-            setLocalRecipients(normalizeRecipients(recipients));
-            close({{selected:selected, saved:true}});
-          }};
-        }}
-      }});
-    }});
-  }}
-
-  function openRecipientsFile(){{
-    if(!askSendSecret()) return;
-    loadRecipients().then(function(items){{
-      if(items.length){{
-        window.open(RECIPIENTS_EDIT_URL, '_blank');
-      }} else {{
-        var template = `{{
-  "recipients": [
-    "example1@company.com",
-    "example2@company.com"
-  ],
-  "updated_at": "",
-  "source": "offload-monitor-ui"
-}}`;
-        var url = RECIPIENTS_NEW_URL + '&value=' + encodeURIComponent(template);
-        window.open(url, '_blank');
-      }}
-    }});
-  }}
-
-  function sendEmailNow(){{
-    if(!askSendSecret()) return;
-    openRecipientsManager('send').then(function(result){{
-      if(!result || !result.selected || !result.selected.length) return;
-      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\\n\\nShift: {shift}\\nDate: {date_dir}\\nRecipients: ' + result.selected.join(', '));
-      if(!ok) return;
-
-      var btn = document.getElementById('btn-email');
-      if(!btn) return;
-      btn.innerText = '⏳ Sending…';
-      btn.disabled = true;
-      btn.style.background = '#64748b';
-
-      var pat = localStorage.getItem('gh_pat');
-      if(!pat){{
-        pat = prompt('أدخل GitHub Personal Access Token (repo scope):');
-        if(!pat){{
-          btn.innerText = '✉️ Send Email Now';
-          btn.style.background = '#c2410c';
-          btn.disabled = false;
-          return;
-        }}
-        localStorage.setItem('gh_pat', pat);
-      }}
-
-      fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {{
-        method:'POST',
-        headers:{{
-          'Accept':'application/vnd.github+json',
-          'Authorization':'Bearer ' + pat,
-          'Content-Type':'application/json'
-        }},
-        body:JSON.stringify({{
-          event_type:'send_report_now',
-          client_payload:{{date_dir:'{date_dir}', shift:'{shift}', recipients: result.selected}}
-        }})
-      }}).then(function(r){{
-        if(r.ok || r.status === 204){{
-          btn.innerText = '✅ Email Sent!';
-          btn.style.background = '#059669';
-          resetButton(btn, '✉️ Send Email Now', '#c2410c', 4000);
-        }} else {{
-          if(r.status === 401){{ localStorage.removeItem('gh_pat'); }}
-          btn.innerText = '❌ Failed (' + r.status + ')';
-          btn.style.background = '#dc2626';
-          resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
-        }}
-      }}).catch(function(){{
-        btn.innerText = '❌ Error';
-        btn.style.background = '#dc2626';
-        resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
-      }});
-    }});
-  }}
-
-  var copyBtn = document.getElementById('btn-copy');
-  var manageBtn = document.getElementById('btn-manage-emails');
-  var emailBtn = document.getElementById('btn-email');
-  if(copyBtn) copyBtn.addEventListener('click', onCopyReport);
-  if(manageBtn) manageBtn.addEventListener('click', openRecipientsFile);
-  if(emailBtn) emailBtn.addEventListener('click', sendEmailNow);
-}})();
-</script>
 
 </body>
 </html>"""
@@ -2628,9 +2416,9 @@ def build_root_index(now: datetime) -> None:
     day_dirs = sorted(_month_days | _saved_days, reverse=True)
 
     shift_meta = {
-        "shift1": {"label": "Morning",   "ar": "صباح", "time": "06:00 > 15:00", "icon": "🌅"},
-        "shift2": {"label": "Afternoon", "ar": "ظهر",  "time": "15:00 > 22:00", "icon": "☀️"},
-        "shift3": {"label": "Night",     "ar": "ليل",  "time": "21:00 > 06:00", "icon": "🌙"},
+        "shift1": {"label": "Morning",   "ar": "صباح", "time": "06:00 – 15:00", "icon": "🌅"},
+        "shift2": {"label": "Afternoon", "ar": "ظهر",  "time": "15:00 – 22:00", "icon": "☀️"},
+        "shift3": {"label": "Night",     "ar": "ليل",  "time": "22:00 – 06:00", "icon": "🌙"},
     }
 
     total_days = len(day_dirs)
@@ -2970,100 +2758,6 @@ def retroactive_enrich_all(now: datetime) -> None:
 #  إرسال التقرير بالبريد الإلكتروني
 # ══════════════════════════════════════════════════════════════════
 
-def _extract_report_content_html(page_html: str) -> str:
-    """Return only the main report container without action buttons/scripts."""
-    soup = BeautifulSoup(page_html, "html.parser")
-    report = soup.find(id="report-content")
-    if report:
-        return str(report)
-    body = soup.body
-    return str(body) if body else page_html
-
-
-def _email_enlarge_inline_fonts(html: str) -> str:
-    """Increase inline font sizes aggressively for Outlook/mobile email clients."""
-    def repl(match):
-        px = int(match.group(1))
-        if px <= 10:
-            new_px = 18
-        elif px <= 12:
-            new_px = 20
-        elif px <= 14:
-            new_px = 22
-        elif px <= 16:
-            new_px = 24
-        elif px <= 20:
-            new_px = 26
-        else:
-            new_px = px + 6
-        return f'font-size:{new_px}px'
-    return re.sub(r'font-size\s*:\s*(\d+)px', repl, html, flags=re.IGNORECASE)
-
-
-def _build_email_html(page_html: str) -> str:
-    """Build a larger, Outlook-friendly HTML email without page buttons or scripts."""
-    report_html = _extract_report_content_html(page_html)
-    report_html = report_html.replace('width="900"', 'width="100%"')
-    report_html = report_html.replace('width="760"', 'width="100%"')
-    report_html = report_html.replace('style="width:900px; max-width:900px; background-color:#ffffff; border:1px solid #d0d5e8;"',
-                                      'style="width:100%; max-width:1280px; background-color:#ffffff; border:1px solid #d0d5e8; margin:0 auto;"')
-    report_html = report_html.replace('style="width:760px; max-width:760px; background-color:#ffffff; border:1px solid #d0d5e8;"',
-                                      'style="width:100%; max-width:1280px; background-color:#ffffff; border:1px solid #d0d5e8; margin:0 auto;"')
-    report_html = report_html.replace('padding:20px 22px 18px 20px;', 'padding:24px 26px 22px 24px;')
-    report_html = report_html.replace('padding:16px 24px 0 24px;', 'padding:18px 26px 0 26px;')
-    report_html = report_html.replace('padding:14px 24px 0 24px;', 'padding:16px 26px 0 26px;')
-    report_html = _email_enlarge_inline_fonts(report_html)
-
-    return f"""<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    html, body {{
-      margin: 0 !important;
-      padding: 0 !important;
-      width: 100% !important;
-      background: #eef1f7 !important;
-      font-family: Calibri, Arial, sans-serif !important;
-      -webkit-text-size-adjust: 100%;
-      -ms-text-size-adjust: 100%;
-    }}
-    body, table, td, div, p, a, li {{
-      font-size: 24px !important;
-      line-height: 1.9 !important;
-    }}
-    table {{ border-collapse: collapse; }}
-    img {{ border: 0; display: block; max-width: 100%; height: auto; }}
-    .mobile-wrap {{ width: 100%; padding: 10px 8px 18px; box-sizing: border-box; }}
-    @media only screen and (max-width: 640px) {{
-      body, table, td, div, p, a, li {{
-        font-size: 27px !important;
-        line-height: 2.0 !important;
-      }}
-      .mobile-wrap {{ padding: 6px 4px 14px !important; }}
-      table[width="100%"] {{ width: 100% !important; }}
-      td[style*="font-size:20px"] div {{ font-size: 27px !important; }}
-      td[style*="font-size:13.5px"], div[style*="font-size:13.5px"], span[style*="font-size:12px"], td[style*="font-size:12px"] {{
-        font-size: 24px !important;
-      }}
-    }}
-  </style>
-</head>
-<body>
-  <div class="mobile-wrap">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" style="width:100%; background:#eef1f7;">
-      <tr>
-        <td align="center">
-          {report_html}
-        </td>
-      </tr>
-    </table>
-  </div>
-</body>
-</html>"""
-
-
 def send_shift_report_email(date_dir: str, shift: str) -> None:
     """إرسال تقرير المناوبة بالبريد الإلكتروني كـ HTML كامل."""
     import smtplib
@@ -3073,33 +2767,19 @@ def send_shift_report_email(date_dir: str, shift: str) -> None:
     smtp_user      = os.environ.get("EMAIL_SENDER", "").strip()
     smtp_password  = os.environ.get("EMAIL_APP_PASSWORD", "").strip()
     recipients_raw = os.environ.get("EMAIL_RECIPIENTS", "").strip()
-    recipients = []
 
-    event_path = os.environ.get("GITHUB_EVENT_PATH", "").strip()
-    if event_path and Path(event_path).exists():
-        try:
-            event_data = json.loads(Path(event_path).read_text(encoding="utf-8"))
-            payload = event_data.get("client_payload") or {}
-            payload_recipients = payload.get("recipients") or []
-            if isinstance(payload_recipients, list):
-                recipients = [str(r).strip() for r in payload_recipients if str(r).strip()]
-        except Exception as exc:
-            print(f"  [email] Could not read recipients from event payload: {exc}")
-
-    if not recipients:
-        recipients = [r.strip() for r in recipients_raw.split(",") if r.strip()]
-
-    if not smtp_user or not smtp_password or not recipients:
-        print("  [email] Skipping — EMAIL_SENDER / EMAIL_APP_PASSWORD / recipients not set.")
+    if not smtp_user or not smtp_password or not recipients_raw:
+        print("  [email] Skipping — EMAIL_SENDER / EMAIL_APP_PASSWORD / EMAIL_RECIPIENTS not set.")
         return
+
+    recipients = [r.strip() for r in recipients_raw.split(",") if r.strip()]
 
     report_file = DOCS_DIR / date_dir / shift / "index.html"
     if not report_file.exists():
         print(f"  [email] Report not found: {report_file}")
         return
 
-    page_html = report_file.read_text(encoding="utf-8")
-    html_content = _build_email_html(page_html)
+    html_content = report_file.read_text(encoding="utf-8")
 
     shift_names = {
         "shift1": "Morning Shift (06:00–15:00)",
@@ -3112,11 +2792,6 @@ def send_shift_report_email(date_dir: str, shift: str) -> None:
     msg["Subject"] = subject
     msg["From"]    = smtp_user
     msg["To"]      = ", ".join(recipients)
-    plain_text = f"""Export Warehouse Activity Report
-Date: {date_dir}
-Shift: {shift_names.get(shift, shift)}
-"""
-    msg.attach(MIMEText(plain_text, "plain", "utf-8"))
     msg.attach(MIMEText(html_content, "html", "utf-8"))
 
     try:
@@ -3212,16 +2887,18 @@ def _shift_window_for(ref_dt: datetime) -> tuple[datetime, datetime]:
 
 
 def filter_flights_by_shift(flights: list[dict], now: datetime) -> list[dict]:
-    """Keep only flights that belong to the current shift date window.
+    """احتفظ فقط بالرحلات التي تاريخها يقع داخل نافذة مناوبة وقت الإيميل (now).
 
-    Day shifts keep only flights dated today.
-    Night shift keeps flights dated either the shift start date or the next date.
-    Flights with missing or unparseable dates are kept.
+    المنطق:
+    - نحوّل تاريخ الرحلة (مثل '27FEB' أو '2025-02-27') إلى ISO.
+    - نقارنه بتاريخ نافذة المناوبة الحالية.
+    - إذا كان تاريخ الرحلة **قبل** تاريخ بداية المناوبة → قديم → نتجاهله.
+    - إذا كان بدون تاريخ أو لم يُوزَّع → نُبقيه (لا نحذفه).
     """
     shift_start, shift_end = _shift_window_for(now)
-    valid_dates = {shift_start.date().isoformat(), shift_end.date().isoformat()}
+    tz = ZoneInfo(TIMEZONE)
 
-    kept = []
+    kept    = []
     skipped = []
 
     for f in flights:
@@ -3235,13 +2912,23 @@ def filter_flights_by_shift(flights: list[dict], now: datetime) -> list[dict]:
             kept.append(f)
             continue
 
-        if iso in valid_dates:
+        try:
+            flight_date = datetime.fromisoformat(iso).replace(tzinfo=tz)
+        except ValueError:
             kept.append(f)
+            continue
+
+        # الرحلة تنتمي لنفس يوم المناوبة أو أحدث → احتفظ بها
+        # الرحلة أقدم من بداية المناوبة بأكثر من يوم كامل → قديمة
+        age_hours = (shift_start - flight_date).total_seconds() / 3600
+
+        if age_hours > 24:
+            skipped.append(f.get("flight","?") + "/" + raw_date)
         else:
-            skipped.append(f.get("flight", "?") + "/" + raw_date)
+            kept.append(f)
 
     if skipped:
-        print(f"  [filter] Skipped {len(skipped)} out-of-date flight(s): {', '.join(skipped)}")
+        print(f"  [filter] Skipped {len(skipped)} old flight(s): {', '.join(skipped)}")
     print(f"  [filter] Kept {len(kept)} flight(s) for this shift window.")
     return kept
 
@@ -3342,7 +3029,6 @@ def main() -> None:
     date_dir, shift, _ = save_flights(flights, now)
 
     print(f"Building report: {date_dir}/{shift}…")
-    ensure_email_recipients_file()
     build_shift_report(date_dir, shift)
     build_root_index(now)
 
