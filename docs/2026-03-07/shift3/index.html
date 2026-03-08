@@ -471,76 +471,127 @@
 
 <!-- ═══ BUTTONS BAR (خارج التقرير) ═══ -->
 <div style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end;">
-
-  <!-- زر نسخ HTML المنسق -->
   <button id="btn-copy"
-    onclick="(function(){
-      var el = document.getElementById('report-content');
-      var html = el ? el.outerHTML : document.body.innerHTML;
-      var full = '<!DOCTYPE html><html><head><meta charset=utf-8><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;}</style></head><body style="margin:0;padding:20px 0;background:#eef1f7;">'+ html +'</body></html>';
-      navigator.clipboard.writeText(full).then(function(){
-        var b=document.getElementById('btn-copy');
-        b.innerText='✅ Copied!'; b.style.background='#059669';
-        setTimeout(function(){b.innerText='📋 Copy Report'; b.style.background='#0b3a78';},2500);
-      }).catch(function(){
-        var ta=document.createElement('textarea'); ta.value=full;
-        document.body.appendChild(ta); ta.select();
-        document.execCommand('copy'); document.body.removeChild(ta);
-        var b=document.getElementById('btn-copy');
-        b.innerText='✅ Copied!'; b.style.background='#059669';
-        setTimeout(function(){b.innerText='📋 Copy Report'; b.style.background='#0b3a78';},2500);
-      });
-    })()"
+    type="button"
     style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
            color:#fff; background:#0b3a78; border:none; border-radius:8px;
            padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(11,58,120,.25);">
     📋 Copy Report
   </button>
 
-  <!-- زر إرسال إيميل -->
   <button id="btn-email"
-    onclick="(function(){
-      if(!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift3\nDate: 2026-03-07')) return;
-      var b=document.getElementById('btn-email');
-      b.innerText='⏳ Sending…'; b.disabled=true; b.style.background='#64748b';
-      var pat=localStorage.getItem('gh_pat');
-      if(!pat){
-        pat=prompt('أدخل GitHub Personal Access Token (repo scope):');
-        if(!pat){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false; return;}
-        localStorage.setItem('gh_pat',pat);
-      }
-      fetch('https://api.github.com/repos/khalidsaif912/offload-monitor/dispatches',{
-        method:'POST',
-        headers:{
-          'Accept':'application/vnd.github+json',
-          'Authorization':'Bearer '+pat,
-          'Content-Type':'application/json'
-        },
-        body:JSON.stringify({
-          event_type:'send_report_now',
-          client_payload:{date_dir:'2026-03-07',shift:'shift3'}
-        })
-      }).then(function(r){
-        if(r.ok||r.status===204){
-          b.innerText='✅ Email Sent!'; b.style.background='#059669';
-          setTimeout(function(){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false;},4000);
-        }else{
-          if(r.status===401){localStorage.removeItem('gh_pat');}
-          b.innerText='❌ Failed ('+r.status+')'; b.style.background='#dc2626';
-          setTimeout(function(){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false;},3000);
-        }
-      }).catch(function(){
-        b.innerText='❌ Error'; b.style.background='#dc2626';
-        setTimeout(function(){b.innerText='✉️ Send Email Now'; b.style.background='#c2410c'; b.disabled=false;},3000);
-      });
-    })()"
+    type="button"
     style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
            color:#fff; background:#c2410c; border:none; border-radius:8px;
            padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(194,65,12,.25);">
     ✉️ Send Email Now
   </button>
-
 </div>
+
+<script>
+(function() {
+  function setBtnState(btn, label, bg, disabled) {
+    if (!btn) return;
+    btn.innerText = label;
+    btn.style.background = bg;
+    btn.disabled = !!disabled;
+  }
+
+  var copyBtn = document.getElementById("btn-copy");
+  if (copyBtn) {
+    copyBtn.addEventListener("click", async function() {
+      var report = document.getElementById("report-content");
+      var html = report ? report.outerHTML : "";
+      var wrapped = '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:20px 0;background:#eef1f7;">' + html + '</body></html>';
+      var plain = report ? (report.innerText || report.textContent || "") : document.body.innerText;
+
+      try {
+        if (navigator.clipboard && window.ClipboardItem) {
+          var item = new ClipboardItem({
+            "text/html": new Blob([wrapped], {type: "text/html"}),
+            "text/plain": new Blob([plain], {type: "text/plain"})
+          });
+          await navigator.clipboard.write([item]);
+        } else if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(plain);
+        } else {
+          var ta = document.createElement("textarea");
+          ta.value = plain;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          document.body.removeChild(ta);
+        }
+        setBtnState(copyBtn, "✅ Copied!", "#059669", false);
+      } catch (e) {
+        setBtnState(copyBtn, "❌ Copy failed", "#dc2626", false);
+      }
+      setTimeout(function() {
+        setBtnState(copyBtn, "📋 Copy Report", "#0b3a78", false);
+      }, 2500);
+    });
+  }
+
+  var emailBtn = document.getElementById("btn-email");
+  if (emailBtn) {
+    emailBtn.addEventListener("click", async function() {
+      var ok = window.confirm("إرسال تقرير هذه المناوبة بالإيميل الآن؟
+
+Shift: shift3
+Date: 2026-03-07");
+      if (!ok) return;
+
+      setBtnState(emailBtn, "⏳ Sending…", "#64748b", true);
+
+      var pat = localStorage.getItem("gh_pat");
+      if (!pat) {
+        pat = window.prompt("أدخل GitHub Personal Access Token (repo scope):");
+        if (!pat) {
+          setBtnState(emailBtn, "✉️ Send Email Now", "#c2410c", false);
+          return;
+        }
+        localStorage.setItem("gh_pat", pat);
+      }
+
+      try {
+        var resp = await fetch("https://api.github.com/repos/khalidsaif912/offload-monitor/dispatches", {
+          method: "POST",
+          headers: {
+            "Accept": "application/vnd.github+json",
+            "Authorization": "Bearer " + pat,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            event_type: "send_report_now",
+            client_payload: {
+              date_dir: "2026-03-07",
+              shift: "shift3"
+            }
+          })
+        });
+
+        if (resp.ok || resp.status === 204) {
+          setBtnState(emailBtn, "✅ Email Sent!", "#059669", true);
+          setTimeout(function() {
+            setBtnState(emailBtn, "✉️ Send Email Now", "#c2410c", false);
+          }, 4000);
+        } else {
+          if (resp.status === 401) localStorage.removeItem("gh_pat");
+          setBtnState(emailBtn, "❌ Failed (" + resp.status + ")", "#dc2626", false);
+          setTimeout(function() {
+            setBtnState(emailBtn, "✉️ Send Email Now", "#c2410c", false);
+          }, 3000);
+        }
+      } catch (err) {
+        setBtnState(emailBtn, "❌ Error", "#dc2626", false);
+        setTimeout(function() {
+          setBtnState(emailBtn, "✉️ Send Email Now", "#c2410c", false);
+        }, 3000);
+      }
+    });
+  }
+})();
+</script>
 
 </body>
 </html>
