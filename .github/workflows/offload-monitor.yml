@@ -15,7 +15,7 @@ on:
       rebuild_all:
         description: "Rebuild ALL historical reports with new template (1 = yes)"
         required: false
-        default: "0"
+        default: "1"
   repository_dispatch:
     types: [send_report_now]
 
