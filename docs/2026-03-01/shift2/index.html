@@ -504,8 +504,14 @@
   function forceReadableContrast(node){
     if(!node || node.nodeType !== 1) return;
     var bg = (node.style.backgroundColor || '').toLowerCase().replace(/\s+/g, '');
-    if(bg === 'rgb(11,58,120)' || bg === '#0b3a78' || bg === 'rgb(30,64,175)' || bg === '#1e40af' || bg === 'rgb(37,99,235)' || bg === '#2563eb'){
-      node.style.color = '#ffffff';
+    var darkBgs = ['rgb(11,58,120)','#0b3a78','rgb(30,64,175)','#1e40af','rgb(37,99,235)','#2563eb','rgb(10,31,82)','#0a1f52'];
+    if(darkBgs.indexOf(bg) !== -1){
+      node.style.backgroundColor = '#eef3fc';
+      node.style.color = '#0b3a78';
+    }
+    var clr = (node.style.color || '').toLowerCase().replace(/\s+/g, '');
+    if(clr === '#ffffff' || clr === '#fff' || clr === 'rgb(255,255,255)'){
+      node.style.color = '#0b3a78';
     }
   }
 
@@ -547,6 +553,43 @@
     if(!el) return null;
     var clone = el.cloneNode(true);
     inlineComputedStyles(el, clone);
+
+    /* ── Outlook fix: convert dark backgrounds to light ── */
+    var darkBgs = ['rgb(11, 58, 120)','rgb(11,58,120)','#0b3a78',
+                   'rgb(30, 64, 175)','rgb(30,64,175)','#1e40af',
+                   'rgb(37, 99, 235)','rgb(37,99,235)','#2563eb',
+                   'rgb(10, 31, 82)','rgb(10,31,82)','#0a1f52'];
+    function isDarkBg(bg){
+      bg = bg.replace(/\s+/g,'');
+      for(var i=0;i<darkBgs.length;i++){ if(bg===darkBgs[i].replace(/\s+/g,'')) return true; }
+      return false;
+    }
+    clone.querySelectorAll('td,th,tr,div,span,strong').forEach(function(el2){
+      var bg2 = (el2.style.backgroundColor || '').toLowerCase();
+      if(isDarkBg(bg2)){
+        el2.style.backgroundColor = '#eef3fc';
+        el2.style.color = '#0b3a78';
+        el2.querySelectorAll('*').forEach(function(child){
+          var c = (child.style.color || '').toLowerCase().replace(/\s+/g,'');
+          if(c === '#ffffff' || c === '#fff' || c === 'rgb(255,255,255)'){
+            child.style.color = '#0b3a78';
+          }
+        });
+      }
+      /* Remove linear-gradient from background */
+      var bgFull = (el2.style.background || '').toLowerCase();
+      if(bgFull.indexOf('linear-gradient') !== -1){
+        el2.style.background = '';
+        el2.style.backgroundColor = '#eef3fc';
+        el2.style.color = '#0b3a78';
+      }
+      /* Fix white text globally */
+      var clr2 = (el2.style.color || '').toLowerCase().replace(/\s+/g,'');
+      if(clr2 === '#ffffff' || clr2 === '#fff' || clr2 === 'rgb(255,255,255)'){
+        el2.style.color = '#0b3a78';
+      }
+    });
+
     clone.querySelectorAll('table').forEach(function(tbl){
       tbl.style.borderCollapse = 'collapse';
       if(!tbl.style.tableLayout) tbl.style.tableLayout = 'fixed';
