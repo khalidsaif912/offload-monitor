@@ -2362,7 +2362,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 
   if (emailBtn) {{
     emailBtn.addEventListener('click', function() {{
-      if (!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: {shift}\nDate: {date_dir}')) return;
+      if (!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\\n\\nShift: {shift}\\nDate: {date_dir}')) return;
       emailBtn.innerText = '⏳ Sending…';
       emailBtn.disabled = true;
       emailBtn.style.background = '#64748b';
