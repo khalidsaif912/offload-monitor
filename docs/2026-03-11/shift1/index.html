@@ -30,7 +30,7 @@
                   <div style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#a8c4f0; margin-top:5px; letter-spacing:0.3px;">
                     Shift Date: <strong style="color:#d4e6ff;">11 MAR 2026</strong>
                     &nbsp;&nbsp;|&nbsp;&nbsp;
-                    Time: <strong style="color:#d4e6ff;">06:00 – 15:00 LT</strong>
+                    Time: <strong style="color:#d4e6ff;">06:00 > 15:00 LT</strong>
                     &nbsp;&nbsp;|&nbsp;&nbsp;
                     <strong style="color:#d4e6ff;">Morning Shift</strong>
                   </div>
@@ -49,15 +49,6 @@
     </td>
   </tr>
 
-  <!-- ═══ BACK LINK ═══ -->
-  <tr>
-    <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
-      <a href="../../index.html"
-         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none;">
-        ← Back to Index
-      </a>
-    </td>
-  </tr>
 
     <!-- ═══ SHIFT SUMMARY ═══ -->
   <tr>
@@ -188,25 +179,24 @@
     </table>
     
     <div style="margin-top:12px;overflow-x:auto;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:12px;">
-      <tr style="background:#0b3a78;">
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;width:30px;">#</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">AWB</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">PCS</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">KGS</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">Priority</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">Description</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;text-align:center;">ULD</td>
-        <td style="padding:7px 6px;color:#fff;font-weight:700;border:1px solid #0a3166;">Offloading Reason</td>
-      </tr>
-      <tr>
-        <td colspan="8" style="padding:14px 6px;border:1px solid #dde6f5;
-            color:#64748b;text-align:center;font-weight:600;">
-          NIL — No offload data recorded for this shift.
-        </td>
-      </tr>
-    </table>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0"
+             style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:12px;">
+        <tr style="background:#0b3a78;">
+          <td style="padding:8px 6px;color:#ffffff;font-weight:700;border:1px solid #0a3166;text-align:center;width:30px;">#</td>
+          <td style="padding:8px 6px;color:#ffffff;font-weight:700;border:1px solid #0a3166;">AWB</td>
+          <td style="padding:8px 6px;color:#ffffff;font-weight:700;border:1px solid #0a3166;text-align:center;">PCS</td>
+          <td style="padding:8px 6px;color:#ffffff;font-weight:700;border:1px solid #0a3166;text-align:center;">KGS</td>
+          <td style="padding:8px 6px;color:#ffffff;font-weight:700;border:1px solid #0a3166;text-align:center;">Priority</td>
+          <td style="padding:8px 6px;color:#ffffff;font-weight:700;border:1px solid #0a3166;">Description</td>
+          <td style="padding:8px 6px;color:#ffffff;font-weight:700;border:1px solid #0a3166;text-align:center;">ULD</td>
+          <td style="padding:8px 6px;color:#ffffff;font-weight:700;border:1px solid #0a3166;">Offloading Reason</td>
+        </tr>
+        <tr>
+          <td colspan="8" style="padding:14px 6px;border:1px solid #dde6f5;color:#64748b;text-align:center;font-weight:600;">
+            NIL — No offload data recorded for this shift.
+          </td>
+        </tr>
+      </table>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:16px;"></div>
   </td></tr>
@@ -413,325 +403,128 @@
 </table>
 
 <!-- ═══ BUTTONS BAR (خارج التقرير) ═══ -->
-<div style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
-
+<div style="max-width:900px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
   <button id="btn-copy"
-    type="button"
     style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#0b3a78; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(11,58,120,.25);">
     📋 Copy Report
   </button>
-
-  <button id="btn-manage-emails"
-    type="button"
-    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#475569; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(71,85,105,.25);">
-    📝 Edit Email List
-  </button>
-
   <button id="btn-email"
-    type="button"
     style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#c2410c; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(194,65,12,.25);">
     ✉️ Send Email Now
   </button>
-
 </div>
 
 <script>
-(function(){
-  var REPORT_SECRET = '887155';
-  var COPY_SUCCESS_MS = 2500;
-  var REPO_OWNER = 'khalidsaif912';
-  var REPO_NAME = 'offload-monitor';
-  var RECIPIENTS_PATH = 'docs/data/email_recipients.json';
-  var RECIPIENTS_RAW_URL = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main/' + RECIPIENTS_PATH;
-  var RECIPIENTS_EDIT_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/edit/main/' + RECIPIENTS_PATH;
-  var RECIPIENTS_NEW_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/new/main?filename=' + encodeURIComponent(RECIPIENTS_PATH);
-  var DEFAULT_RECIPIENTS = [];
-
-  function askSendSecret(){
-    var entered = prompt('Enter send password:');
-    if(entered === null) return false;
-    if((entered || '').trim() !== REPORT_SECRET){
-      alert('Wrong password');
-      return false;
-    }
-    return true;
+(function() {
+  function setBtnState(btn, text, bg, disabled) {
+    if (!btn) return;
+    btn.innerText = text;
+    btn.style.background = bg;
+    btn.disabled = !!disabled;
   }
 
-  function resetButton(btn, text, color, delay){
-    setTimeout(function(){
-      btn.innerText = text;
-      btn.style.background = color;
-      btn.disabled = false;
-    }, delay || 3000);
-  }
-
-  function plainCopyFallback(text){
-    var ta = document.createElement('textarea');
-    ta.value = text;
-    ta.style.position = 'fixed';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try { document.execCommand('copy'); } catch (e) {}
-    document.body.removeChild(ta);
-  }
-
-  function buildReportHtml(){
+  function buildStandaloneReportHtml() {
     var el = document.getElementById('report-content');
-    if(!el) return null;
-    var html = el.outerHTML;
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}table{border-collapse:collapse;}img{max-width:100%;height:auto;display:block;}</style></head><body>' + html + '</body></html>';
+    if (!el) return '';
+    var clone = el.cloneNode(true);
+    var links = clone.querySelectorAll('a[href="../../index.html"]');
+    links.forEach(function(a) {
+      var row = a.closest('tr');
+      if (row) row.remove();
+    });
+    var doc = '<!DOCTYPE html><html><head><meta charset="utf-8"></head>' +
+      '<body style="margin:0;padding:20px 0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;">' +
+      clone.outerHTML + '</body></html>';
+    return doc;
   }
 
-  function onCopyReport(){
+  async function copyReport() {
     var btn = document.getElementById('btn-copy');
-    var el = document.getElementById('report-content');
-    if(!btn || !el) return;
-
-    var full = buildReportHtml();
-    if(!full) return;
-
-    function markCopied(){
-      btn.innerText = '✅ Copied!';
-      btn.style.background = '#059669';
-      resetButton(btn, '📋 Copy Report', '#0b3a78', COPY_SUCCESS_MS);
-    }
-
-    if(navigator.clipboard && window.ClipboardItem){
-      var item = new ClipboardItem({
-        'text/html': new Blob([full], {type:'text/html'}),
-        'text/plain': new Blob([el.innerText], {type:'text/plain'})
-      });
-      navigator.clipboard.write([item]).then(markCopied).catch(function(){
-        if(navigator.clipboard && navigator.clipboard.writeText){
-          navigator.clipboard.writeText(el.innerText).then(markCopied).catch(function(){
-            plainCopyFallback(el.innerText);
-            markCopied();
-          });
-        } else {
-          plainCopyFallback(el.innerText);
-          markCopied();
-        }
-      });
-    } else {
-      plainCopyFallback(el.innerText);
-      markCopied();
-    }
-  }
-
-  function normalizeRecipients(items){
-    var seen = {};
-    var out = [];
-    (items || []).forEach(function(v){
-      var s = String(v || '').trim().toLowerCase();
-      if(!s) return;
-      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return;
-      if(seen[s]) return;
-      seen[s] = true;
-      out.push(s);
-    });
-    return out;
-  }
-
-  function getLocalRecipients(){
+    var html = buildStandaloneReportHtml();
+    if (!html) return;
+    var plainEl = document.getElementById('report-content');
+    var plain = plainEl ? (plainEl.innerText || plainEl.textContent || '') : '';
     try {
-      return normalizeRecipients(JSON.parse(localStorage.getItem('saved_recipients') || '[]'));
-    } catch(e) {
-      return [];
-    }
-  }
-
-  function setLocalRecipients(items){
-    localStorage.setItem('saved_recipients', JSON.stringify(normalizeRecipients(items)));
-  }
-
-  function loadRecipients(){
-    var fallback = getLocalRecipients();
-    if(fallback.length) return Promise.resolve(fallback);
-    return fetch(RECIPIENTS_RAW_URL + '?t=' + Date.now(), {cache:'no-store'})
-      .then(function(r){
-        if(!r.ok) throw new Error('missing');
-        return r.json();
-      })
-      .then(function(data){
-        var arr = normalizeRecipients((data && data.recipients) || DEFAULT_RECIPIENTS);
-        if(arr.length) setLocalRecipients(arr);
-        return arr;
-      })
-      .catch(function(){
-        return normalizeRecipients(DEFAULT_RECIPIENTS);
-      });
-  }
-
-  function renderRecipientList(container, recipients){
-    if(!container) return;
-    if(!recipients.length){
-      container.innerHTML = '<div style="padding:10px;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;">No saved recipients yet.</div>';
-      return;
-    }
-    container.innerHTML = recipients.map(function(email, idx){
-      return '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;background:#fff;">'
-        + '<span style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">'
-        + '<input type="checkbox" data-email="' + email.replace(/"/g,'&quot;') + '" checked>'
-        + '<span style="word-break:break-all;">' + email + '</span>'
-        + '</span>'
-        + '<button type="button" data-del="' + idx + '" style="border:none;background:#dc2626;color:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;font-weight:700;">Delete</button>'
-        + '</label>';
-    }).join('');
-  }
-
-  function openRecipientsManager(mode){
-    return loadRecipients().then(function(initial){
-      var recipients = initial.slice();
-      return new Promise(function(resolve){
-        var backdrop = document.createElement('div');
-        backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-        var box = document.createElement('div');
-        box.style.cssText = 'width:min(560px,100%);max-height:90vh;overflow:auto;background:#f8fafc;border-radius:16px;box-shadow:0 20px 60px rgba(15,23,42,.35);padding:18px;font-family:Calibri,Arial,sans-serif;';
-        backdrop.appendChild(box);
-        box.innerHTML = ''
-          + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">'
-          + '<div><div style="font-size:22px;font-weight:800;color:#0f172a;">Email Recipients</div><div style="font-size:13px;color:#64748b;">Choose all, some, or add a new email.</div></div>'
-          + '<button type="button" id="picker-close" style="border:none;background:#e2e8f0;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Close</button>'
-          + '</div>'
-          + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
-          + '<button type="button" id="picker-all" style="border:none;background:#0b3a78;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Select All</button>'
-          + '<button type="button" id="picker-none" style="border:none;background:#64748b;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Unselect All</button>'
-          + '<button type="button" id="picker-open-gh" style="border:none;background:#475569;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Open on GitHub</button>'
-          + '</div>'
-          + '<div style="display:flex;gap:8px;margin-bottom:12px;">'
-          + '<input id="picker-new-email" type="email" placeholder="new@example.com" style="flex:1;min-width:0;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;">'
-          + '<button type="button" id="picker-add" style="border:none;background:#059669;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:700;">Add</button>'
-          + '</div>'
-          + '<div id="picker-list"></div>'
-          + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">'
-          + (mode === 'send' ? '<button type="button" id="picker-send" style="border:none;background:#c2410c;color:#fff;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:800;">Send Now</button>' : '')
-          + '<button type="button" id="picker-save-only" style="border:none;background:#0b3a78;color:#fff;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:800;">Save</button>'
-          + '</div>';
-        document.body.appendChild(backdrop);
-        var list = box.querySelector('#picker-list');
-        function rerender(){ renderRecipientList(list, recipients); }
-        function close(result){ document.body.removeChild(backdrop); resolve(result || null); }
-        rerender();
-        box.querySelector('#picker-close').onclick = function(){ close(null); };
-        box.querySelector('#picker-all').onclick = function(){ list.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ cb.checked = true; }); };
-        box.querySelector('#picker-none').onclick = function(){ list.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ cb.checked = false; }); };
-        box.querySelector('#picker-open-gh').onclick = function(){ window.open(RECIPIENTS_EDIT_URL, '_blank'); };
-        box.querySelector('#picker-add').onclick = function(){
-          var input = box.querySelector('#picker-new-email');
-          var val = String(input.value || '').trim().toLowerCase();
-          if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){ alert('Enter a valid email address'); return; }
-          recipients = normalizeRecipients(recipients.concat([val]));
-          input.value = '';
-          rerender();
-        };
-        list.addEventListener('click', function(ev){
-          var idx = ev.target && ev.target.getAttribute('data-del');
-          if(idx === null) return;
-          recipients.splice(Number(idx), 1);
-          rerender();
+      if (navigator.clipboard && window.ClipboardItem) {
+        var item = new ClipboardItem({
+          'text/html': new Blob([html], {type: 'text/html'}),
+          'text/plain': new Blob([plain], {type: 'text/plain'})
         });
-        box.querySelector('#picker-save-only').onclick = function(){
-          var selected = normalizeRecipients(recipients);
-          setLocalRecipients(selected);
-          alert('Saved locally in this browser. To save on GitHub, use Open on GitHub.');
-          close({selected:selected, saved:true});
-        };
-        if(mode === 'send'){
-          box.querySelector('#picker-send').onclick = function(){
-            var selected = Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(cb){ return cb.getAttribute('data-email'); });
-            selected = normalizeRecipients(selected);
-            if(!selected.length){ alert('Choose at least one recipient'); return; }
-            setLocalRecipients(normalizeRecipients(recipients));
-            close({selected:selected, saved:true});
-          };
-        }
-      });
-    });
-  }
-
-  function openRecipientsFile(){
-    if(!askSendSecret()) return;
-    loadRecipients().then(function(items){
-      if(items.length){
-        window.open(RECIPIENTS_EDIT_URL, '_blank');
+        await navigator.clipboard.write([item]);
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(plain);
       } else {
-        var template = `{
-  "recipients": [
-    "example1@company.com",
-    "example2@company.com"
-  ],
-  "updated_at": "",
-  "source": "offload-monitor-ui"
-}`;
-        var url = RECIPIENTS_NEW_URL + '&value=' + encodeURIComponent(template);
-        window.open(url, '_blank');
+        var ta = document.createElement('textarea');
+        ta.value = plain;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
       }
-    });
+      setBtnState(btn, '✅ Copied!', '#059669', false);
+    } catch (e) {
+      console.error(e);
+      setBtnState(btn, '❌ Copy failed', '#dc2626', false);
+    }
+    setTimeout(function() { setBtnState(btn, '📋 Copy Report', '#0b3a78', false); }, 2500);
   }
 
-  function sendEmailNow(){
-    if(!askSendSecret()) return;
-    openRecipientsManager('send').then(function(result){
-      if(!result || !result.selected || !result.selected.length) return;
-      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift1\nDate: 2026-03-11\nRecipients: ' + result.selected.join(', '));
-      if(!ok) return;
-
-      var btn = document.getElementById('btn-email');
-      if(!btn) return;
-      btn.innerText = '⏳ Sending…';
-      btn.disabled = true;
-      btn.style.background = '#64748b';
-
-      var pat = localStorage.getItem('gh_pat');
-      if(!pat){
-        pat = prompt('أدخل GitHub Personal Access Token (repo scope):');
-        if(!pat){
-          btn.innerText = '✉️ Send Email Now';
-          btn.style.background = '#c2410c';
-          btn.disabled = false;
-          return;
-        }
-        localStorage.setItem('gh_pat', pat);
+  async function sendEmailNow() {
+    var btn = document.getElementById('btn-email');
+    var pin = prompt('أدخل الرقم السري للإرسال');
+    if (pin !== '887155') return;
+    var defaultRecipients = (localStorage.getItem('email_recipients') || '').trim();
+    var recips = prompt('أدخل الإيميلات مفصولة بفاصلة ,
+اتركها فارغة لاستخدام EMAIL_RECIPIENTS من GitHub Actions.', defaultRecipients);
+    var recipients = [];
+    if (recips && recips.trim()) {
+      recipients = recips.split(',').map(function(x) { return x.trim(); }).filter(Boolean);
+      localStorage.setItem('email_recipients', recipients.join(', '));
+    }
+    setBtnState(btn, '⏳ Sending…', '#64748b', true);
+    var pat = localStorage.getItem('gh_pat');
+    if (!pat) {
+      pat = prompt('أدخل GitHub Personal Access Token (repo scope)');
+      if (!pat) {
+        setBtnState(btn, '✉️ Send Email Now', '#c2410c', false);
+        return;
       }
-
-      fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
-        method:'POST',
-        headers:{
-          'Accept':'application/vnd.github+json',
-          'Authorization':'Bearer ' + pat,
-          'Content-Type':'application/json'
+      localStorage.setItem('gh_pat', pat);
+    }
+    try {
+      var r = await fetch('https://api.github.com/repos/khalidsaif912/offload-monitor/dispatches', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'Authorization': 'Bearer ' + pat,
+          'Content-Type': 'application/json'
         },
-        body:JSON.stringify({
-          event_type:'send_report_now',
-          client_payload:{date_dir:'2026-03-11', shift:'shift1', recipients: result.selected}
+        body: JSON.stringify({
+          event_type: 'send_report_now',
+          client_payload: {
+            date_dir: '2026-03-11',
+            shift: 'shift1',
+            recipients: recipients
+          }
         })
-      }).then(function(r){
-        if(r.ok || r.status === 204){
-          btn.innerText = '✅ Email Sent!';
-          btn.style.background = '#059669';
-          resetButton(btn, '✉️ Send Email Now', '#c2410c', 4000);
-        } else {
-          if(r.status === 401){ localStorage.removeItem('gh_pat'); }
-          btn.innerText = '❌ Failed (' + r.status + ')';
-          btn.style.background = '#dc2626';
-          resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
-        }
-      }).catch(function(){
-        btn.innerText = '❌ Error';
-        btn.style.background = '#dc2626';
-        resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
       });
-    });
+      if (r.ok || r.status === 204) {
+        setBtnState(btn, '✅ Dispatch sent', '#059669', false);
+      } else {
+        if (r.status === 401 || r.status === 403) localStorage.removeItem('gh_pat');
+        setBtnState(btn, '❌ Failed (' + r.status + ')', '#dc2626', false);
+      }
+    } catch (e) {
+      console.error(e);
+      setBtnState(btn, '❌ Error', '#dc2626', false);
+    }
+    setTimeout(function() { setBtnState(btn, '✉️ Send Email Now', '#c2410c', false); }, 4000);
   }
 
   var copyBtn = document.getElementById('btn-copy');
-  var manageBtn = document.getElementById('btn-manage-emails');
   var emailBtn = document.getElementById('btn-email');
-  if(copyBtn) copyBtn.addEventListener('click', onCopyReport);
-  if(manageBtn) manageBtn.addEventListener('click', openRecipientsFile);
-  if(emailBtn) emailBtn.addEventListener('click', sendEmailNow);
+  if (copyBtn) copyBtn.addEventListener('click', copyReport);
+  if (emailBtn) emailBtn.addEventListener('click', sendEmailNow);
 })();
 </script>
 
