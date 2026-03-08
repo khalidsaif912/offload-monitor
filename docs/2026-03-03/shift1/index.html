@@ -52,10 +52,10 @@
   <!-- ═══ BACK LINK ═══ -->
   <tr>
     <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
-      <a href="../../index.html"
-         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none;">
+      <span onclick="window.location.href='../../index.html'"
+         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none; cursor:pointer; display:inline-block;">
         ← Back to Index
-      </a>
+      </span>
     </td>
   </tr>
 
@@ -199,7 +199,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="color:#b91c1c;font-size:12px;font-weight:700;">⟳ UPDATE</span>
-          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-08 11:41</span>
+          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-08 11:52</span>
         </div>
       </div>
       <!-- Status bar -->
@@ -213,15 +213,15 @@
       <!-- Table -->
       <div style="overflow-x:auto;">
         <table width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;font-size:13px;">
-          <tr bgcolor="#1e40af">
-            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;width:30px;font-size:13px;">#</td>
-            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;font-size:13px;">AWB</td>
-            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;">PCS</td>
-            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;">KGS</td>
-            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;">Priority</td>
-            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;font-size:13px;">Description</td>
-            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;">ULD</td>
-            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;font-size:13px;">Offloading Reason</td>
+          <tr>
+            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;text-align:center;width:30px;font-size:13px;"><font color="#ffffff">#</font></td>
+            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;font-size:13px;"><font color="#ffffff">AWB</font></td>
+            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;"><font color="#ffffff">PCS</font></td>
+            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;"><font color="#ffffff">KGS</font></td>
+            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;"><font color="#ffffff">Priority</font></td>
+            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;font-size:13px;"><font color="#ffffff">Description</font></td>
+            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;text-align:center;font-size:13px;"><font color="#ffffff">ULD</font></td>
+            <td bgcolor="#1e40af" style="padding:9px 8px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;font-size:13px;"><font color="#ffffff">Offloading Reason</font></td>
           </tr>
           
         <tr style="background:#f3f4f6;">
@@ -535,13 +535,7 @@
     var el = document.getElementById('report-content');
     if(!el) return null;
     var html = el.outerHTML;
-    var css = [
-      'body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}',
-      'table{border-collapse:collapse;}',
-      'img{max-width:100%;height:auto;display:block;}',
-      'td[bgcolor="#1e40af"]{background-color:#1e40af!important;color:#ffffff!important;}',
-      'td[bgcolor="#1e40af"] *{color:#ffffff!important;}'
-    ].join('');
+    var css = 'body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;}table{border-collapse:collapse;}td[bgcolor="#1e40af"]{background-color:#1e40af!important;}td[bgcolor="#1e40af"] font{color:#ffffff!important;color:#ffffff;}';
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>' + css + '</style></head><body>' + html + '</body></html>';
   }
 

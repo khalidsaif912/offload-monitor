@@ -30,7 +30,7 @@
                   <div style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#a8c4f0; margin-top:5px; letter-spacing:0.3px;">
                     Shift Date: <strong style="color:#d4e6ff;">13 MAR 2026</strong>
                     &nbsp;&nbsp;|&nbsp;&nbsp;
-                    Time: <strong style="color:#d4e6ff;">15:00 – 22:00 LT</strong>
+                    Time: <strong style="color:#d4e6ff;">13:00 – 22:00 LT</strong>
                     &nbsp;&nbsp;|&nbsp;&nbsp;
                     <strong style="color:#d4e6ff;">Afternoon Shift</strong>
                   </div>
@@ -52,10 +52,10 @@
   <!-- ═══ BACK LINK ═══ -->
   <tr>
     <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
-      <a href="../../index.html"
-         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none;">
+      <span onclick="window.location.href='../../index.html'"
+         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none; cursor:pointer; display:inline-block;">
         ← Back to Index
-      </a>
+      </span>
     </td>
   </tr>
 
@@ -190,15 +190,15 @@
     <div style="margin-top:12px;overflow-x:auto;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0"
            style="border-collapse:collapse;font-family:Calibri,Arial,sans-serif;font-size:12px;">
-      <tr bgcolor="#1e40af">
-        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;width:30px;">#</td>
-        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;">AWB</td>
-        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;">PCS</td>
-        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;">KGS</td>
-        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;">Priority</td>
-        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;">Description</td>
-        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;text-align:center;">ULD</td>
-        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;color:#ffffff;font-weight:700;border:1px solid #1e3a8a;">Offloading Reason</td>
+      <tr>
+        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;text-align:center;width:30px;"><font color="#ffffff">#</font></td>
+        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;"><font color="#ffffff">AWB</font></td>
+        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;text-align:center;"><font color="#ffffff">PCS</font></td>
+        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;text-align:center;"><font color="#ffffff">KGS</font></td>
+        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;text-align:center;"><font color="#ffffff">Priority</font></td>
+        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;"><font color="#ffffff">Description</font></td>
+        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;text-align:center;"><font color="#ffffff">ULD</font></td>
+        <td bgcolor="#1e40af" style="padding:7px 6px;background-color:#1e40af;font-weight:700;border:1px solid #1e3a8a;"><font color="#ffffff">Offloading Reason</font></td>
       </tr>
       <tr>
         <td colspan="8" style="padding:14px 6px;border:1px solid #dde6f5;
@@ -479,13 +479,7 @@
     var el = document.getElementById('report-content');
     if(!el) return null;
     var html = el.outerHTML;
-    var css = [
-      'body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}',
-      'table{border-collapse:collapse;}',
-      'img{max-width:100%;height:auto;display:block;}',
-      'td[bgcolor="#1e40af"]{background-color:#1e40af!important;color:#ffffff!important;}',
-      'td[bgcolor="#1e40af"] *{color:#ffffff!important;}'
-    ].join('');
+    var css = 'body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;}table{border-collapse:collapse;}td[bgcolor="#1e40af"]{background-color:#1e40af!important;}td[bgcolor="#1e40af"] font{color:#ffffff!important;color:#ffffff;}';
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>' + css + '</style></head><body>' + html + '</body></html>';
   }
 
