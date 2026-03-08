@@ -292,11 +292,55 @@ def fetch_std_etd_airlabs(
 
 def get_shift(now: datetime) -> str:
     mins = now.hour * 60 + now.minute
-    if 6 * 60 <= mins < 14 * 60 + 30:
+    if 6 * 60 <= mins < 15 * 60:
         return "shift1"
-    if 14 * 60 + 30 <= mins < 21 * 60 + 30:
+    if 15 * 60 <= mins < 22 * 60:
         return "shift2"
     return "shift3"
+
+
+def _parse_time_from_std_etd(raw: str) -> tuple[int, int] | None:
+    s = (raw or "").strip()
+    if not s:
+        return None
+    m = re.search(r"(\d{1,2}):(\d{2})", s)
+    if not m:
+        return None
+    hh = int(m.group(1))
+    mm = int(m.group(2))
+    if not (0 <= hh <= 23 and 0 <= mm <= 59):
+        return None
+    return hh, mm
+
+
+def _bucket_from_date_and_time(date_iso: str, hh: int | None, mm: int | None, fallback_now: datetime) -> tuple[str, str]:
+    tz = ZoneInfo(TIMEZONE)
+    base_date = datetime.fromisoformat(date_iso).date()
+
+    if hh is None or mm is None:
+        if base_date == fallback_now.astimezone(tz).date():
+            return date_iso, get_shift(fallback_now)
+        return date_iso, "shift1"
+
+    mins = hh * 60 + mm
+    if 6 * 60 <= mins < 15 * 60:
+        return date_iso, "shift1"
+    if 15 * 60 <= mins < 22 * 60:
+        return date_iso, "shift2"
+    if mins < 6 * 60:
+        return ((base_date - timedelta(days=1)).isoformat(), "shift3")
+    return date_iso, "shift3"
+
+
+def resolve_flight_bucket(flight: dict, now: datetime) -> tuple[str, str]:
+    raw_date = (flight.get("date") or "").strip()
+    date_iso = normalize_flight_date(raw_date, now) if raw_date else now.strftime("%Y-%m-%d")
+    if not date_iso:
+        date_iso = now.strftime("%Y-%m-%d")
+
+    parsed = _parse_time_from_std_etd(flight.get("std_etd", ""))
+    hh, mm = parsed if parsed else (None, None)
+    return _bucket_from_date_and_time(date_iso, hh, mm, now)
 
 
 def slugify(text: str, max_length: int = 80) -> str:
@@ -673,42 +717,59 @@ def _parse_type_c(soup: BeautifulSoup) -> list[dict]:
 #  التخزين
 # ══════════════════════════════════════════════════════════════════
 
-def save_flights(flights: list[dict], now: datetime) -> tuple[str, str, dict]:
-    date_dir = now.strftime("%Y-%m-%d")
-    shift    = get_shift(now)
-    folder   = DATA_DIR / date_dir / shift
-    folder.mkdir(parents=True, exist_ok=True)
-
-    meta_path = folder / "meta.json"
-    meta      = load_json(meta_path, {"flights": {}})
-    if not isinstance(meta, dict) or "flights" not in meta:
-        meta = {"flights": {}}
+def save_flights(flights: list[dict], now: datetime) -> list[tuple[str, str]]:
+    metas_by_bucket: dict[tuple[str, str], dict] = {}
+    touched: list[tuple[str, str]] = []
 
     for flight in flights:
-        filename  = slugify(
-            f"{flight['flight']}_{flight.get('date','')}_{flight.get('destination','')}"
+        date_dir, shift = resolve_flight_bucket(flight, now)
+        folder = DATA_DIR / date_dir / shift
+        folder.mkdir(parents=True, exist_ok=True)
+
+        meta_path = folder / "meta.json"
+        meta = metas_by_bucket.get((date_dir, shift))
+        if meta is None:
+            meta = load_json(meta_path, {"flights": {}})
+            if not isinstance(meta, dict) or "flights" not in meta:
+                meta = {"flights": {}}
+            metas_by_bucket[(date_dir, shift)] = meta
+
+        filename = slugify(
+            f"{flight.get('flight','')}_{flight.get('date','')}_{flight.get('destination','')}"
         ) + ".json"
         file_path = folder / filename
-        existed   = file_path.exists()
+        existed = file_path.exists()
 
-        payload = {**flight, "saved_at": now.isoformat()}
+        payload = {
+            **flight,
+            "saved_at": now.isoformat(),
+            "archive_date": date_dir,
+            "archive_shift": shift,
+        }
         file_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
         entry = meta["flights"].get(filename, {
-            "flight":     flight["flight"],
-            "date":       flight.get("date", ""),
-            "dest":       flight.get("destination", ""),
+            "flight": flight.get("flight", ""),
+            "date": flight.get("date", ""),
+            "dest": flight.get("destination", ""),
             "created_at": now.isoformat(),
             "updated_at": now.isoformat(),
-            "updates":    0,
+            "updates": 0,
         })
         if existed:
             entry["updates"] = int(entry.get("updates", 0)) + 1
-        entry["updated_at"]       = now.isoformat()
+        entry["updated_at"] = now.isoformat()
+        entry["archive_date"] = date_dir
+        entry["archive_shift"] = shift
         meta["flights"][filename] = entry
 
-    write_json(meta_path, meta)
-    return date_dir, shift, meta
+        if (date_dir, shift) not in touched:
+            touched.append((date_dir, shift))
+
+    for (date_dir, shift), meta in metas_by_bucket.items():
+        write_json(DATA_DIR / date_dir / shift / "meta.json", meta)
+
+    return touched
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -2859,9 +2920,9 @@ def _shift_window_for(ref_dt: datetime) -> tuple[datetime, datetime]:
     """إرجاع (start, end) للمناوبة التي تنتمي إليها ref_dt بالتوقيت المحلي.
 
     المناوبات:
-      shift1 : 06:00 – 14:30
-      shift2 : 14:30 – 21:30
-      shift3 : 21:30 – 06:00 (اليوم التالي)
+      shift1 : 06:00 – 15:00
+      shift2 : 15:00 – 22:00
+      shift3 : 21:00 – 06:00 (اليوم التالي)
     """
     tz  = ZoneInfo(TIMEZONE)
     loc = ref_dt.astimezone(tz)
@@ -2869,19 +2930,18 @@ def _shift_window_for(ref_dt: datetime) -> tuple[datetime, datetime]:
 
     base = loc.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    if 6 * 60 <= mins < 14 * 60 + 30:          # shift1
-        start = base.replace(hour=6)
-        end   = base.replace(hour=14, minute=30)
-    elif 14 * 60 + 30 <= mins < 21 * 60 + 30:  # shift2
-        start = base.replace(hour=14, minute=30)
-        end   = base.replace(hour=21, minute=30)
-    else:                                        # shift3 يعبر منتصف الليل
+    if 6 * 60 <= mins < 15 * 60:
+        start = base.replace(hour=6, minute=0)
+        end   = base.replace(hour=15, minute=0)
+    elif 15 * 60 <= mins < 22 * 60:
+        start = base.replace(hour=15, minute=0)
+        end   = base.replace(hour=22, minute=0)
+    else:
         if loc.hour < 6:
-            # بعد منتصف الليل — المناوبة بدأت أمس
-            start = (base - timedelta(days=1)).replace(hour=21, minute=30)
+            start = (base - timedelta(days=1)).replace(hour=21, minute=0)
         else:
-            start = base.replace(hour=21, minute=30)
-        end = (start + timedelta(hours=8, minutes=30))
+            start = base.replace(hour=21, minute=0)
+        end = (start + timedelta(hours=9))
 
     return start, end
 
@@ -2993,11 +3053,10 @@ def main() -> None:
         STATE_FILE.write_text(new_hash, encoding="utf-8")
         return
 
-    # ── فلترة الرحلات القديمة بناءً على تاريخ الإيميل والمناوبة ──
-    flights = filter_flights_by_shift(flights, now)
-
+    # ── لا نربط الأوفلود بوقت تشغيل الـ workflow فقط.
+    #     كل رحلة تُؤرشف حسب تاريخها ووقت STD/ETD إلى التقرير/المناوبة المناسبة.
     if not flights:
-        print("WARNING: All flights filtered out as old/stale — no data for this shift.")
+        print("WARNING: No flights available after parsing.")
         STATE_FILE.write_text(new_hash, encoding="utf-8")
         build_root_index(now)
         return
@@ -3026,14 +3085,15 @@ def main() -> None:
         print("AIRLABS_API_KEY not set — STD/ETD will remain blank.")
 
     print(f"Extracted {len(flights)} flight(s). Saving…")
-    date_dir, shift, _ = save_flights(flights, now)
+    touched_buckets = save_flights(flights, now)
 
-    print(f"Building report: {date_dir}/{shift}…")
-    build_shift_report(date_dir, shift)
+    for date_dir, shift in touched_buckets:
+        print(f"Building report: {date_dir}/{shift}…")
+        build_shift_report(date_dir, shift)
     build_root_index(now)
 
     STATE_FILE.write_text(new_hash, encoding="utf-8")
-    print(f"Done. ✓  ({len(flights)} flights saved)")
+    print(f"Done. ✓  ({len(flights)} flights saved into {len(touched_buckets)} bucket(s))")
 
     # ── إرسال البريد قبل نهاية المناوبة ──
     today_str = now.strftime("%Y-%m-%d")
