@@ -94,7 +94,7 @@
         <tr>
           <td style="padding:10px 12px; border-right:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
             <strong style="color:#0b3a78;">📦 Offloaded / Missing AWB:</strong><br>
-            2 offloaded shipments across 2 flights (WY117, WY103).
+            2 offloaded shipments across 2 flights (WY103, WY117).
           </td>
           <td style="padding:10px 12px; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
             <strong style="color:#0b3a78;">📋 UTL Report:</strong><br>
@@ -199,7 +199,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="color:#b91c1c;font-size:12px;font-weight:700;">⟳ UPDATE</span>
-          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-08 09:48</span>
+          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-08 09:55</span>
         </div>
       </div>
       <!-- Status bar -->
@@ -255,7 +255,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:10px;">
           <span style="color:#b91c1c;font-size:12px;font-weight:700;">⟳ UPDATE</span>
-          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-08 09:48</span>
+          <span style="color:#bfdbfe;font-size:11px;">Updated: 2026-03-08 09:55</span>
         </div>
       </div>
       <!-- Status bar -->
@@ -577,10 +577,7 @@
 
   if (emailBtn) {
     emailBtn.addEventListener('click', function() {
-      if (!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟
-
-Shift: shift2
-Date: 2026-03-04')) return;
+      if (!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift2\nDate: 2026-03-04')) return;
       emailBtn.innerText = '⏳ Sending…';
       emailBtn.disabled = true;
       emailBtn.style.background = '#64748b';

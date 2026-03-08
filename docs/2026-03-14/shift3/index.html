@@ -483,10 +483,7 @@
 
   if (emailBtn) {
     emailBtn.addEventListener('click', function() {
-      if (!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟
-
-Shift: shift3
-Date: 2026-03-14')) return;
+      if (!confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift3\nDate: 2026-03-14')) return;
       emailBtn.innerText = '⏳ Sending…';
       emailBtn.disabled = true;
       emailBtn.style.background = '#64748b';
