@@ -1,0 +1,20 @@
+{
+  "flight": "ET625",
+  "date": "09MAR26",
+  "std_etd": "",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "071-60091986",
+      "pcs": "14",
+      "kgs": "1506",
+      "description": "PRINTING MATERIALS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "saved_at": "2026-03-10T00:48:40.688967+04:00"
+}
