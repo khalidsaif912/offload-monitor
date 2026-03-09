@@ -402,18 +402,19 @@
               <tr>
                 <!-- TRANSOM logo text -->
                 <td valign="top" style="padding-right:18px; border-right:2px solid #8b0000;">
-                  <table cellpadding="0" cellspacing="0" border="0"><tr>
-                  <td data-protect="transom" style="font-family:Arial Black,Arial,sans-serif; font-size:28px;
-                             font-weight:900; color:#8b0000; letter-spacing:2px; line-height:1;
-                             mso-line-height-rule:exactly; mso-style-textfill-fill-color:#8b0000;">
-                    <font face="Arial Black" color="#8b0000" size="6">
-                      <b data-protect="transom" style="font-size:28px; color:#8b0000; font-family:Arial Black,Arial,sans-serif; font-weight:900;">TRANSOM</b>
-                    </font>
-                  </td></tr>
-                  <tr><td style="font-family:Arial,sans-serif; font-size:10px; font-weight:600;
-                              color:#888888; letter-spacing:3px;">
-                    <font face="Arial" color="#888888" size="1"><b>CARGO</b></font>
-                  </td></tr></table>
+                  <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                    <tr>
+                      <td width="5" bgcolor="#8b0000" style="background-color:#8b0000; font-size:1px; line-height:1px;">&nbsp;</td>
+                      <td bgcolor="#fdf0f0" style="background-color:#fdf0f0; padding:5px 10px;">
+                        <font face="Arial Black,Arial,sans-serif" color="#8b0000">
+                          <b style="font-size:22px; font-weight:900; letter-spacing:2px; color:#8b0000; font-family:Arial Black,Arial,sans-serif;">TRANSOM</b>
+                        </font><br>
+                        <font face="Arial,sans-serif" color="#888888">
+                          <span style="font-size:9px; font-weight:600; letter-spacing:3px; color:#888888;">CARGO</span>
+                        </font>
+                      </td>
+                    </tr>
+                  </table>
                 </td>
                 <!-- Contact info -->
                 <td valign="top" style="padding-left:16px;">
@@ -640,23 +641,6 @@
     });
     clone.querySelectorAll('td,th').forEach(function(cell){
       if(!cell.style.verticalAlign) cell.style.verticalAlign = 'top';
-    });
-    /* ── حماية TRANSOM بعد كل المعالجة ── */
-    clone.querySelectorAll('[data-protect="transom"]').forEach(function(el2){
-      el2.style.color = '#8b0000';
-      el2.style.fontSize = '28px';
-      el2.style.fontFamily = 'Arial Black, Arial, sans-serif';
-      el2.style.fontWeight = '900';
-      el2.style.letterSpacing = '2px';
-    });
-    clone.querySelectorAll('b,strong,span,font').forEach(function(el2){
-      var txt = (el2.textContent || '').trim();
-      if(txt === 'TRANSOM'){
-        el2.style.color = '#8b0000';
-        el2.style.fontSize = '28px';
-        el2.style.fontFamily = 'Arial Black, Arial, sans-serif';
-        el2.style.fontWeight = '900';
-      }
     });
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}table{border-collapse:collapse;table-layout:fixed;}img{max-width:100%;height:auto;display:block;}</style></head><body>' + clone.outerHTML + '</body></html>';
   }
