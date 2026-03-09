@@ -988,9 +988,11 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
                 except: pass
 
                 badge = (
-                    f'<span style="display:inline-block;padding:2px 8px;border-radius:4px;'
-                    f'background:{badge_bg};border:1px solid {badge_border};color:{badge_color};'
-                    f'font-size:10.5px;font-weight:700;">{reason.upper()}</span>'
+                    f'<table cellpadding="0" cellspacing="0" border="0" style="display:inline-table;border-collapse:collapse;">'
+                    f'<tr><td bgcolor="{badge_bg}" style="background-color:{badge_bg};border:1px solid {badge_border};'
+                    f'padding:2px 9px;">'
+                    f'<font color="{badge_color}"><strong style="font-size:10.5px;font-weight:700;">{reason.upper()}</strong></font>'
+                    f'</td></tr></table>'
                 ) if reason else "—"
 
                 td_s = (f'style="padding:7px 8px;border:1px solid {cell_border};'
