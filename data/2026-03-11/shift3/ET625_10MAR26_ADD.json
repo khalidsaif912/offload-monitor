@@ -1,0 +1,30 @@
+{
+  "flight": "ET625",
+  "date": "10MAR26",
+  "std_etd": "",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "071-60091975",
+      "pcs": "58",
+      "kgs": "1030",
+      "description": "CONSOL",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "071-60091371",
+      "pcs": "66",
+      "kgs": "1003.7",
+      "description": "PERSONAL EFFEC",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "saved_at": "2026-03-11T00:26:52.003475+04:00"
+}
