@@ -833,7 +833,7 @@
 
       var btn = document.getElementById('btn-email');
       if(!btn) return;
-      btn.innerText = '⏳ Sending…';
+      btn.innerText = '⏳ Saving edits…';
       btn.disabled = true;
       btn.style.background = '#64748b';
 
@@ -849,18 +849,67 @@
         localStorage.setItem('gh_pat', pat);
       }
 
-      fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
-        method:'POST',
-        headers:{
-          'Accept':'application/vnd.github+json',
-          'Authorization':'Bearer ' + pat,
-          'Content-Type':'application/json'
-        },
-        body:JSON.stringify({
-          event_type:'send_report_now',
-          client_payload:{date_dir:'2026-03-07', shift:'shift3', recipients: result.selected}
-        })
-      }).then(function(r){
+      /* ── Step 1: Build the full edited HTML from the DOM ── */
+      var editedHtml = buildReportHtml();
+      if(!editedHtml){
+        btn.innerText = '❌ No report found';
+        btn.style.background = '#dc2626';
+        resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
+        return;
+      }
+
+      /* ── Step 2: Get current file SHA then update index.html in repo ── */
+      var filePath = 'docs/2026-03-07/shift3/index.html';
+      var apiBase = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/';
+      var headers = {
+        'Accept':'application/vnd.github+json',
+        'Authorization':'Bearer ' + pat,
+        'Content-Type':'application/json'
+      };
+
+      /* ── Build the full page HTML (wrap report in the page shell) ── */
+      var fullPageHtml = document.documentElement.outerHTML;
+
+      btn.innerText = '⏳ Uploading edits…';
+
+      fetch(apiBase + filePath + '?t=' + Date.now(), {headers:headers})
+      .then(function(r){
+        if(r.status === 401){ localStorage.removeItem('gh_pat'); throw new Error('AUTH'); }
+        if(!r.ok && r.status !== 404) throw new Error('GET_SHA_' + r.status);
+        return r.ok ? r.json() : null;
+      })
+      .then(function(fileInfo){
+        var sha = fileInfo ? fileInfo.sha : undefined;
+        var encoded = btoa(unescape(encodeURIComponent(fullPageHtml)));
+        var putBody = {
+          message: 'Update report with manual edits (2026-03-07/shift3)',
+          content: encoded,
+          branch: 'main'
+        };
+        if(sha) putBody.sha = sha;
+
+        return fetch(apiBase + filePath, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify(putBody)
+        });
+      })
+      .then(function(r){
+        if(r.status === 401){ localStorage.removeItem('gh_pat'); throw new Error('AUTH'); }
+        if(!r.ok) throw new Error('PUT_' + r.status);
+        btn.innerText = '⏳ Sending email…';
+
+        /* ── Step 3: Trigger the dispatch to send email ── */
+        return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
+          method:'POST',
+          headers: headers,
+          body:JSON.stringify({
+            event_type:'send_report_now',
+            client_payload:{date_dir:'2026-03-07', shift:'shift3', recipients: result.selected}
+          })
+        });
+      })
+      .then(function(r){
         if(r.ok || r.status === 204){
           btn.innerText = '✅ Email Sent!';
           btn.style.background = '#059669';
@@ -871,8 +920,14 @@
           btn.style.background = '#dc2626';
           resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
         }
-      }).catch(function(){
-        btn.innerText = '❌ Error';
+      })
+      .catch(function(err){
+        var msg = (err && err.message) || 'Error';
+        if(msg === 'AUTH'){
+          btn.innerText = '❌ Token expired — retry';
+        } else {
+          btn.innerText = '❌ ' + msg;
+        }
         btn.style.background = '#dc2626';
         resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
       });
