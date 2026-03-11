@@ -1,0 +1,21 @@
+{
+  "flight": "WY123",
+  "date": "11-Mar",
+  "std_etd": "",
+  "destination": "MUC",
+  "format": "A",
+  "items": [
+    {
+      "awb": "910-18568955",
+      "pcs": "100",
+      "kgs": "693",
+      "description": "CONSOL",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "16:02",
+  "saved_at": "2026-03-11T18:26:53.104195+04:00"
+}
