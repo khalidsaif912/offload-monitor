@@ -37,7 +37,7 @@
                 </td>
                 <td align="right" valign="middle" data-email-keep="1" style="padding-right:6px; background-color:#0b3a78;">
                   <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#93c5fd; line-height:1.5; text-align:right;">
-                    TRANSOM<br>
+                    Transom Cargo LLC.<br>
                     <strong style="color:#ffffff; font-weight:700;">Export Operations</strong>
                   </div>
                 </td>
@@ -595,13 +595,15 @@
     });
     var bRoot=clone.querySelector('[data-email-keep="1"]');
     if(bRoot){
+      /* تطبيق اللون الأبيض على الجذر حتى يرثه كل النص غير المُصنَّف */
+      bRoot.style.color='#ffffff';
       bRoot.querySelectorAll('*').forEach(function(e){
         var c=normC(e.style.color);
         /* ذهبي → يبقى */
         if(c===normC('#fde68a')||c==='rgb(253,230,138)') return;
         /* أزرق فاتح → يبقى */
         if(c===normC('#93c5fd')||c==='rgb(147,197,253)') return;
-        /* كل شيء آخر → أبيض */
+        /* فرض الأبيض على الجميع بغض النظر عن القيمة الحالية */
         e.style.color='#ffffff';
       });
     }
