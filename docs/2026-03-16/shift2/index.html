@@ -541,109 +541,102 @@
   }
 
   /* ══════════════════════════════════════════════════════════
-     buildReportHtml — توليد HTML نظيف للإيميل/النسخ
-     المنطق:
-       1) نسخ العنصر كما هو (inline styles موجودة بالفعل في HTML)
-       2) تحويل الخلفيات الداكنة → فاتحة، ما عدا البنر (data-email-keep)
-       3) تنظيف contenteditable / tabindex / back-link
+     buildReportHtml — HTML نظيف للإيميل/النسخ
+     القاعدة: البنر (data-email-keep) يحتفظ بألوانه دائماً
+     باقي العناصر: خلفيات داكنة → فاتحة، نص أبيض → داكن
      ══════════════════════════════════════════════════════════ */
   function buildReportHtml(){
     var el = document.getElementById('report-content');
     if(!el) return null;
 
-    /* ── خطوة 1: نسخ بسيط بدون computed styles ── */
+    /* خطوة 1: نسخ بسيط — inline styles موجودة في HTML مباشرةً */
     var clone = el.cloneNode(true);
 
-    /* ── خطوة 2: تحويل الألوان الداكنة → فاتحة (ما عدا البنر) ── */
-    function isInBanner(node){
-      var p = node;
-      while(p && p !== clone){
-        if(p.getAttribute && p.getAttribute('data-email-keep') === '1') return true;
-        p = p.parentElement;
-      }
-      return false;
-    }
-
-    function normColor(s){ return (s||'').toLowerCase().replace(/\s/g,''); }
-
-    var DARK_BG_LIST = [
-      'rgb(11,58,120)','#0b3a78',
-      'rgb(30,64,175)','#1e40af',
-      'rgb(37,99,235)','#2563eb',
-      'rgb(10,31,82)','#0a1f52',
+    function normC(s){ return (s||'').toLowerCase().replace(/\s/g,''); }
+    var DARK=[
+      'rgb(11,58,120)','#0b3a78','rgb(30,64,175)','#1e40af',
+      'rgb(37,99,235)','#2563eb','rgb(10,31,82)','#0a1f52',
       'rgb(26,110,207)','#1a6ecf'
     ];
-    function isDarkBg(s){
-      var n = normColor(s);
-      for(var i=0;i<DARK_BG_LIST.length;i++) if(n===normColor(DARK_BG_LIST[i])) return true;
+    function isDark(s){
+      var n=normC(s);
+      for(var i=0;i<DARK.length;i++) if(n===normC(DARK[i])) return true;
       return false;
     }
-    function isWhiteText(s){
-      var n = normColor(s);
+    function isWhite(s){
+      var n=normC(s);
       return n==='#ffffff'||n==='#fff'||n==='rgb(255,255,255)';
     }
+    function inBanner(node){
+      var p=node;
+      while(p&&p!==clone){
+        if(p.getAttribute&&p.getAttribute('data-email-keep')==='1') return true;
+        p=p.parentElement;
+      }
+      return false;
+    }
 
-    /* تحويل العناصر خارج البنر */
-    clone.querySelectorAll('*').forEach(function(el2){
-      if(isInBanner(el2)) return;
-      var bg = el2.style.backgroundColor;
-      if(isDarkBg(bg)){
-        el2.style.backgroundColor = '#eef3fc';
-        el2.style.color = '#0b3a78';
+    /* خطوة 2: تحويل العناصر خارج البنر فقط */
+    clone.querySelectorAll('*').forEach(function(e){
+      if(inBanner(e)) return;
+      if(isDark(e.style.backgroundColor)){
+        e.style.backgroundColor='#eef3fc';
+        e.style.color='#0b3a78';
       }
-      var bgFull = el2.style.background;
-      if(bgFull && bgFull.toLowerCase().indexOf('linear-gradient') !== -1){
-        el2.style.background = '';
-        el2.style.backgroundColor = '#eef3fc';
-        el2.style.color = '#0b3a78';
+      var bg=e.style.background||'';
+      if(bg.toLowerCase().indexOf('linear-gradient')!==-1){
+        e.style.background='';
+        e.style.backgroundColor='#eef3fc';
+        e.style.color='#0b3a78';
       }
-      if(isWhiteText(el2.style.color)){
-        el2.style.color = '#1b1f2a';
-      }
+      if(isWhite(e.style.color)) e.style.color='#1b1f2a';
     });
 
-    /* ── خطوة 3: البنر — تثبيت الألوان بشكل قاطع ── */
-    clone.querySelectorAll('[data-email-keep]').forEach(function(el2){
-      var bg = normColor(el2.style.backgroundColor);
-      if(bg && bg !== normColor('#f59e0b') && bg !== 'rgb(245,158,11)'){
-        el2.style.backgroundColor = '#0b3a78';
-      }
+    /* خطوة 3: البنر — تثبيت ألوانه بشكل قاطع بعد خطوة 2 */
+    clone.querySelectorAll('[data-email-keep]').forEach(function(e){
+      var bg=normC(e.style.backgroundColor);
+      /* الشريط الذهبي يبقى */
+      if(bg&&bg!==normC('#f59e0b')&&bg!=='rgb(245,158,11)')
+        e.style.backgroundColor='#0b3a78';
     });
-    var bannerRoot = clone.querySelector('[data-email-keep="1"]');
-    if(bannerRoot){
-      bannerRoot.querySelectorAll('div,span,strong,td,th').forEach(function(el2){
-        var c = normColor(el2.style.color);
-        if(c === normColor('#fde68a') || c === 'rgb(253,230,138)') return;
-        if(c === normColor('#93c5fd') || c === 'rgb(147,197,253)') return;
-        el2.style.color = '#ffffff';
+    var bRoot=clone.querySelector('[data-email-keep="1"]');
+    if(bRoot){
+      bRoot.querySelectorAll('*').forEach(function(e){
+        var c=normC(e.style.color);
+        /* ذهبي → يبقى */
+        if(c===normC('#fde68a')||c==='rgb(253,230,138)') return;
+        /* أزرق فاتح → يبقى */
+        if(c===normC('#93c5fd')||c==='rgb(147,197,253)') return;
+        /* كل شيء آخر → أبيض */
+        e.style.color='#ffffff';
       });
     }
 
-    /* ── خطوة 4: إصلاح الجداول ── */
-    clone.querySelectorAll('table').forEach(function(tbl){
-      tbl.setAttribute('cellpadding','0');
-      tbl.setAttribute('cellspacing','0');
-      tbl.setAttribute('border','0');
-      tbl.setAttribute('role','presentation');
-      tbl.style.borderCollapse = 'collapse';
-      if(!tbl.style.width) tbl.style.width = '100%';
+    /* خطوة 4: إصلاح الجداول */
+    clone.querySelectorAll('table').forEach(function(t){
+      t.setAttribute('cellpadding','0');
+      t.setAttribute('cellspacing','0');
+      t.setAttribute('border','0');
+      t.setAttribute('role','presentation');
+      t.style.borderCollapse='collapse';
+      if(!t.style.width) t.style.width='100%';
     });
-    clone.querySelectorAll('td,th').forEach(function(cell){
-      if(!cell.style.verticalAlign) cell.style.verticalAlign = 'top';
+    clone.querySelectorAll('td,th').forEach(function(c){
+      if(!c.style.verticalAlign) c.style.verticalAlign='top';
     });
 
-    /* ── خطوة 5: تنظيف contenteditable / tabindex / back-link ── */
-    clone.querySelectorAll('[contenteditable]').forEach(function(el2){
-      el2.removeAttribute('contenteditable');
-      el2.style.outline = 'none';
+    /* خطوة 5: تنظيف */
+    clone.querySelectorAll('[contenteditable]').forEach(function(e){
+      e.removeAttribute('contenteditable');
+      e.style.outline='none';
     });
-    clone.querySelectorAll('[tabindex]').forEach(function(el2){
-      el2.removeAttribute('tabindex');
+    clone.querySelectorAll('[tabindex]').forEach(function(e){
+      e.removeAttribute('tabindex');
     });
-    var backRow = clone.querySelector('#back-link-row');
-    if(backRow) backRow.style.display = 'none';
+    var br=clone.querySelector('#back-link-row');
+    if(br) br.style.display='none';
 
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}table{border-collapse:collapse;}img{max-width:100%;height:auto;display:block;}</style></head><body>' + clone.outerHTML + '</body></html>';
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}table{border-collapse:collapse;}img{max-width:100%;height:auto;display:block;}</style></head><body>'+clone.outerHTML+'</body></html>';
   }
 
   function onCopyReport(){
