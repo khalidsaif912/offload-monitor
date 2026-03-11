@@ -94,7 +94,7 @@
         <tr>
           <td style="padding:10px 12px; border-right:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
             <strong style="color:#0b3a78;">📦 Offloaded / Missing AWB:</strong><br>
-            7 offloaded shipments across 2 flights (wy101, WY171).
+            7 offloaded shipments across 2 flights (WY171, wy101).
           </td>
           <td style="padding:10px 12px; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
             <strong style="color:#0b3a78;">📋 UTL Report:</strong><br>
@@ -605,7 +605,6 @@
     /* تحويل العناصر خارج البنر */
     clone.querySelectorAll('*').forEach(function(el2){
       if(isInBanner(el2)) return;
-
       var bg = el2.style.backgroundColor;
       if(isDarkBg(bg)){
         el2.style.backgroundColor = '#eef3fc';
@@ -625,21 +624,16 @@
     /* ── خطوة 3: البنر — تثبيت الألوان بشكل قاطع ── */
     clone.querySelectorAll('[data-email-keep]').forEach(function(el2){
       var bg = normColor(el2.style.backgroundColor);
-      /* الشريط الأصفر (f59e0b) يبقى كما هو */
       if(bg && bg !== normColor('#f59e0b') && bg !== 'rgb(245,158,11)'){
         el2.style.backgroundColor = '#0b3a78';
       }
     });
-    /* تثبيت ألوان النصوص داخل البنر */
     var bannerRoot = clone.querySelector('[data-email-keep="1"]');
     if(bannerRoot){
       bannerRoot.querySelectorAll('div,span,strong,td,th').forEach(function(el2){
         var c = normColor(el2.style.color);
-        /* أصفر ذهبي → يبقى */
         if(c === normColor('#fde68a') || c === 'rgb(253,230,138)') return;
-        /* أزرق فاتح (Oman SATS) → يبقى */
         if(c === normColor('#93c5fd') || c === 'rgb(147,197,253)') return;
-        /* أي لون آخر → أبيض */
         el2.style.color = '#ffffff';
       });
     }
