@@ -25,19 +25,17 @@
               <tr>
                 <td data-email-keep="1" style="background-color:#0b3a78;">
                   <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:21px; font-weight:800; color:#ffffff; letter-spacing:0.5px; line-height:1.25;">
-                    &#9992;&nbsp; Export Warehouse Activity Report
+                    <span style="color:#ffffff;">&#9992;&nbsp; Export Warehouse Activity Report</span>
                   </div>
                   <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#ffffff; margin-top:7px; letter-spacing:0.2px;">
-                    Shift Date:&nbsp;<strong style="color:#fde68a; font-weight:700;">01 MAR 2026</strong>
-                    &nbsp;&nbsp;|&nbsp;&nbsp;
-                    Time:&nbsp;<strong style="color:#fde68a; font-weight:700;">21:00 – 06:00 LT</strong>
-                    &nbsp;&nbsp;|&nbsp;&nbsp;
-                    <strong style="color:#fde68a; font-weight:700;">Night Shift</strong>
+                    <span style="color:#ffffff;">Shift Date:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">01 MAR 2026</strong>
+                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;Time:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">21:00 – 06:00 LT</strong>
+                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><strong style="color:#fde68a; font-weight:700;">Night Shift</strong>
                   </div>
                 </td>
                 <td align="right" valign="middle" data-email-keep="1" style="padding-right:6px; background-color:#0b3a78;">
                   <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#93c5fd; line-height:1.5; text-align:right;">
-                    Transom Cargo LLC.<br>
+                    <span style="color:#93c5fd;">Transom Cargo LLC.</span><br>
                     <strong style="color:#ffffff; font-weight:700;">Export Operations</strong>
                   </div>
                 </td>
@@ -117,11 +115,16 @@
     </table>
     <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <strong style="color:#0b3a78;">Load Plan:</strong>
-      <ul style="margin:4px 0 10px 22px; padding:0; color:#1b1f2a;"><li>&nbsp;</li></ul>
+      <ul id="ul-loadplan" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <button onclick="addListItem('ul-loadplan')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+      <br>
       <strong style="color:#0b3a78;">Advance Loading:</strong>
-      <ul style="margin:4px 0 10px 22px; padding:0; color:#1b1f2a;"><li>&nbsp;</li></ul>
+      <ul id="ul-advloading" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <button onclick="addListItem('ul-advloading')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+      <br>
       <strong style="color:#0b3a78;">CSD Rescreening:</strong>
-      <ul style="margin:4px 0 4px 22px; padding:0; color:#1b1f2a;"><li>&nbsp;</li></ul>
+      <ul id="ul-csdrescreening" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="52" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <button onclick="addListItem('ul-csdrescreening')" style="font-size:11px;padding:1px 8px;margin-bottom:4px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -278,33 +281,37 @@
         <td colspan="2" valign="top" style="font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.8;">
           
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Supervisors:</div>
-      <ul style="margin:2px 0 10px 20px;padding:0;"><li>SN 82593 — Mohamed Al Kalbani</li>
+      <ul id="ul-supervisors" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82593 — Mohamed Al Kalbani</li>
 </ul>
+      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Load Control:</div>
-      <ul style="margin:2px 0 10px 20px;padding:0;"><li>SN 82114 — Mubarak Al Nofli</li>
-<li>SN 82441 — Mudathir Al Hajri</li>
-<li>SN 81348 — Assad Al Omairi</li>
+      <ul id="ul-dept-loadcontrol" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82114 — Mubarak Al Nofli</li>
+<li contenteditable="true" style="outline:none;">SN 82441 — Mudathir Al Hajri</li>
+<li contenteditable="true" style="outline:none;">SN 81348 — Assad Al Omairi</li>
 </ul>
+      <button onclick="addListItem('ul-dept-loadcontrol')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Export Checker:</div>
-      <ul style="margin:2px 0 10px 20px;padding:0;"><li>SN 82673 — Khalifa Al Maqbali</li>
-<li>SN 82672 — Dawood Al Siyabi</li>
-<li>SN 80482 — Waleed Al Hadabi</li>
-<li>SN 82666 — Mohamed Al Maskari</li>
-<li>SN 82547 — Mazin Al Hajri</li>
-<li>SN 82439 — Ghaith Al Habsi</li>
-<li>SN 82661 — Mohamed Al Maskari</li>
+      <ul id="ul-dept-exportchecker" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82673 — Khalifa Al Maqbali</li>
+<li contenteditable="true" style="outline:none;">SN 82672 — Dawood Al Siyabi</li>
+<li contenteditable="true" style="outline:none;">SN 80482 — Waleed Al Hadabi</li>
+<li contenteditable="true" style="outline:none;">SN 82666 — Mohamed Al Maskari</li>
+<li contenteditable="true" style="outline:none;">SN 82547 — Mazin Al Hajri</li>
+<li contenteditable="true" style="outline:none;">SN 82439 — Ghaith Al Habsi</li>
+<li contenteditable="true" style="outline:none;">SN 82661 — Mohamed Al Maskari</li>
 </ul>
+      <button onclick="addListItem('ul-dept-exportchecker')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Export Operators:</div>
-      <ul style="margin:2px 0 10px 20px;padding:0;"><li>SN 82467 — Khamis Al Hinai</li>
-<li>SN 81223 — Mazin Al Siyabi</li>
-<li>SN 82429 — Zakariya Al Balushi</li>
+      <ul id="ul-dept-exportoperators" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82467 — Khamis Al Hinai</li>
+<li contenteditable="true" style="outline:none;">SN 81223 — Mazin Al Siyabi</li>
+<li contenteditable="true" style="outline:none;">SN 82429 — Zakariya Al Balushi</li>
 </ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">B) CTU Staff On Duty:</div><ul style="margin:2px 0 10px 20px;padding:0;"><li style="color:#64748b;">NIL</li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">C) Support Team:</div><ul style="margin:2px 0 10px 20px;padding:0;"><li style="color:#64748b;">NIL</li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">D) Sick Leave / No Show / Others:</div><ul style="margin:2px 0 10px 20px;padding:0;"><li style="color:#64748b;">NIL</li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">E) Annual Leave / Course / Off in Lieu:</div><ul style="margin:2px 0 10px 20px;padding:0;"><li style="color:#64748b;">NIL</li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">F) Trainee:</div><ul style="margin:2px 0 10px 20px;padding:0;"><li style="color:#64748b;">NIL</li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">G) Overtime Justification:</div><ul style="margin:2px 0 10px 20px;padding:0;"><li style="color:#64748b;">NIL</li></ul>
+      <button onclick="addListItem('ul-dept-exportoperators')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">B) CTU Staff On Duty:</div><ul id="ul-ctu" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-ctu')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">C) Support Team:</div><ul id="ul-support" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-support')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">D) Sick Leave / No Show / Others:</div><ul id="ul-sickleave" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-sickleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">E) Annual Leave / Course / Off in Lieu:</div><ul id="ul-annualleave" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-annualleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">F) Trainee:</div><ul id="ul-trainee" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-trainee')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">G) Overtime Justification:</div><ul id="ul-overtime" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-overtime')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
         </td>
       </tr>
     </table>
@@ -502,6 +509,105 @@
     }, delay || 3000);
   }
 
+  /* ── قوائم قابلة للتعديل: إضافة وحذف عناصر ── */
+  function addListItem(ulId){
+    var ul = document.getElementById(ulId);
+    if(!ul) return;
+    var li = document.createElement('li');
+    li.contentEditable = 'true';
+    li.style.outline = 'none';
+    li.style.minWidth = '40px';
+    li.innerHTML = '&nbsp;';
+    li.addEventListener('keydown', function(e){
+      /* Enter → أضف عنصراً جديداً */
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        var newLi = document.createElement('li');
+        newLi.contentEditable = 'true';
+        newLi.style.outline = 'none';
+        newLi.innerHTML = '&nbsp;';
+        _attachLiEvents(newLi);
+        ul.insertBefore(newLi, li.nextSibling);
+        newLi.focus();
+        /* ضع cursor في النهاية */
+        var r = document.createRange();
+        r.selectNodeContents(newLi);
+        r.collapse(false);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }
+      /* Delete/Backspace على عنصر فارغ → احذفه */
+      if((e.key === 'Backspace' || e.key === 'Delete') && (li.innerText.trim()===''||li.innerText.trim()===' ')){
+        if(ul.children.length > 1){
+          e.preventDefault();
+          var prev = li.previousElementSibling || li.nextElementSibling;
+          ul.removeChild(li);
+          if(prev) prev.focus();
+        }
+      }
+    });
+    ul.appendChild(li);
+    li.focus();
+    var r = document.createRange();
+    r.selectNodeContents(li);
+    r.collapse(false);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
+    _attachLiEvents(li);
+  }
+
+  function _attachLiEvents(li){
+    var ul = li.parentElement;
+    li.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        var newLi = document.createElement('li');
+        newLi.contentEditable = 'true';
+        newLi.style.outline = 'none';
+        newLi.innerHTML = '&nbsp;';
+        _attachLiEvents(newLi);
+        li.parentElement.insertBefore(newLi, li.nextSibling);
+        newLi.focus();
+        var r = document.createRange();
+        r.selectNodeContents(newLi);
+        r.collapse(false);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(r);
+      }
+      if((e.key === 'Backspace'||e.key==='Delete') && (li.innerText.trim()===''||li.innerText.trim()===' ')){
+        if(li.parentElement && li.parentElement.children.length > 1){
+          e.preventDefault();
+          var prev = li.previousElementSibling || li.nextElementSibling;
+          li.parentElement.removeChild(li);
+          if(prev) prev.focus();
+        }
+      }
+    });
+  }
+
+  /* ربط الـ li الموجودة مسبقاً بالأحداث عند تحميل الصفحة */
+  document.addEventListener('DOMContentLoaded', function(){
+    var editableLists = [
+      'ul-loadplan','ul-advloading','ul-csdrescreening',
+      'ul-supervisors','ul-ctu','ul-support',
+      'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'
+    ];
+    editableLists.forEach(function(id){
+      var ul = document.getElementById(id);
+      if(!ul) return;
+      Array.from(ul.querySelectorAll('li[contenteditable]')).forEach(function(li){
+        _attachLiEvents(li);
+      });
+    });
+    /* أيضاً أقسام الأقسام الديناميكية */
+    document.querySelectorAll('ul[id^="ul-dept-"]').forEach(function(ul){
+      Array.from(ul.querySelectorAll('li[contenteditable]')).forEach(function(li){
+        _attachLiEvents(li);
+      });
+    });
+  });
   function plainCopyFallback(text, html){
     if(html){
       var holder = document.createElement('div');
@@ -631,6 +737,11 @@
     });
     clone.querySelectorAll('[tabindex]').forEach(function(e){
       e.removeAttribute('tabindex');
+    });
+    /* إزالة أزرار + Add من النسخة المُرسَلة */
+    clone.querySelectorAll('button').forEach(function(e){
+      if(e.textContent.trim().indexOf('Add')!==-1 || e.textContent.trim().indexOf('+')!==-1)
+        e.parentNode && e.parentNode.removeChild(e);
     });
     var br=clone.querySelector('#back-link-row');
     if(br) br.style.display='none';
