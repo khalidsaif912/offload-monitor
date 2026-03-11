@@ -437,7 +437,6 @@
             </div>
 
           </td>
-          </td>
 
         </tr>
       </table>
@@ -636,6 +635,16 @@
     clone.querySelectorAll('td,th').forEach(function(cell){
       if(!cell.style.verticalAlign) cell.style.verticalAlign = 'top';
     });
+
+    /* ── Strip contenteditable + tabindex — not safe/needed in email ── */
+    clone.querySelectorAll('[contenteditable]').forEach(function(el2){
+      el2.removeAttribute('contenteditable');
+      el2.style.outline = 'none';
+    });
+    clone.querySelectorAll('[tabindex]').forEach(function(el2){
+      el2.removeAttribute('tabindex');
+    });
+
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}table{border-collapse:collapse;table-layout:fixed;}img{max-width:100%;height:auto;display:block;}</style></head><body>' + clone.outerHTML + '</body></html>';
   }
 
@@ -851,7 +860,7 @@
         localStorage.setItem('gh_pat', pat);
       }
 
-      /* ── Step 1: Build the full edited HTML from the DOM ── */
+      /* ── Step 1: Capture DOM edits (inline styles, clean email-safe HTML) ── */
       var editedHtml = buildReportHtml();
       if(!editedHtml){
         btn.innerText = '❌ No report found';
@@ -860,7 +869,7 @@
         return;
       }
 
-      /* ── Step 2: Get current file SHA then update index.html in repo ── */
+      /* ── Step 2: Get current file SHA then upload the edited HTML to repo ── */
       var filePath = 'docs/2026-03-15/shift1/index.html';
       var apiBase = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/';
       var headers = {
@@ -868,9 +877,6 @@
         'Authorization':'Bearer ' + pat,
         'Content-Type':'application/json'
       };
-
-      /* ── Build the full page HTML (wrap report in the page shell) ── */
-      var fullPageHtml = document.documentElement.outerHTML;
 
       btn.innerText = '⏳ Uploading edits…';
 
@@ -882,7 +888,8 @@
       })
       .then(function(fileInfo){
         var sha = fileInfo ? fileInfo.sha : undefined;
-        var encoded = btoa(unescape(encodeURIComponent(fullPageHtml)));
+        /* Use editedHtml — includes user edits + inline styles + email-safe colors */
+        var encoded = btoa(unescape(encodeURIComponent(editedHtml)));
         var putBody = {
           message: 'Update report with manual edits (2026-03-15/shift1)',
           content: encoded,
