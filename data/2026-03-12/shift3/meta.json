@@ -1,1 +1,20 @@
-{}
+{
+  "flights": {
+    "WY_251_12_-Mar_MAA.json": {
+      "flight": "WY 251",
+      "date": "12 -Mar",
+      "dest": "MAA",
+      "created_at": "2026-03-12T01:45:14.494152+04:00",
+      "updated_at": "2026-03-12T01:45:14.494152+04:00",
+      "updates": 0
+    },
+    "WY251_11MAR_.json": {
+      "flight": "WY251",
+      "date": "11MAR",
+      "dest": "",
+      "created_at": "2026-03-12T01:45:14.494152+04:00",
+      "updated_at": "2026-03-12T01:45:14.494152+04:00",
+      "updates": 0
+    }
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "flight": "WY 251",
+  "date": "12 -Mar",
+  "std_etd": "",
+  "destination": "MAA",
+  "format": "A",
+  "items": [
+    {
+      "awb": "910- 18436073",
+      "pcs": "37",
+      "kgs": "1182",
+      "description": "LEATHER",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "01:36",
+  "saved_at": "2026-03-12T01:45:14.494152+04:00"
+}
