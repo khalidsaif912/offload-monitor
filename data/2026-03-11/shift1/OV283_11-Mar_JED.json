@@ -1,0 +1,21 @@
+{
+  "flight": "OV283",
+  "date": "11-Mar",
+  "std_etd": "",
+  "destination": "JED",
+  "format": "A",
+  "items": [
+    {
+      "awb": "703-13473725",
+      "pcs": "39",
+      "kgs": "742",
+      "description": "CHILDREN WEARS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "12:04",
+  "saved_at": "2026-03-11T12:58:24.985057+04:00"
+}
