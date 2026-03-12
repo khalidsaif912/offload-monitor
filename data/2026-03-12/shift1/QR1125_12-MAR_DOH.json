@@ -1,0 +1,21 @@
+{
+  "flight": "QR1125",
+  "date": "12-MAR",
+  "std_etd": "",
+  "destination": "DOH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "QKE64837QR",
+      "pcs": "38",
+      "kgs": "329",
+      "description": "CONSOL",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "08:19",
+  "saved_at": "2026-03-12T08:44:38.913091+04:00"
+}
