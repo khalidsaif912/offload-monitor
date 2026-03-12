@@ -1,0 +1,31 @@
+{
+  "flight": "OV203",
+  "date": "12-Mar",
+  "std_etd": "",
+  "destination": "RUH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "960 10020975",
+      "pcs": "18",
+      "kgs": "382",
+      "description": "COURIER",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "960 10021023",
+      "pcs": "125",
+      "kgs": "2612",
+      "description": "COURIER",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "12:28",
+  "saved_at": "2026-03-12T13:01:37.817869+04:00"
+}
