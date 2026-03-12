@@ -1,0 +1,81 @@
+{
+  "flight": "TK775",
+  "date": "13-Mar",
+  "std_etd": "",
+  "destination": "IST",
+  "format": "A",
+  "items": [
+    {
+      "awb": "235 44935251",
+      "pcs": "56",
+      "kgs": "712",
+      "description": "SEWING THREAD",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH-4310TK"
+    },
+    {
+      "awb": "235 44934713",
+      "pcs": "2",
+      "kgs": "6",
+      "description": "SPARE PARTS",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "235 44938670",
+      "pcs": "8",
+      "kgs": "154",
+      "description": "CONSOL",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH-5481TK"
+    },
+    {
+      "awb": "235 44933755",
+      "pcs": "1",
+      "kgs": "87",
+      "description": "CONSOL",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "235 44938633",
+      "pcs": "1",
+      "kgs": "64",
+      "description": "CONSOL",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "235 44938670",
+      "pcs": "1",
+      "kgs": "20",
+      "description": "CONSOL",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH-5727TK"
+    },
+    {
+      "awb": "235 44935251",
+      "pcs": "57",
+      "kgs": "726",
+      "description": "SEWING THREAD",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "03:12",
+  "saved_at": "2026-03-13T03:24:15.792997+04:00"
+}
