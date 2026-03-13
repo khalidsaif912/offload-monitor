@@ -1,0 +1,41 @@
+{
+  "flight": "ET625",
+  "date": "13-Mar",
+  "std_etd": "",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "071 60091382A",
+      "pcs": "50",
+      "kgs": "818",
+      "description": "PERSONAL EFFEC",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "071 60091684P",
+      "pcs": "46",
+      "kgs": "1225",
+      "description": "PERSONAL EFFEC",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "071 60092001",
+      "pcs": "11",
+      "kgs": "101",
+      "description": "TAMPER PROOFEN",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "04:55",
+  "saved_at": "2026-03-13T05:26:08.368749+04:00"
+}
