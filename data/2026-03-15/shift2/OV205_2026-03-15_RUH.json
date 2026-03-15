@@ -1,0 +1,21 @@
+{
+  "flight": "OV205",
+  "date": "2026-03-15",
+  "std_etd": "",
+  "destination": "RUH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "960-10030414",
+      "pcs": "31",
+      "kgs": "697",
+      "description": "COURIER",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "15:28",
+  "saved_at": "2026-03-15T15:36:35.653219+04:00"
+}
