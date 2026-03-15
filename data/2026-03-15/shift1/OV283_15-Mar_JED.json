@@ -1,0 +1,21 @@
+{
+  "flight": "OV283",
+  "date": "15-Mar",
+  "std_etd": "",
+  "destination": "JED",
+  "format": "A",
+  "items": [
+    {
+      "awb": "703-13264506",
+      "pcs": "36",
+      "kgs": "732",
+      "description": "GARMENTS",
+      "reason": "DUE TO SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "08:41",
+  "saved_at": "2026-03-15T09:19:16.810459+04:00"
+}
