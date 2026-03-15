@@ -1,0 +1,21 @@
+{
+  "flight": "wy689",
+  "date": "15-Mar",
+  "std_etd": "06:40|07:21",
+  "destination": "JED",
+  "format": "A",
+  "items": [
+    {
+      "awb": "960-10030414",
+      "pcs": "31",
+      "kgs": "697",
+      "description": "COURIER",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "15:57",
+  "saved_at": "2026-03-15T17:10:58.529342+04:00"
+}
