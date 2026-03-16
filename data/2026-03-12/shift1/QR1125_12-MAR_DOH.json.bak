@@ -1,7 +1,7 @@
 {
   "flight": "QR1125",
   "date": "12-MAR",
-  "std_etd": "19:20",
+  "std_etd": "19:20|05:02",
   "destination": "DOH",
   "format": "A",
   "items": [
@@ -17,8 +17,5 @@
     }
   ],
   "email_time": "08:19",
-  "saved_at": "2026-03-12T08:44:38.913091+04:00",
-  "_tz_fixed": "2026-03-16T11:06:44Z",
-  "retro_enriched_at": "2026-03-16T15:06:45.728514+04:00",
-  "retro_enriched_source": "Flightradar"
+  "saved_at": "2026-03-12T08:44:38.913091+04:00"
 }

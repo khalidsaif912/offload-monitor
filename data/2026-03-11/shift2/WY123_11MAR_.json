@@ -1,11 +1,13 @@
 {
   "flight": "WY123",
   "date": "11MAR",
-  "std_etd": "",
-  "destination": "",
+  "std_etd": "16:40",
+  "destination": "MUC",
   "format": "C",
   "reason": "",
   "items": [],
   "email_time": "16:02",
-  "saved_at": "2026-03-11T21:13:21.344551+04:00"
+  "saved_at": "2026-03-11T21:13:21.344551+04:00",
+  "retro_enriched_at": "2026-03-16T15:06:45.728514+04:00",
+  "retro_enriched_source": "Flightradar"
 }
