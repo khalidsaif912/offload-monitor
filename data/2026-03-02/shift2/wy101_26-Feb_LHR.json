@@ -1,7 +1,7 @@
 {
   "flight": "wy101",
   "date": "26-Feb",
-  "std_etd": "10:25",
+  "std_etd": "10:25|10:35",
   "destination": "LHR",
   "format": "A",
   "items": [
@@ -67,5 +67,7 @@
     }
   ],
   "saved_at": "2026-03-02T15:22:28.351831+04:00",
-  "retro_enriched_at": "2026-03-08T14:31:24.425613+04:00"
+  "retro_enriched_at": "2026-03-08T14:31:24.425613+04:00",
+  "enrichment_source": "Flightradar",
+  "last_enriched": "2026-03-16T14:35:28.403776+04:00"
 }
