@@ -1,7 +1,7 @@
 {
   "flight": "WY117",
   "date": "04MAR26",
-  "std_etd": "10:45",
+  "std_etd": "10:45|10:55",
   "destination": "FRA",
   "format": "A",
   "items": [
@@ -17,6 +17,6 @@
     }
   ],
   "saved_at": "2026-03-08T17:58:23.029626+04:00",
-  "retro_enriched_at": "2026-03-16T14:11:15.532134+04:00",
+  "retro_enriched_at": "2026-03-16T14:55:31.753743+04:00",
   "retro_enriched_source": "Flightradar"
 }
