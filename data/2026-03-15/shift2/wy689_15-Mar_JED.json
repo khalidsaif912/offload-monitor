@@ -1,7 +1,7 @@
 {
   "flight": "wy689",
   "date": "15-Mar",
-  "std_etd": "06:40|07:21",
+  "std_etd": "06:40",
   "destination": "JED",
   "format": "A",
   "items": [
@@ -17,5 +17,7 @@
     }
   ],
   "email_time": "15:57",
-  "saved_at": "2026-03-15T21:16:02.668340+04:00"
+  "saved_at": "2026-03-15T21:16:02.668340+04:00",
+  "retro_enriched_at": "2026-03-16T14:11:15.532134+04:00",
+  "retro_enriched_source": "Flightradar"
 }

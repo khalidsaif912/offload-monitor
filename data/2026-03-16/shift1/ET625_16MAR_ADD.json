@@ -1,7 +1,7 @@
 {
   "flight": "ET625",
   "date": "16MAR",
-  "std_etd": "00:15|00:35",
+  "std_etd": "00:15",
   "destination": "ADD",
   "format": "C",
   "reason": "",

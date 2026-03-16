@@ -1,7 +1,7 @@
 {
   "flight": "WY843",
   "date": "03MAR26",
-  "std_etd": "09:15|10:27",
+  "std_etd": "05:15",
   "destination": "MNL",
   "format": "A",
   "items": [
@@ -17,5 +17,6 @@
     }
   ],
   "saved_at": "2026-03-03T21:56:20.964365+04:00",
-  "retro_enriched_at": "2026-03-08T14:31:24.425613+04:00"
+  "retro_enriched_at": "2026-03-16T14:11:15.532134+04:00",
+  "retro_enriched_source": "Flightradar"
 }
