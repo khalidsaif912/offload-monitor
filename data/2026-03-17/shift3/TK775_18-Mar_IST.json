@@ -1,0 +1,61 @@
+{
+  "flight": "TK775",
+  "date": "18-Mar",
+  "std_etd": "22:20",
+  "destination": "IST",
+  "format": "A",
+  "items": [
+    {
+      "awb": "AKH-3082TK",
+      "pcs": "2",
+      "kgs": "30",
+      "description": "BLOOD SAMPLES",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "AKH-4780TK",
+      "pcs": "1",
+      "kgs": "330",
+      "description": "INSTMT3071NC L",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "AKH-5216TK",
+      "pcs": "1",
+      "kgs": "132",
+      "description": "INSTMT3071NC L",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "AKH-5914TK",
+      "pcs": "5",
+      "kgs": "423",
+      "description": "PORTHOLE ASSY",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "AKH-7021TK",
+      "pcs": "2",
+      "kgs": "203.5",
+      "description": "CONSOLIDATION",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "03:23",
+  "saved_at": "2026-03-18T03:23:00+04:00"
+}
