@@ -1,0 +1,21 @@
+{
+  "flight": "OV287",
+  "date": "18-Mar",
+  "std_etd": "03:05",
+  "destination": "JED",
+  "format": "A",
+  "items": [
+    {
+      "awb": "703-13472023",
+      "pcs": "15",
+      "kgs": "230",
+      "description": "SPORTS BACKPAC",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "08:23",
+  "saved_at": "2026-03-19T08:23:00+04:00"
+}

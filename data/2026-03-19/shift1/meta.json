@@ -1,0 +1,12 @@
+{
+  "flights": {
+    "OV287_18-Mar_JED.json": {
+      "flight": "OV287",
+      "date": "18-Mar",
+      "dest": "JED",
+      "created_at": "2026-03-19T08:23:00+04:00",
+      "updated_at": "2026-03-19T08:23:00+04:00",
+      "updates": 0
+    }
+  }
+}
