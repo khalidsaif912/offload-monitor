@@ -1,0 +1,33 @@
+{
+  "flight": "ET625",
+  "date": "1 9 -Mar",
+  "std_etd": "00:15",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "071-60091850P",
+      "pcs": "66",
+      "kgs": "1571.9",
+      "description": "PERSONAL EFFEC",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "071-60091382D",
+      "pcs": "27",
+      "kgs": "428.40",
+      "description": "PERSONAL EFFEC",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "05:01",
+  "saved_at": "2026-03-19T05:01:00+04:00",
+  "enrichment_source": "Flightradar",
+  "last_enriched": "2026-03-19T05:04:20.355890+04:00"
+}
