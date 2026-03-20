@@ -1,0 +1,41 @@
+{
+  "flight": "OV2 05",
+  "date": "20 -Mar",
+  "std_etd": "07:35|09:53",
+  "destination": "RUH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "703- 13341576",
+      "pcs": "9",
+      "kgs": "83.5",
+      "description": "CONSOLIDATION",
+      "reason": "",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "703-13341613",
+      "pcs": "19",
+      "kgs": "404.5",
+      "description": "CONSOLIDATION",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "703-13453985",
+      "pcs": "17",
+      "kgs": "193.6",
+      "description": "ZIP FASTENER",
+      "reason": "",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "11:43",
+  "saved_at": "2026-03-20T11:43:00+04:00"
+}
