@@ -1,0 +1,51 @@
+{
+  "flight": "QR1127",
+  "date": "20-MAR",
+  "std_etd": "09:00",
+  "destination": "DOH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "",
+      "pcs": "7",
+      "kgs": "981",
+      "description": "CONSOL",
+      "reason": "NOT RECEIVED AT RAMP",
+      "class_": "",
+      "item": "",
+      "trolley": "PLA92215QR"
+    },
+    {
+      "awb": "",
+      "pcs": "250",
+      "kgs": "525.9",
+      "description": "CONSOL",
+      "reason": "NOT RECEIVED AT RAMP",
+      "class_": "",
+      "item": "",
+      "trolley": "PMC75299QR"
+    },
+    {
+      "awb": "",
+      "pcs": "13",
+      "kgs": "514",
+      "description": "CONSOL",
+      "reason": "NOT RECEIVED AT RAMP",
+      "class_": "",
+      "item": "",
+      "trolley": "PMC87338QR"
+    },
+    {
+      "awb": "",
+      "pcs": "38",
+      "kgs": "333.8",
+      "description": "CONSOL",
+      "reason": "NOT RECEIVED AT RAMP",
+      "class_": "",
+      "item": "",
+      "trolley": "QKE55059QR"
+    }
+  ],
+  "email_time": "14:45",
+  "saved_at": "2026-03-20T14:45:00+04:00"
+}
