@@ -1,0 +1,41 @@
+{
+  "flight": "TK861",
+  "date": "20 -Mar",
+  "std_etd": "04:10",
+  "destination": "IST",
+  "format": "A",
+  "items": [
+    {
+      "awb": "",
+      "pcs": "2",
+      "kgs": "324",
+      "description": "PORTHOLE ASSY",
+      "reason": "DUE TO SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": "A KH- 5914 TK"
+    },
+    {
+      "awb": "",
+      "pcs": "13",
+      "kgs": "179",
+      "description": "AIRCRAFT PARTS",
+      "reason": "DUE TO SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH- 6447 TK"
+    },
+    {
+      "awb": "",
+      "pcs": "2",
+      "kgs": "203",
+      "description": "CONSOL",
+      "reason": "DUE TO SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH- 7021 TK"
+    }
+  ],
+  "email_time": "09:07",
+  "saved_at": "2026-03-20T09:07:00+04:00"
+}
