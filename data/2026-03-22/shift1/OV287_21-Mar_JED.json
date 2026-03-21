@@ -1,0 +1,21 @@
+{
+  "flight": "OV287",
+  "date": "21-Mar",
+  "std_etd": "01:55",
+  "destination": "JED",
+  "format": "A",
+  "items": [
+    {
+      "awb": "70313473364",
+      "pcs": "19",
+      "kgs": "434",
+      "description": "LADIES SUITS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "05:52",
+  "saved_at": "2026-03-22T05:52:00+04:00"
+}
