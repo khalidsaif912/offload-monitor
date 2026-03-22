@@ -1,0 +1,51 @@
+{
+  "flight": "TK775",
+  "date": "2 3 -MAR",
+  "std_etd": "22:20",
+  "destination": "IST",
+  "format": "A",
+  "items": [
+    {
+      "awb": "235 36417054",
+      "pcs": "1",
+      "kgs": "169",
+      "description": "PORTHOLE ASSY",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH5914TK"
+    },
+    {
+      "awb": "",
+      "pcs": "1",
+      "kgs": "155",
+      "description": "STAND-ALONE SH",
+      "reason": "",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH-6447TK"
+    },
+    {
+      "awb": "235 44938703P",
+      "pcs": "13",
+      "kgs": "179.5",
+      "description": "AIRCRAFT PARTS",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH-7021TK"
+    },
+    {
+      "awb": "235 44932156",
+      "pcs": "2",
+      "kgs": "203.5",
+      "description": "CONSOL",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "02:33",
+  "saved_at": "2026-03-23T02:33:00+04:00"
+}
