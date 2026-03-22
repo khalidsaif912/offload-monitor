@@ -1,0 +1,12 @@
+{
+  "flights": {
+    "OV783_22-MAR_BLR.json": {
+      "flight": "OV783",
+      "date": "22-MAR",
+      "dest": "BLR",
+      "created_at": "2026-03-23T23:37:00+04:00",
+      "updated_at": "2026-03-23T23:37:00+04:00",
+      "updates": 0
+    }
+  }
+}
