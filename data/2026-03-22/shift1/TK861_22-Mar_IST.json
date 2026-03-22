@@ -1,0 +1,51 @@
+{
+  "flight": "TK861",
+  "date": "22-Mar",
+  "std_etd": "04:10",
+  "destination": "IST",
+  "format": "A",
+  "items": [
+    {
+      "awb": "",
+      "pcs": "2",
+      "kgs": "324",
+      "description": "PORTHOLE ASSY",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH-5914TK"
+    },
+    {
+      "awb": "",
+      "pcs": "13",
+      "kgs": "179.5",
+      "description": "AIRCRAFT PARTS",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH-6447TK"
+    },
+    {
+      "awb": "",
+      "pcs": "2",
+      "kgs": "203.5",
+      "description": "CONSOLIDATION",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH-7021TK"
+    },
+    {
+      "awb": "",
+      "pcs": "",
+      "kgs": "",
+      "description": "",
+      "reason": "RZFW 70000 KG.",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "09:19",
+  "saved_at": "2026-03-22T09:19:00+04:00"
+}
