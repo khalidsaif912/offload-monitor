@@ -27,8 +27,5 @@
     }
   ],
   "email_time": "05:01",
-  "saved_at": "2026-03-19T05:01:00+04:00",
-  "_tz_fixed": "2026-03-23T06:27:11Z",
-  "enrichment_source": "Flightradar",
-  "last_enriched": "2026-03-23T10:27:23.622700+04:00"
+  "saved_at": "2026-03-19T05:01:00+04:00"
 }

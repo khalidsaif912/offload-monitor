@@ -1,7 +1,7 @@
 {
   "flight": "OV287",
   "date": "18-Mar",
-  "std_etd": "03:05|06:45",
+  "std_etd": "03:05",
   "destination": "JED",
   "format": "A",
   "items": [
