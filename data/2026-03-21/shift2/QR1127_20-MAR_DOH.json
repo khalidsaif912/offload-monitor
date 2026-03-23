@@ -49,5 +49,7 @@
   "email_time": "14:45",
   "saved_at": "2026-03-21T14:45:00+04:00",
   "enrichment_source": "Flightradar",
-  "last_enriched": "2026-03-21T02:51:16.704489+04:00"
+  "last_enriched": "2026-03-23T10:11:00.313419+04:00",
+  "retro_enriched_at": "2026-03-23T10:10:33.048890+04:00",
+  "retro_enriched_source": "Flightradar"
 }
