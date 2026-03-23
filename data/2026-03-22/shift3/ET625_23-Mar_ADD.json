@@ -1,0 +1,23 @@
+{
+  "flight": "ET625",
+  "date": "23-Mar",
+  "std_etd": "00:15",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "071-60091393",
+      "pcs": "135",
+      "kgs": "2262",
+      "description": "P.EFFECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "04:40",
+  "saved_at": "2026-03-23T04:40:00+04:00",
+  "enrichment_source": "Flightradar",
+  "last_enriched": "2026-03-23T07:21:01.310929+04:00"
+}
