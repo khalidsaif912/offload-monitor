@@ -70,41 +70,63 @@ def is_offload_email(subject: str) -> bool:
     return any(k in s for k in keywords)
 
 
+def extract_folder_names(folders) -> list[str]:
+    names = []
+    for folder in folders or []:
+        line = folder.decode(errors="ignore")
+        print(line)
+
+        # نأخذ آخر جزء بين علامتَي اقتباس
+        m = re.search(r'"([^"]+)"\s*$', line)
+        if m:
+            names.append(m.group(1))
+    return names
+
+
 def main():
     mail = imaplib.IMAP4_SSL(IMAP_SERVER)
     mail.login(EMAIL, PASSWORD)
 
     status, folders = mail.list()
     print("\n[INFO] Available folders:")
-    if folders:
-        for folder in folders:
-            print(folder.decode(errors="ignore"))
+    if status != "OK":
+        raise RuntimeError("Failed to list folders")
 
-    # ✅ افتح فقط المجلد المطلوب — بدون fallback
+    folder_names = extract_folder_names(folders)
+
+    actual_folder = None
+    for name in folder_names:
+        if name.strip().lower() == TARGET_FOLDER.lower():
+            actual_folder = name
+            break
+
+    if not actual_folder:
+        raise RuntimeError(f'Folder "{TARGET_FOLDER}" not found in IMAP list')
+
+    print(f'\n[INFO] Matched folder: {actual_folder}')
+
+    # مهم: نرسل الاسم بين اقتباسين
     try:
-        status, data = mail.select(TARGET_FOLDER)
-        print(f'\n[DEBUG] Opening folder "{TARGET_FOLDER}" -> {status}')
+        status, data = mail.select(f'"{actual_folder}"')
+        print(f'[DEBUG] Opening folder "{actual_folder}" -> {status}')
         print(f"[DEBUG] select() response: {data}")
     except Exception as e:
-        raise RuntimeError(f'Cannot open folder "{TARGET_FOLDER}": {e}')
+        raise RuntimeError(f'Cannot open folder "{actual_folder}": {e}')
 
     if status != "OK":
-        raise RuntimeError(f'Cannot open folder "{TARGET_FOLDER}"')
+        raise RuntimeError(f'Cannot open folder "{actual_folder}"')
 
-    # عدد الرسائل داخل المجلد
     folder_count = int(data[0].decode()) if data and data[0] else 0
-    print(f'[INFO] Total emails in "{TARGET_FOLDER}": {folder_count}')
+    print(f'[INFO] Total emails in "{actual_folder}": {folder_count}')
 
     status, messages = mail.search(None, "ALL")
     if status != "OK":
-        raise RuntimeError(f'Failed to search emails in folder "{TARGET_FOLDER}"')
+        raise RuntimeError(f'Failed to search emails in folder "{actual_folder}"')
 
     ids = messages[0].split()
     print(f"[INFO] Search returned {len(ids)} email id(s)")
 
-    # فقط آخر 15
     ids = ids[-15:]
-
     saved_count = 0
 
     for num in ids:
@@ -118,7 +140,6 @@ def main():
         subject = msg.get("Subject", "offload")
         print(f"\n[EMAIL] {subject}")
 
-        # ✅ فلترة المواضيع
         if not is_offload_email(subject):
             print("[SKIP] Not an offload email")
             continue
