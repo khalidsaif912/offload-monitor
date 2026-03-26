@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 
 # 🔧 إعدادات
-ONEDRIVE_FOLDER_URL = "PUT_YOUR_FOLDER_LINK_HERE"
+ONEDRIVE_FOLDER_URL = "https://omanair-my.sharepoint.com/:f:/p/8715_hq/IgDdD8um6ShWSa7BONLOTNcXAYphb1AI98eW_NZjxjvbW0k?e=lEMoPT"
 DOWNLOAD_DIR = Path("downloads")
 
 
