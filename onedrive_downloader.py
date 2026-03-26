@@ -16,6 +16,7 @@ BASE_DIR = Path("downloads")
 BASE_DIR.mkdir(exist_ok=True)
 
 
+# تنظيف اسم الملف
 def clean_name(text: str) -> str:
     text = (text or "").strip().lower()
     text = re.sub(r"\s+", "_", text)
@@ -23,6 +24,7 @@ def clean_name(text: str) -> str:
     return text[:50] or "email"
 
 
+# استخراج تاريخ الإيميل
 def get_email_datetime(msg) -> datetime:
     raw_date = msg.get("Date")
     if raw_date:
@@ -33,6 +35,7 @@ def get_email_datetime(msg) -> datetime:
     return datetime.now(ZoneInfo(TIMEZONE))
 
 
+# استخراج HTML من الإيميل
 def get_html_content(msg) -> str | None:
     html_content = None
 
@@ -57,20 +60,43 @@ def get_html_content(msg) -> str | None:
     return html_content
 
 
+# 🔌 الاتصال
 mail = imaplib.IMAP4_SSL(IMAP_SERVER)
 mail.login(EMAIL, PASSWORD)
 
-status, _ = mail.select(LABEL_NAME)
-if status != "OK":
-    raise RuntimeError(f"Cannot open label/folder: {LABEL_NAME}")
+# 🔍 طباعة كل المجلدات
+status, folders = mail.list()
+print("\n[INFO] Available folders:")
+for folder in folders:
+    print(folder.decode(errors="ignore"))
 
+# 🔄 تجربة فتح المجلد
+candidate_labels = [
+    "offload-reports",
+    "INBOX/offload-reports",
+    "[Gmail]/offload-reports",
+    '"offload-reports"',
+    '"INBOX/offload-reports"',
+    '"[Gmail]/offload-reports"',
+]
+
+opened = False
+for label in candidate_labels:
+    status, _ = mail.select(label)
+    print(f"[DEBUG] Trying: {label} -> {status}")
+    if status == "OK":
+        print(f"[SUCCESS] Opened folder: {label}")
+        opened = True
+        break
+
+if not opened:
+    raise RuntimeError("Cannot open any expected label/folder")
+
+# 📥 قراءة الإيميلات
 status, messages = mail.search(None, "ALL")
-if status != "OK":
-    raise RuntimeError("Failed to search emails")
-
 ids = messages[0].split()[-15:]
 
-print(f"[INFO] Found {len(ids)} emails")
+print(f"\n[INFO] Found {len(ids)} emails")
 
 for num in ids:
     status, msg_data = mail.fetch(num, "(RFC822)")
@@ -91,6 +117,7 @@ for num in ids:
     day_dir.mkdir(parents=True, exist_ok=True)
 
     html_content = get_html_content(msg)
+
     if not html_content:
         print("[SKIP] No HTML content found")
         continue
