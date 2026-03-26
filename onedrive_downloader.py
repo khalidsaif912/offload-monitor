@@ -72,12 +72,12 @@ for folder in folders:
 
 # 🔄 تجربة فتح المجلد
 candidate_labels = [
-    "offload-reports",
-    "INBOX/offload-reports",
-    "[Gmail]/offload-reports",
-    '"offload-reports"',
-    '"INBOX/offload-reports"',
-    '"[Gmail]/offload-reports"',
+    "Offload Reports",
+    '"Offload Reports"',
+    "INBOX/Offload Reports",
+    '"INBOX/Offload Reports"',
+    "[Gmail]/Offload Reports",
+    '"[Gmail]/Offload Reports"',
 ]
 
 opened = False
