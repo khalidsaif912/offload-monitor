@@ -2,6 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 from pathlib import Path
 from urllib.parse import urljoin
+import os
 
 
 # 🔧 إعدادات
@@ -10,11 +11,18 @@ DOWNLOAD_DIR = Path("downloads")
 
 
 def list_files(folder_url: str) -> list[str]:
-    """Extract file download links from OneDrive shared folder"""
-    
-    print("[INFO] Reading OneDrive folder...")
+    """Extract file links from SharePoint folder"""
 
-    r = requests.get(folder_url)
+    print("[INFO] Reading OneDrive/SharePoint folder...")
+
+    r = requests.get(
+        folder_url,
+        headers={
+            "User-Agent": "Mozilla/5.0",
+            "Cache-Control": "no-cache",
+        },
+        timeout=30,
+    )
     r.raise_for_status()
 
     soup = BeautifulSoup(r.text, "html.parser")
@@ -24,30 +32,41 @@ def list_files(folder_url: str) -> list[str]:
     for a in soup.find_all("a", href=True):
         href = a["href"]
 
-        if "download" in href or "redir" in href:
-            full_url = urljoin("https://onedrive.live.com", href)
+        # SharePoint patterns
+        if any(x in href for x in ["download", "redir", ":u:", ":x:", "Doc.aspx"]):
+            full_url = urljoin(folder_url, href)
             links.append(full_url)
 
     links = list(set(links))
 
-    print(f"[INFO] Found {len(links)} file(s)")
+    print(f"[INFO] Found {len(links)} candidate link(s)")
     return links
 
 
-def download_file(url: str, save_dir: Path):
+def download_file(url: str, save_dir: Path, index: int):
     """Download single file"""
 
     try:
-        r = requests.get(url, timeout=30)
+        r = requests.get(
+            url,
+            timeout=60,
+            allow_redirects=True,
+            headers={"User-Agent": "Mozilla/5.0"},
+        )
         r.raise_for_status()
 
-        # نحاول نطلع اسم الملف
+        # تجاهل صفحات HTML الصغيرة (ليست ملفات)
+        content_type = r.headers.get("Content-Type", "").lower()
+        if "text/html" in content_type and len(r.content) < 5000:
+            print(f"[SKIP] Not a real file: {url}")
+            return
+
+        # اسم الملف
         filename = url.split("/")[-1].split("?")[0]
         if not filename:
-            filename = "file.html"
+            filename = f"file_{index}.html"
 
         file_path = save_dir / filename
-
         file_path.write_bytes(r.content)
 
         print(f"[DOWNLOADED] {filename}")
@@ -57,14 +76,25 @@ def download_file(url: str, save_dir: Path):
 
 
 def main():
-    DOWNLOAD_DIR.mkdir(exist_ok=True)
+    print("[DEBUG] Current working dir:", os.getcwd())
+
+    # إنشاء المجلد + ضمان ظهوره في GitHub
+    DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    (DOWNLOAD_DIR / ".gitkeep").touch(exist_ok=True)
+
+    print("[DEBUG] downloads path:", DOWNLOAD_DIR.resolve())
+    print("[DEBUG] downloads exists:", DOWNLOAD_DIR.exists())
 
     links = list_files(ONEDRIVE_FOLDER_URL)
 
-    for link in links:
-        download_file(link, DOWNLOAD_DIR)
+    if not links:
+        print("[WARNING] No links found — SharePoint page may require JS")
+        return
 
-    print("[DONE] All files downloaded.")
+    for i, link in enumerate(links, start=1):
+        download_file(link, DOWNLOAD_DIR, i)
+
+    print("[DONE] All files processed.")
 
 
 if __name__ == "__main__":
