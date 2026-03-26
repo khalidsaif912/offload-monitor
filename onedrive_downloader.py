@@ -79,26 +79,7 @@ if status != "OK":
     raise RuntimeError('Cannot open folder: Offload Reports')
 
 # 🔄 تجربة فتح المجلد
-candidate_labels = [
-    "Offload Reports",
-    '"Offload Reports"',
-    "INBOX/Offload Reports",
-    '"INBOX/Offload Reports"',
-    "[Gmail]/Offload Reports",
-    '"[Gmail]/Offload Reports"',
-]
-
-opened = False
-for label in candidate_labels:
-    status, _ = mail.select(label)
-    print(f"[DEBUG] Trying: {label} -> {status}")
-    if status == "OK":
-        print(f"[SUCCESS] Opened folder: {label}")
-        opened = True
-        break
-
-if not opened:
-    raise RuntimeError("Cannot open any expected label/folder")
+candidate_labels 
 
 # 📥 قراءة الإيميلات
 status, messages = mail.search(None, "ALL")
