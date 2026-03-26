@@ -1,101 +1,109 @@
-import requests
-from bs4 import BeautifulSoup
+import imaplib
+import email
+from email.utils import parsedate_to_datetime
 from pathlib import Path
-from urllib.parse import urljoin
-import os
+from datetime import datetime
+from zoneinfo import ZoneInfo
+import re
+
+EMAIL = "SCOON80@gmail.com"
+PASSWORD = "zcmn srnz xtln vkwe"
+IMAP_SERVER = "imap.gmail.com"
+TIMEZONE = "Asia/Muscat"
+LABEL_NAME = "Offload"
+
+BASE_DIR = Path("downloads")
+BASE_DIR.mkdir(exist_ok=True)
 
 
-# 🔧 إعدادات
-ONEDRIVE_FOLDER_URL = "https://omanair-my.sharepoint.com/:f:/p/8715_hq/IgDdD8um6ShWSa7BONLOTNcXAYphb1AI98eW_NZjxjvbW0k?e=lEMoPT"
-DOWNLOAD_DIR = Path("downloads")
+def clean_name(text: str) -> str:
+    text = (text or "").strip().lower()
+    text = re.sub(r"\s+", "_", text)
+    text = re.sub(r"[^a-zA-Z0-9_-]", "", text)
+    return text[:50] or "email"
 
 
-def list_files(folder_url: str) -> list[str]:
-    """Extract file links from SharePoint folder"""
-
-    print("[INFO] Reading OneDrive/SharePoint folder...")
-
-    r = requests.get(
-        folder_url,
-        headers={
-            "User-Agent": "Mozilla/5.0",
-            "Cache-Control": "no-cache",
-        },
-        timeout=30,
-    )
-    r.raise_for_status()
-
-    soup = BeautifulSoup(r.text, "html.parser")
-
-    links = []
-
-    for a in soup.find_all("a", href=True):
-        href = a["href"]
-
-        # SharePoint patterns
-        if any(x in href for x in ["download", "redir", ":u:", ":x:", "Doc.aspx"]):
-            full_url = urljoin(folder_url, href)
-            links.append(full_url)
-
-    links = list(set(links))
-
-    print(f"[INFO] Found {len(links)} candidate link(s)")
-    return links
+def get_email_datetime(msg) -> datetime:
+    raw_date = msg.get("Date")
+    if raw_date:
+        try:
+            return parsedate_to_datetime(raw_date).astimezone(ZoneInfo(TIMEZONE))
+        except Exception:
+            pass
+    return datetime.now(ZoneInfo(TIMEZONE))
 
 
-def download_file(url: str, save_dir: Path, index: int):
-    """Download single file"""
+def get_html_content(msg) -> str | None:
+    html_content = None
 
-    try:
-        r = requests.get(
-            url,
-            timeout=60,
-            allow_redirects=True,
-            headers={"User-Agent": "Mozilla/5.0"},
-        )
-        r.raise_for_status()
+    if msg.is_multipart():
+        for part in msg.walk():
+            content_type = part.get_content_type()
+            disposition = str(part.get("Content-Disposition") or "").lower()
 
-        # تجاهل صفحات HTML الصغيرة (ليست ملفات)
-        content_type = r.headers.get("Content-Type", "").lower()
-        if "text/html" in content_type and len(r.content) < 5000:
-            print(f"[SKIP] Not a real file: {url}")
-            return
+            if "attachment" in disposition:
+                continue
 
-        # اسم الملف
-        filename = url.split("/")[-1].split("?")[0]
-        if not filename:
-            filename = f"file_{index}.html"
+            if content_type == "text/html":
+                payload = part.get_payload(decode=True)
+                if payload:
+                    html_content = payload.decode(errors="ignore")
+                    break
+    else:
+        payload = msg.get_payload(decode=True)
+        if payload:
+            html_content = payload.decode(errors="ignore")
 
-        file_path = save_dir / filename
-        file_path.write_bytes(r.content)
-
-        print(f"[DOWNLOADED] {filename}")
-
-    except Exception as e:
-        print(f"[ERROR] {url} -> {e}")
+    return html_content
 
 
-def main():
-    print("[DEBUG] Current working dir:", os.getcwd())
+mail = imaplib.IMAP4_SSL(IMAP_SERVER)
+mail.login(EMAIL, PASSWORD)
 
-    # إنشاء المجلد + ضمان ظهوره في GitHub
-    DOWNLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    (DOWNLOAD_DIR / ".gitkeep").touch(exist_ok=True)
+status, _ = mail.select(LABEL_NAME)
+if status != "OK":
+    raise RuntimeError(f"Cannot open label/folder: {LABEL_NAME}")
 
-    print("[DEBUG] downloads path:", DOWNLOAD_DIR.resolve())
-    print("[DEBUG] downloads exists:", DOWNLOAD_DIR.exists())
+status, messages = mail.search(None, "ALL")
+if status != "OK":
+    raise RuntimeError("Failed to search emails")
 
-    links = list_files(ONEDRIVE_FOLDER_URL)
+ids = messages[0].split()[-15:]
 
-    if not links:
-        print("[WARNING] No links found — SharePoint page may require JS")
-        return
+print(f"[INFO] Found {len(ids)} emails")
 
-    for i, link in enumerate(links, start=1):
-        download_file(link, DOWNLOAD_DIR, i)
+for num in ids:
+    status, msg_data = mail.fetch(num, "(RFC822)")
+    if status != "OK":
+        print(f"[ERROR] Failed to fetch email {num.decode()}")
+        continue
 
-    print("[DONE] All files processed.")
+    msg = email.message_from_bytes(msg_data[0][1])
 
+    subject = msg.get("Subject", "offload")
+    print(f"\n[EMAIL] {subject}")
 
-if __name__ == "__main__":
-    main()
+    email_dt = get_email_datetime(msg)
+    date_folder = email_dt.strftime("%Y-%m-%d")
+    time_part = email_dt.strftime("%Y-%m-%d_%H-%M")
+
+    day_dir = BASE_DIR / date_folder
+    day_dir.mkdir(parents=True, exist_ok=True)
+
+    html_content = get_html_content(msg)
+    if not html_content:
+        print("[SKIP] No HTML content found")
+        continue
+
+    safe_subject = clean_name(subject)
+    filename = f"{time_part}_{safe_subject}_{num.decode()}.html"
+    file_path = day_dir / filename
+
+    if file_path.exists():
+        print(f"[SKIP] Already exists: {filename}")
+        continue
+
+    file_path.write_text(html_content, encoding="utf-8")
+    print(f"[SAVED HTML] {file_path}")
+
+mail.logout()
