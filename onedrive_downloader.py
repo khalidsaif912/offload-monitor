@@ -10,7 +10,7 @@ EMAIL = "SCOON80@gmail.com"
 PASSWORD = "zcmn srnz xtln vkwe"
 IMAP_SERVER = "imap.gmail.com"
 TIMEZONE = "Asia/Muscat"
-LABEL_NAME = "offload-reports"
+TARGET_FOLDER = "Offload Reports"
 
 BASE_DIR = Path("downloads")
 BASE_DIR.mkdir(exist_ok=True)
