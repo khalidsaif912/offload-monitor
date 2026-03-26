@@ -16,8 +16,8 @@ BASE_DIR = Path("downloads")
 BASE_DIR.mkdir(exist_ok=True)
 
 
+
 def clean_name(text: str) -> str:
-    """تنظيف عنوان الإيميل ليصلح كاسم ملف"""
     text = (text or "").strip().lower()
     text = re.sub(r"\s+", "_", text)
     text = re.sub(r"[^a-zA-Z0-9_-]", "", text)
@@ -25,7 +25,6 @@ def clean_name(text: str) -> str:
 
 
 def get_email_datetime(msg) -> datetime:
-    """استخراج تاريخ الإيميل وتحويله لتوقيت مسقط"""
     raw_date = msg.get("Date")
     if raw_date:
         try:
@@ -36,7 +35,6 @@ def get_email_datetime(msg) -> datetime:
 
 
 def get_html_content(msg) -> str | None:
-    """استخراج HTML من الإيميل"""
     html_content = None
 
     if msg.is_multipart():
@@ -44,7 +42,6 @@ def get_html_content(msg) -> str | None:
             content_type = part.get_content_type()
             disposition = str(part.get("Content-Disposition") or "").lower()
 
-            # تجاهل المرفقات
             if "attachment" in disposition:
                 continue
 
@@ -61,49 +58,55 @@ def get_html_content(msg) -> str | None:
     return html_content
 
 
+def is_offload_email(subject: str) -> bool:
+    s = (subject or "").lower()
+    keywords = [
+        "offload",
+        "offloaded",
+        "offloaded cargo",
+        "fw_offloaded",
+        "fw: offloaded",
+        "fwd: offloaded",
+    ]
+    return any(k in s for k in keywords)
+
+
 def main():
-    # 🔌 الاتصال بـ Gmail
     mail = imaplib.IMAP4_SSL(IMAP_SERVER)
     mail.login(EMAIL, PASSWORD)
 
-    # 🔍 طباعة كل المجلدات المتاحة
     status, folders = mail.list()
     print("\n[INFO] Available folders:")
     if folders:
         for folder in folders:
             print(folder.decode(errors="ignore"))
 
-    # 🔄 تجربة فتح المجلد الصحيح
-    candidate_labels = [
-        "Offload Reports",
-        "INBOX",
-    ]
+    # ✅ افتح فقط المجلد المطلوب — بدون fallback
+    try:
+        status, data = mail.select(TARGET_FOLDER)
+        print(f'\n[DEBUG] Opening folder "{TARGET_FOLDER}" -> {status}')
+        print(f"[DEBUG] select() response: {data}")
+    except Exception as e:
+        raise RuntimeError(f'Cannot open folder "{TARGET_FOLDER}": {e}')
 
-    opened = False
-    selected_label = None
+    if status != "OK":
+        raise RuntimeError(f'Cannot open folder "{TARGET_FOLDER}"')
 
-    for label in candidate_labels:
-        try:
-            status, _ = mail.select(label)
-            print(f"[DEBUG] Trying: {label} -> {status}")
-            if status == "OK":
-                print(f"[SUCCESS] Opened folder: {label}")
-                opened = True
-                selected_label = label
-                break
-        except Exception as e:
-            print(f"[DEBUG] Trying: {label} -> ERROR: {e}")
+    # عدد الرسائل داخل المجلد
+    folder_count = int(data[0].decode()) if data and data[0] else 0
+    print(f'[INFO] Total emails in "{TARGET_FOLDER}": {folder_count}')
 
-    if not opened:
-        raise RuntimeError("Cannot open any expected label/folder")
-
-    # 📥 قراءة آخر 15 إيميل
     status, messages = mail.search(None, "ALL")
     if status != "OK":
-        raise RuntimeError(f"Failed to search emails in folder: {selected_label}")
+        raise RuntimeError(f'Failed to search emails in folder "{TARGET_FOLDER}"')
 
-    ids = messages[0].split()[-15:]
-    print(f"\n[INFO] Found {len(ids)} emails")
+    ids = messages[0].split()
+    print(f"[INFO] Search returned {len(ids)} email id(s)")
+
+    # فقط آخر 15
+    ids = ids[-15:]
+
+    saved_count = 0
 
     for num in ids:
         status, msg_data = mail.fetch(num, "(RFC822)")
@@ -115,6 +118,11 @@ def main():
 
         subject = msg.get("Subject", "offload")
         print(f"\n[EMAIL] {subject}")
+
+        # ✅ فلترة المواضيع
+        if not is_offload_email(subject):
+            print("[SKIP] Not an offload email")
+            continue
 
         email_dt = get_email_datetime(msg)
         date_folder = email_dt.strftime("%Y-%m-%d")
@@ -141,6 +149,9 @@ def main():
 
         file_path.write_text(html_content, encoding="utf-8")
         print(f"[SAVED HTML] {file_path}")
+        saved_count += 1
+
+    print(f"\n[INFO] Saved {saved_count} offload HTML file(s)")
 
     mail.logout()
 
