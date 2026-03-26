@@ -72,11 +72,11 @@ for folder in folders:
     print(folder.decode(errors="ignore"))
 
 # 🔄 فتح المجلد الصحيح
-status, _ = mail.select('"Offload Reports"')
-print(f'[DEBUG] Opening "Offload Reports" -> {status}')
+status, _ = mail.select("Offload Reports")
+print(f'[DEBUG] Opening Offload Reports -> {status}')
 
 if status != "OK":
-    raise RuntimeError('Cannot open folder: "Offload Reports"')
+    raise RuntimeError('Cannot open folder: Offload Reports')
 
 # 🔄 تجربة فتح المجلد
 candidate_labels = [
