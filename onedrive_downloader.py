@@ -16,16 +16,16 @@ BASE_DIR = Path("downloads")
 BASE_DIR.mkdir(exist_ok=True)
 
 
-# تنظيف اسم الملف
 def clean_name(text: str) -> str:
+    """تنظيف عنوان الإيميل ليصلح كاسم ملف"""
     text = (text or "").strip().lower()
     text = re.sub(r"\s+", "_", text)
     text = re.sub(r"[^a-zA-Z0-9_-]", "", text)
     return text[:50] or "email"
 
 
-# استخراج تاريخ الإيميل
 def get_email_datetime(msg) -> datetime:
+    """استخراج تاريخ الإيميل وتحويله لتوقيت مسقط"""
     raw_date = msg.get("Date")
     if raw_date:
         try:
@@ -35,8 +35,8 @@ def get_email_datetime(msg) -> datetime:
     return datetime.now(ZoneInfo(TIMEZONE))
 
 
-# استخراج HTML من الإيميل
 def get_html_content(msg) -> str | None:
+    """استخراج HTML من الإيميل"""
     html_content = None
 
     if msg.is_multipart():
@@ -44,6 +44,7 @@ def get_html_content(msg) -> str | None:
             content_type = part.get_content_type()
             disposition = str(part.get("Content-Disposition") or "").lower()
 
+            # تجاهل المرفقات
             if "attachment" in disposition:
                 continue
 
@@ -60,66 +61,89 @@ def get_html_content(msg) -> str | None:
     return html_content
 
 
-# 🔌 الاتصال
-mail = imaplib.IMAP4_SSL(IMAP_SERVER)
-mail.login(EMAIL, PASSWORD)
+def main():
+    # 🔌 الاتصال بـ Gmail
+    mail = imaplib.IMAP4_SSL(IMAP_SERVER)
+    mail.login(EMAIL, PASSWORD)
 
-# 🔍 طباعة كل المجلدات
-# 🔍 طباعة كل المجلدات
-status, folders = mail.list()
-print("\n[INFO] Available folders:")
-for folder in folders:
-    print(folder.decode(errors="ignore"))
+    # 🔍 طباعة كل المجلدات المتاحة
+    status, folders = mail.list()
+    print("\n[INFO] Available folders:")
+    if folders:
+        for folder in folders:
+            print(folder.decode(errors="ignore"))
 
-# 🔄 فتح المجلد الصحيح
-status, _ = mail.select("Offload Reports")
-print(f'[DEBUG] Opening Offload Reports -> {status}')
+    # 🔄 تجربة فتح المجلد الصحيح
+    candidate_labels = [
+        "Offload Reports",
+        "INBOX",
+    ]
 
-if status != "OK":
-    raise RuntimeError('Cannot open folder: Offload Reports')
+    opened = False
+    selected_label = None
 
-# 🔄 تجربة فتح المجلد
-candidate_labels 
+    for label in candidate_labels:
+        try:
+            status, _ = mail.select(label)
+            print(f"[DEBUG] Trying: {label} -> {status}")
+            if status == "OK":
+                print(f"[SUCCESS] Opened folder: {label}")
+                opened = True
+                selected_label = label
+                break
+        except Exception as e:
+            print(f"[DEBUG] Trying: {label} -> ERROR: {e}")
 
-# 📥 قراءة الإيميلات
-status, messages = mail.search(None, "ALL")
-ids = messages[0].split()[-15:]
+    if not opened:
+        raise RuntimeError("Cannot open any expected label/folder")
 
-print(f"\n[INFO] Found {len(ids)} emails")
-
-for num in ids:
-    status, msg_data = mail.fetch(num, "(RFC822)")
+    # 📥 قراءة آخر 15 إيميل
+    status, messages = mail.search(None, "ALL")
     if status != "OK":
-        print(f"[ERROR] Failed to fetch email {num.decode()}")
-        continue
+        raise RuntimeError(f"Failed to search emails in folder: {selected_label}")
 
-    msg = email.message_from_bytes(msg_data[0][1])
+    ids = messages[0].split()[-15:]
+    print(f"\n[INFO] Found {len(ids)} emails")
 
-    subject = msg.get("Subject", "offload")
-    print(f"\n[EMAIL] {subject}")
+    for num in ids:
+        status, msg_data = mail.fetch(num, "(RFC822)")
+        if status != "OK":
+            print(f"[ERROR] Failed to fetch email {num.decode()}")
+            continue
 
-    email_dt = get_email_datetime(msg)
-    date_folder = email_dt.strftime("%Y-%m-%d")
-    time_part = email_dt.strftime("%Y-%m-%d_%H-%M")
+        msg = email.message_from_bytes(msg_data[0][1])
 
-    day_dir = BASE_DIR / date_folder
-    day_dir.mkdir(parents=True, exist_ok=True)
+        subject = msg.get("Subject", "offload")
+        print(f"\n[EMAIL] {subject}")
 
-    html_content = get_html_content(msg)
+        email_dt = get_email_datetime(msg)
+        date_folder = email_dt.strftime("%Y-%m-%d")
+        time_part = email_dt.strftime("%Y-%m-%d_%H-%M")
 
-    if not html_content:
-        print("[SKIP] No HTML content found")
-        continue
+        day_dir = BASE_DIR / date_folder
+        day_dir.mkdir(parents=True, exist_ok=True)
 
-    safe_subject = clean_name(subject)
-    filename = f"{time_part}_{safe_subject}_{num.decode()}.html"
-    file_path = day_dir / filename
+        html_content = get_html_content(msg)
 
-    if file_path.exists():
-        print(f"[SKIP] Already exists: {filename}")
-        continue
+        if not html_content:
+            print("[SKIP] No HTML content found")
+            continue
 
-    file_path.write_text(html_content, encoding="utf-8")
-    print(f"[SAVED HTML] {file_path}")
+        print(f"[DEBUG] HTML length: {len(html_content)}")
 
-mail.logout()
+        safe_subject = clean_name(subject)
+        filename = f"{time_part}_{safe_subject}_{num.decode()}.html"
+        file_path = day_dir / filename
+
+        if file_path.exists():
+            print(f"[SKIP] Already exists: {filename}")
+            continue
+
+        file_path.write_text(html_content, encoding="utf-8")
+        print(f"[SAVED HTML] {file_path}")
+
+    mail.logout()
+
+
+if __name__ == "__main__":
+    main()
