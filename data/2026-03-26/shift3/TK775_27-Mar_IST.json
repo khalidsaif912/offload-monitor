@@ -1,0 +1,21 @@
+{
+  "flight": "TK775",
+  "date": "27-Mar",
+  "std_etd": "22:20",
+  "destination": "IST",
+  "format": "A",
+  "items": [
+    {
+      "awb": "235 36419025",
+      "pcs": "1",
+      "kgs": "168",
+      "description": "CONSOLDATION",
+      "reason": "DUE TO SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": "AKH-7021TK"
+    }
+  ],
+  "email_time": "02:00",
+  "saved_at": "2026-03-27T02:00:00+04:00"
+}
