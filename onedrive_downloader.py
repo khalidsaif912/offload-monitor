@@ -16,7 +16,6 @@ BASE_DIR = Path("downloads")
 BASE_DIR.mkdir(exist_ok=True)
 
 
-
 def clean_name(text: str) -> str:
     text = (text or "").strip().lower()
     text = re.sub(r"\s+", "_", text)
