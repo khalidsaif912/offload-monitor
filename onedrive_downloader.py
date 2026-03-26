@@ -65,10 +65,18 @@ mail = imaplib.IMAP4_SSL(IMAP_SERVER)
 mail.login(EMAIL, PASSWORD)
 
 # 🔍 طباعة كل المجلدات
+# 🔍 طباعة كل المجلدات
 status, folders = mail.list()
 print("\n[INFO] Available folders:")
 for folder in folders:
     print(folder.decode(errors="ignore"))
+
+# 🔄 فتح المجلد الصحيح
+status, _ = mail.select('"Offload Reports"')
+print(f'[DEBUG] Opening "Offload Reports" -> {status}')
+
+if status != "OK":
+    raise RuntimeError('Cannot open folder: "Offload Reports"')
 
 # 🔄 تجربة فتح المجلد
 candidate_labels = [
