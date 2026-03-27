@@ -1,0 +1,21 @@
+{
+  "flight": "OV783",
+  "date": "27-Mar",
+  "std_etd": "19:20|22:41",
+  "destination": "BLR",
+  "format": "A",
+  "items": [
+    {
+      "awb": "703-13278930",
+      "pcs": "39",
+      "kgs": "312",
+      "description": "SURGICAL SUTUR",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "23:52",
+  "saved_at": "2026-03-28T23:52:00+04:00"
+}
