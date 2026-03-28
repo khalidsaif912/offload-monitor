@@ -1,7 +1,7 @@
 {
   "flight": "EY697",
   "date": "27-Mar",
-  "std_etd": "19:50|20:52",
+  "std_etd": "19:50",
   "destination": "AUH",
   "format": "A",
   "items": [
@@ -27,7 +27,5 @@
     }
   ],
   "email_time": "04:32",
-  "saved_at": "2026-03-29T04:32:00+04:00",
-  "enrichment_source": "Flightradar",
-  "last_enriched": "2026-03-29T00:45:02.787016+04:00"
+  "saved_at": "2026-03-29T04:32:00+04:00"
 }
