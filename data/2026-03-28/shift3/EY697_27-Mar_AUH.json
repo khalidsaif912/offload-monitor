@@ -1,0 +1,33 @@
+{
+  "flight": "EY697",
+  "date": "27-Mar",
+  "std_etd": "19:50|20:52",
+  "destination": "AUH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "60752413826",
+      "pcs": "75",
+      "kgs": "1354",
+      "description": "CONSOL",
+      "reason": "NOT RCVD UNDER A/C",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "60752413830",
+      "pcs": "5",
+      "kgs": "120",
+      "description": "OMANI FRANKINC",
+      "reason": "NOT RCVD UNDER A/C",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "04:32",
+  "saved_at": "2026-03-29T04:32:00+04:00",
+  "enrichment_source": "Flightradar",
+  "last_enriched": "2026-03-29T00:45:02.787016+04:00"
+}
