@@ -1,7 +1,7 @@
 {
   "flight": "WY405",
   "date": "31-Mar",
-  "std_etd": "10:40|15:15",
+  "std_etd": "10:40",
   "destination": "CAI",
   "format": "A",
   "items": [
