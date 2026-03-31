@@ -1,0 +1,21 @@
+{
+  "flight": "WY405",
+  "date": "31-Mar",
+  "std_etd": "10:40",
+  "destination": "CAI",
+  "format": "A",
+  "items": [
+    {
+      "awb": "319-03010976",
+      "pcs": "45",
+      "kgs": "475",
+      "description": "CONSOLIDATION",
+      "reason": "DUE TO SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "14:18",
+  "saved_at": "2026-03-31T14:18:00+04:00"
+}
