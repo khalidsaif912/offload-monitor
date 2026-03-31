@@ -1,7 +1,7 @@
 {
   "flight": "OV205",
   "date": "31-Mar",
-  "std_etd": "08:30",
+  "std_etd": "08:30|10:54",
   "destination": "RUH",
   "format": "A",
   "items": [
