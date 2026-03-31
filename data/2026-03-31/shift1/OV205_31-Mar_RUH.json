@@ -1,0 +1,31 @@
+{
+  "flight": "OV205",
+  "date": "31-Mar",
+  "std_etd": "08:30",
+  "destination": "RUH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "703 13341930P",
+      "pcs": "32",
+      "kgs": "507",
+      "description": "CONSOL",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "703 13454346P",
+      "pcs": "101",
+      "kgs": "1095",
+      "description": "CONSOL",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "12:02",
+  "saved_at": "2026-03-31T12:02:00+04:00"
+}
