@@ -1,1 +1,12 @@
-{}
+{
+  "flights": {
+    "ET625_01APR_ADD.json": {
+      "flight": "ET625",
+      "date": "01APR",
+      "dest": "ADD",
+      "created_at": "2026-04-01T04:32:00+04:00",
+      "updated_at": "2026-04-01T04:32:00+04:00",
+      "updates": 0
+    }
+  }
+}
