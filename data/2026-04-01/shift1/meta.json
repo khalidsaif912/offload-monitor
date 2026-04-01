@@ -1,1 +1,12 @@
-{}
+{
+  "flights": {
+    "WY683_01-APR_RUH.json": {
+      "flight": "WY683",
+      "date": "01-APR",
+      "dest": "RUH",
+      "created_at": "2026-04-01T14:26:00+04:00",
+      "updated_at": "2026-04-01T14:26:00+04:00",
+      "updates": 1
+    }
+  }
+}

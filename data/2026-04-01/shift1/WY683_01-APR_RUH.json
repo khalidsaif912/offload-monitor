@@ -1,0 +1,21 @@
+{
+  "flight": "WY683",
+  "date": "01-APR",
+  "std_etd": "09:55|13:47",
+  "destination": "RUH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "910-18712691",
+      "pcs": "3",
+      "kgs": "128",
+      "description": "TUBES PIPES HS",
+      "reason": "DUE TO HIGHT",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "14:26",
+  "saved_at": "2026-04-01T14:26:00+04:00"
+}
