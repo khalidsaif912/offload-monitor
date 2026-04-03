@@ -1822,8 +1822,8 @@
 
 <script>
 /* ── Manpower popup logic ── */
-var ROSTER_JSON = "https://raw.githubusercontent.com/khalidsaif912/roster-site/main/docs/data/roster.json";
-var LEAVE_LABELS = ["Annual Leave","Sick Leave","Emergency Leave","Off Day","Training"];
+var ROSTER_DAILY_BASE = "https://khalidsaif912.github.io/roster-site/date/";
+var LEAVE_LABELS = ["annual leave","sick leave","emergency leave","off day","training"];
 var SHIFT_MAP = {"shift1":"Morning","shift2":"Afternoon","shift3":"Night"};
 var EXCLUDED_DEPTS = ["officers"];
 var EXCLUDED_SNS = ["990737"];
@@ -1842,29 +1842,43 @@ function getTodayDate() {
     return now.toISOString().slice(0,10);
 }
 
-function parseCardsHtml(html, shift) {
+function normShift(s) {
+    return (s || "").trim().toLowerCase();
+}
+
+function parseRosterHtml(html, shiftKey) {
     var parser = new DOMParser();
     var doc = parser.parseFromString(html, "text/html");
-    var target = SHIFT_MAP[shift] || "Morning";
+    var target = normShift(SHIFT_MAP[shiftKey] || shiftKey || "Morning");
     var onDuty = [];
+
     doc.querySelectorAll(".deptCard").forEach(function(card) {
-        var dept = (card.querySelector(".deptTitle")||{}).textContent || "Unknown";
-        dept = dept.trim();
-        card.querySelectorAll(".shiftCard").forEach(function(sc) {
-            var label = (sc.querySelector(".shiftLabel")||{}).textContent || "";
-            label = label.trim();
+        var dept = ((card.querySelector(".deptTitle") || {}).textContent || "Unknown").trim();
+        var deptNorm = dept.toLowerCase();
+
+        card.querySelectorAll("details.shiftCard").forEach(function(sc) {
+            var label = normShift(sc.getAttribute("data-shift") || "");
+
             sc.querySelectorAll(".empRow").forEach(function(row) {
                 var ne = row.querySelector(".empName");
                 if (!ne) return;
+
                 var raw = ne.textContent.trim();
-                var name = raw, sn = "";
-                var mx = raw.match(/^(.+?)\s*[-–]\s*(\d+)\s*$/);
-                if (mx) { name = mx[1].trim(); sn = mx[2].trim(); }
-                if (LEAVE_LABELS.indexOf(label) === -1 && label === target) {
-                    if (EXCLUDED_DEPTS.indexOf(dept.toLowerCase()) === -1 && EXCLUDED_SNS.indexOf(sn) === -1 && name.toLowerCase().indexOf("support") === -1) {
-                        onDuty.push({name:name, sn:sn, dept:dept});
-                    }
+                var name = raw;
+                var sn = "";
+                var mx = raw.match(/^(.+?)\s*[-–]\s*(\d+)(?:\s*\(.*?\))?\s*$/);
+                if (mx) {
+                    name = mx[1].trim();
+                    sn = mx[2].trim();
                 }
+
+                if (LEAVE_LABELS.indexOf(label) !== -1) return;
+                if (label !== target) return;
+                if (EXCLUDED_DEPTS.indexOf(deptNorm) !== -1) return;
+                if (EXCLUDED_SNS.indexOf(sn) !== -1) return;
+                if ((name + " " + dept).toLowerCase().indexOf("support") !== -1) return;
+
+                onDuty.push({name:name, sn:sn, dept:dept});
             });
         });
     });
@@ -1874,17 +1888,18 @@ function parseCardsHtml(html, shift) {
 function loadManpower() {
     var el = document.getElementById("mp-content");
     el.innerHTML = '<div class="mp-loading">جاري التحميل...</div>';
-    fetch(ROSTER_JSON + "?t=" + Date.now())
-        .then(function(r){ return r.json(); })
-        .then(function(json) {
-            var days = json.days || {};
-            var day = days[getTodayDate()];
-            if (!day || !day.cards_html) {
-                el.innerHTML = '<div class="mp-loading">لا توجد بيانات لهذا اليوم</div>';
-                return;
-            }
+
+    var dateStr = getTodayDate();
+    var url = ROSTER_DAILY_BASE + dateStr + "/?t=" + Date.now();
+
+    fetch(url)
+        .then(function(r) {
+            if (!r.ok) throw new Error("HTTP " + r.status);
+            return r.text();
+        })
+        .then(function(htmlText) {
             var shift = getCurrentShift();
-            var emps = parseCardsHtml(day.cards_html, shift);
+            var emps = parseRosterHtml(htmlText, shift);
             if (!emps.length) {
                 el.innerHTML = '<div class="mp-loading">لا توجد بيانات</div>';
                 return;
