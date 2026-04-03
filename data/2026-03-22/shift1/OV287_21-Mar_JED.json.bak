@@ -1,7 +1,7 @@
 {
   "flight": "OV287",
   "date": "21-Mar",
-  "std_etd": "05:55",
+  "std_etd": "01:55",
   "destination": "JED",
   "format": "A",
   "items": [
@@ -18,5 +18,7 @@
   ],
   "email_time": "05:52",
   "saved_at": "2026-03-22T05:52:00+04:00",
-  "_tz_fixed": "2026-03-23T06:27:11Z"
+  "_tz_fixed": "2026-03-24T08:22:59Z",
+  "retro_enriched_at": "2026-03-24T12:22:59.576746+04:00",
+  "retro_enriched_source": "Flightradar"
 }

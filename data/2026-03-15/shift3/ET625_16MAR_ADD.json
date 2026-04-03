@@ -1,14 +1,14 @@
 {
   "flight": "ET625",
   "date": "16MAR",
-  "std_etd": "00:15",
+  "std_etd": "00:25",
   "destination": "ADD",
   "format": "C",
   "reason": "",
   "items": [],
   "email_time": "04:23",
   "saved_at": "2026-03-16T04:23:00+04:00",
-  "_tz_fixed": "2026-03-24T08:22:59Z",
-  "retro_enriched_at": "2026-03-24T12:22:59.576746+04:00",
+  "_tz_fixed": "2026-04-03T12:39:29Z",
+  "retro_enriched_at": "2026-04-03T16:39:30.152724+04:00",
   "retro_enriched_source": "Flightradar"
 }

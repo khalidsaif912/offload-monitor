@@ -1,0 +1,41 @@
+{
+  "flight": "ET625",
+  "date": "2 6 -Mar",
+  "std_etd": "00:15",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "071-60091393P",
+      "pcs": "57",
+      "kgs": "955",
+      "description": "PERSONAL EFFECT",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "071-60092023A",
+      "pcs": "56",
+      "kgs": "1200",
+      "description": "PERSONAL EFFECT",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "071-60092141",
+      "pcs": "93",
+      "kgs": "1135",
+      "description": "SEWING THREAD",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "04:56",
+  "saved_at": "2026-03-27T04:56:00+04:00"
+}

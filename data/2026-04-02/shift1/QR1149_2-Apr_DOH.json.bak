@@ -1,0 +1,43 @@
+{
+  "flight": "QR1149",
+  "date": "2-Apr",
+  "std_etd": "01:30",
+  "destination": "DOH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "PMC70646QR",
+      "pcs": "272",
+      "kgs": "3423",
+      "description": "SEWING THREAD",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "PMC80358QR",
+      "pcs": "253",
+      "kgs": "2798",
+      "description": "SEWING THREAD",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "",
+      "pcs": "",
+      "kgs": "",
+      "description": "",
+      "reason": "UNDERLOAD 628 KGS",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "05:42",
+  "saved_at": "2026-04-02T05:42:00+04:00",
+  "enrichment_source": "Flightradar",
+  "last_enriched": "2026-04-02T10:51:49.307159+04:00"
+}

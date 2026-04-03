@@ -1,0 +1,21 @@
+{
+  "flight": "OV287",
+  "date": "25-Mar",
+  "std_etd": "03:05",
+  "destination": "JED",
+  "format": "A",
+  "items": [
+    {
+      "awb": "703-1341720",
+      "pcs": "99",
+      "kgs": "1024",
+      "description": "CONSOLIDATION",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "07:51",
+  "saved_at": "2026-03-25T07:51:00+04:00"
+}

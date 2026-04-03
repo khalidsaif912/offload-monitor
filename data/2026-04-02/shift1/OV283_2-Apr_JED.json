@@ -1,7 +1,7 @@
 {
   "flight": "OV283",
   "date": "2-Apr",
-  "std_etd": "04:30",
+  "std_etd": "08:30",
   "destination": "JED",
   "format": "A",
   "items": [
@@ -17,5 +17,6 @@
     }
   ],
   "email_time": "08:49",
-  "saved_at": "2026-04-02T08:49:00+04:00"
+  "saved_at": "2026-04-02T08:49:00+04:00",
+  "_tz_fixed": "2026-04-03T12:39:29Z"
 }

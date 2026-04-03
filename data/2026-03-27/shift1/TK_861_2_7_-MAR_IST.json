@@ -1,7 +1,7 @@
 {
   "flight": "TK 861",
   "date": "2 7 -MAR",
-  "std_etd": "04:10",
+  "std_etd": "08:10",
   "destination": "IST",
   "format": "A",
   "items": [
@@ -17,5 +17,6 @@
     }
   ],
   "email_time": "10:55",
-  "saved_at": "2026-03-27T10:55:00+04:00"
+  "saved_at": "2026-03-27T10:55:00+04:00",
+  "_tz_fixed": "2026-04-03T12:39:29Z"
 }
