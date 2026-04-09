@@ -57,52 +57,6 @@
     </td>
   </tr>
 
-    <!-- ═══ SHIFT SUMMARY ═══ -->
-  <tr>
-    <td style="padding:16px 24px 0 24px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
-          <td style="padding:6px 10px; background-color:#eef3fc;">
-            <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px; text-transform:uppercase;">Shift Summary</span>
-          </td>
-        </tr>
-      </table>
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px; border:1px solid #e0e7f5;">
-        <tr>
-          <td width="50%" style="padding:10px 12px; border-right:1px solid #e0e7f5; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
-            <strong style="color:#0b3a78;">✅ Flight Performance:</strong><br>
-            All flights departed on time (no cargo-related delay).
-          </td>
-          <td width="50%" style="padding:10px 12px; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
-            <strong style="color:#0b3a78;">🚫 Cargo Delay:</strong><br>
-            NIL
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:10px 12px; border-right:1px solid #e0e7f5; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top;">
-            <strong style="color:#0b3a78;">⚠️ DG Irregularities:</strong><br>
-            DG Embargo station check done.
-          </td>
-          <td style="padding:10px 12px; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top;">
-            <strong style="color:#0b3a78;">🦺 Safety Incidents:</strong><br>
-            Safety briefing done; PPE compliance confirmed.
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:10px 12px; border-right:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
-            <strong style="color:#0b3a78;">📦 Offloaded / Missing AWB:</strong><br>
-            NIL
-          </td>
-          <td style="padding:10px 12px; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
-            <strong style="color:#0b3a78;">📋 UTL Report:</strong><br>
-            NIL
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-
   <!-- ═══ SECTION 1: OPERATIONAL ACTIVITIES ═══ -->
   <tr><td style="padding:18px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -140,19 +94,20 @@
       </tr>
     </table>
     <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
-        <li>Safety toolbox conducted.</li>
-        <li>ULD and net serviceability checked.</li>
-        <li>Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
-        <li>Briefing on <strong>EY CCS 25-011</strong> (correct pallet stack build-up) – read &amp; sign completed.</li>
-        <li>Briefing on <strong>QR CGO CSA 09-25</strong> (weight scale discrepancies) – read &amp; sign completed.</li>
-        <li>Process briefing for shipments UWS discrepancies.</li>
-        <li><strong>WY instruction:</strong> No shipment to CAI with handwritten labels – read &amp; sign completed.</li>
-        <li>EY safety notification related to cargo handling discussed.</li>
-        <li>Staff reminded to complete LMS training and informed about new roster.</li>
-        <li>Instructions on attaching printed ULD tags on trolleys.</li>
-        <li>Stationery logbook kept at supervisor desk.</li>
+      <ul id="ul-briefings" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+        <li contenteditable="true" tabindex="60" style="outline:none;">Safety toolbox conducted.</li>
+        <li contenteditable="true" tabindex="61" style="outline:none;">ULD and net serviceability checked.</li>
+        <li contenteditable="true" tabindex="62" style="outline:none;">Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
+        <li contenteditable="true" tabindex="63" style="outline:none;">Briefing on <strong>EY CCS 25-011</strong> (correct pallet stack build-up) – read &amp; sign completed.</li>
+        <li contenteditable="true" tabindex="64" style="outline:none;">Briefing on <strong>QR CGO CSA 09-25</strong> (weight scale discrepancies) – read &amp; sign completed.</li>
+        <li contenteditable="true" tabindex="65" style="outline:none;">Process briefing for shipments UWS discrepancies.</li>
+        <li contenteditable="true" tabindex="66" style="outline:none;"><strong>WY instruction:</strong> No shipment to CAI with handwritten labels – read &amp; sign completed.</li>
+        <li contenteditable="true" tabindex="67" style="outline:none;">EY safety notification related to cargo handling discussed.</li>
+        <li contenteditable="true" tabindex="68" style="outline:none;">Staff reminded to complete LMS training and informed about new roster.</li>
+        <li contenteditable="true" tabindex="69" style="outline:none;">Instructions on attaching printed ULD tags on trolleys.</li>
+        <li contenteditable="true" tabindex="70" style="outline:none;">Stationery logbook kept at supervisor desk.</li>
       </ul>
+      <button onclick="addListItem('ul-briefings')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -184,11 +139,12 @@
       </tr>
     </table>
     <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
-        <li>All flights departed on time as per RDM Mr. Saleh.</li>
-        <li>DG embargo station check completed.</li>
-        <li>Pigeonhole check done for any pending documents.</li>
+      <ul id="ul-opnotes" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+        <li contenteditable="true" tabindex="80" style="outline:none;">All flights departed on time as per RDM Mr. Saleh.</li>
+        <li contenteditable="true" tabindex="81" style="outline:none;">DG embargo station check completed.</li>
+        <li contenteditable="true" tabindex="82" style="outline:none;">Pigeonhole check done for any pending documents.</li>
       </ul>
+      <button onclick="addListItem('ul-opnotes')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#f4f5f9;border:1px solid #5b6a8a;color:#3d4a63;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -307,31 +263,34 @@
         <td colspan="2" valign="top" style="font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.8;">
           
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Supervisors:</div>
-      <ul id="ul-supervisors" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 80250 — Jay Macalino</li>
+      <ul id="ul-supervisors" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Jay Macalino</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">80250</span></li>
 </ul>
       <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Load Control:</div>
-      <ul id="ul-dept-loadcontrol" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82445 — Al Muthana Al Shamfari</li>
-<li contenteditable="true" style="outline:none;">SN 82548 — Ahmed Al Muqaini</li>
+      <ul id="ul-dept-loadcontrol" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Al Muthana Al Shamfari</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">82445</span></li>
+<li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Ahmed Al Muqaini</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">82548</span></li>
 </ul>
       <button onclick="addListItem('ul-dept-loadcontrol')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Export Checker:</div>
-      <ul id="ul-dept-exportchecker" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82649 — Saif Al Mahrizi</li>
-<li contenteditable="true" style="outline:none;">SN 990465 — Abdulfatah Al Shukeili</li>
-<li contenteditable="true" style="outline:none;">SN 82283 — Ahmed Al Mawali</li>
-<li contenteditable="true" style="outline:none;">SN 82587 — Yousuf Al Balushi</li>
-<li contenteditable="true" style="outline:none;">SN 82574 — Ali Al Mamari</li>
-<li contenteditable="true" style="outline:none;">SN 80695 — Hosni Al Sulti</li>
-<li contenteditable="true" style="outline:none;">SN 8646 — Yousuf Al Jaradi</li>
+      <ul id="ul-dept-exportchecker" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Saif Al Mahrizi</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">82649</span></li>
+<li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Abdulfatah Al Shukeili</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">990465</span></li>
+<li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Ahmed Al Mawali</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">82283</span></li>
+<li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Yousuf Al Balushi</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">82587</span></li>
+<li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Ali Al Mamari</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">82574</span></li>
+<li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Hosni Al Sulti</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">80695</span></li>
+<li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Yousuf Al Jaradi</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">8646</span></li>
 </ul>
       <button onclick="addListItem('ul-dept-exportchecker')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Export Operators:</div>
-      <ul id="ul-dept-exportoperators" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82588 — Ghassan Al Tarsi</li>
-<li contenteditable="true" style="outline:none;">SN 82656 — Faisal Al Balushi</li>
+      <ul id="ul-dept-exportoperators" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Ghassan Al Tarsi</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">82588</span></li>
+<li contenteditable="true" style="outline:none;"><span style="display:inline-block;min-width:220px;font-family:'Courier New',Courier,monospace;">Faisal Al Balushi</span><span style="font-family:'Courier New',Courier,monospace;color:#0b3a78;font-weight:600;">82656</span></li>
 </ul>
       <button onclick="addListItem('ul-dept-exportoperators')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
           <div style="color:#0b3a78;font-weight:700;font-size:13px;">B) CTU Staff On Duty:</div><ul id="ul-ctu" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-ctu')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">C) Support Team:</div><ul id="ul-support" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-support')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Inventory:</div><ul id="ul-inventory" style="margin:2px 0 10px 0;padding:0;list-style:none;"><li style="font-family:'Courier New',Courier,monospace;list-style:none;padding:2px 0;"><span style="display:inline-block;min-width:220px;">Mohamed Al Subhi</span><span style="color:#0b3a78;font-weight:600;">82592</span></li>
+<li style="font-family:'Courier New',Courier,monospace;list-style:none;padding:2px 0;"><span style="display:inline-block;min-width:220px;">Said Al Amri</span><span style="color:#0b3a78;font-weight:600;">990737</span></li></ul><button onclick="addListItem('ul-inventory')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">C) Support Team:</div><ul id="ul-support" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;font-family:'Courier New',Courier,monospace;"><span style="display:inline-block;min-width:220px;">Ahmed Al Sabii</span><span style="color:#0b3a78;font-weight:600;">82653</span></li>
+<li contenteditable="true" style="outline:none;font-family:'Courier New',Courier,monospace;"><span style="display:inline-block;min-width:220px;">Jamal Al Hadi</span><span style="color:#0b3a78;font-weight:600;">82565</span></li></ul><button onclick="addListItem('ul-support')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
           <div style="color:#0b3a78;font-weight:700;font-size:13px;">D) Sick Leave / No Show / Others:</div><ul id="ul-sickleave" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-sickleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
           <div style="color:#0b3a78;font-weight:700;font-size:13px;">E) Annual Leave / Course / Off in Lieu:</div><ul id="ul-annualleave" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-annualleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
           <div style="color:#0b3a78;font-weight:700;font-size:13px;">F) Trainee:</div><ul id="ul-trainee" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-trainee')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
@@ -961,7 +920,6 @@
   }
 
   function sendEmailNow(){
-    if(!askSendSecret()) return;
     openRecipientsManager('send').then(function(result){
       if(!result || !result.selected || !result.selected.length) return;
       var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift3\nDate: 2026-03-14\nRecipients: ' + result.selected.join(', '));

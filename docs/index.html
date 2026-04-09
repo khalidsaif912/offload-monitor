@@ -2179,10 +2179,6 @@ function loadManpower() {
         .then(function(htmlText) {
             var shift = getCurrentShift();
             var emps = parseRosterHtml(htmlText, shift);
-            if (!emps.length) {
-                el.innerHTML = '<div class="mp-loading">لا توجد بيانات</div>';
-                return;
-            }
             var grouped = {};
             emps.forEach(function(e) {
                 if (!grouped[e.dept]) grouped[e.dept] = [];
@@ -2195,11 +2191,26 @@ function loadManpower() {
                     html += '<div class="mp-emp"><span class="emp-sn">SN ' + e.sn + '</span><span class="emp-name">' + e.name + '</span></div>';
                 });
             }
+            // Inventory — ثابت دائماً
+            html += '<div class="mp-dept">Inventory</div>';
+            html += '<div class="mp-emp"><span class="emp-sn">82592</span><span class="emp-name">Mohamed Al Subhi</span></div>';
+            html += '<div class="mp-emp"><span class="emp-sn">990737</span><span class="emp-name">Said Al Amri</span></div>';
+            // C) Support Team — ثابت دائماً
+            html += '<div class="mp-dept">C) Support Team</div>';
+            html += '<div class="mp-emp"><span class="emp-sn">82653</span><span class="emp-name">Ahmed Al Sabii</span></div>';
+            html += '<div class="mp-emp"><span class="emp-sn">82565</span><span class="emp-name">Jamal Al Hadi</span></div>';
             el.innerHTML = html;
             mpData = grouped;
         })
         .catch(function(err) {
-            el.innerHTML = '<div class="mp-loading">خطأ: ' + err.message + '</div>';
+            // Inventory — ثابت دائماً حتى عند الخطأ
+            var fallback = '<div class="mp-dept">Inventory</div>';
+            fallback += '<div class="mp-emp"><span class="emp-sn">82592</span><span class="emp-name">Mohamed Al Subhi</span></div>';
+            fallback += '<div class="mp-emp"><span class="emp-sn">990737</span><span class="emp-name">Said Al Amri</span></div>';
+            fallback += '<div class="mp-dept">C) Support Team</div>';
+            fallback += '<div class="mp-emp"><span class="emp-sn">82653</span><span class="emp-name">Ahmed Al Sabii</span></div>';
+            fallback += '<div class="mp-emp"><span class="emp-sn">82565</span><span class="emp-name">Jamal Al Hadi</span></div>';
+            el.innerHTML = fallback;
         });
 }
 
