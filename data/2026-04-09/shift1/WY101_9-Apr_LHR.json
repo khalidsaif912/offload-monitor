@@ -1,0 +1,23 @@
+{
+  "flight": "WY101",
+  "date": "9-Apr",
+  "std_etd": "10:15",
+  "destination": "LHR",
+  "format": "A",
+  "items": [
+    {
+      "awb": "910-18580645",
+      "pcs": "36",
+      "kgs": "300",
+      "description": "CONSOL",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": "AKE47021WY"
+    }
+  ],
+  "email_time": "14:25",
+  "saved_at": "2026-04-09T14:25:00+04:00",
+  "storage_date_dir": "2026-04-09",
+  "storage_shift": "shift1"
+}
