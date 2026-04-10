@@ -1,0 +1,23 @@
+{
+  "flight": "3T263",
+  "date": "10-Apr",
+  "std_etd": "10:00",
+  "destination": "PZU",
+  "format": "A",
+  "items": [
+    {
+      "awb": "524-00019596",
+      "pcs": "1",
+      "kgs": "62",
+      "description": "PRODUCT FOR V",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "14:50",
+  "saved_at": "2026-04-10T14:50:00+04:00",
+  "storage_date_dir": "2026-04-10",
+  "storage_shift": "shift2"
+}
