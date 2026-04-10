@@ -1066,42 +1066,74 @@ def _parse_type_c(soup: BeautifulSoup) -> list[dict]:
 #  التخزين
 # ══════════════════════════════════════════════════════════════════
 
-def save_flights(flights: list[dict], now: datetime) -> tuple[str, str, dict]:
-    shift    = get_shift(now)
-    date_dir = get_shift_date(now, shift)
-    folder   = DATA_DIR / date_dir / shift
-    folder.mkdir(parents=True, exist_ok=True)
+def save_flights(flights: list[dict], now: datetime) -> tuple[str, str, dict, list[str]]:
+    """
+    Save flights under the folder of the actual flight date, not merely the email/runtime date.
 
-    meta_path = folder / "meta.json"
-    meta      = load_json(meta_path, {"flights": {}})
-    if not isinstance(meta, dict) or "flights" not in meta:
-        meta = {"flights": {}}
+    Returns:
+        operational_date_dir: shift date derived from runtime (kept for compatibility/logging)
+        shift: current shift key
+        operational_meta: meta.json for the runtime-derived folder (or empty fallback)
+        affected_date_dirs: sorted list of date folders that were actually written
+    """
+    shift = get_shift(now)
+    operational_date_dir = get_shift_date(now, shift)
+
+    metas_by_folder: dict[Path, dict] = {}
+    affected_date_dirs: set[str] = set()
 
     for flight in flights:
-        filename  = slugify(
+        flight_date_dir = normalize_flight_date(flight.get("date", ""), now) or operational_date_dir
+        affected_date_dirs.add(flight_date_dir)
+
+        folder = DATA_DIR / flight_date_dir / shift
+        folder.mkdir(parents=True, exist_ok=True)
+
+        meta_path = folder / "meta.json"
+        meta = metas_by_folder.get(meta_path)
+        if meta is None:
+            meta = load_json(meta_path, {"flights": {}})
+            if not isinstance(meta, dict) or "flights" not in meta:
+                meta = {"flights": {}}
+            metas_by_folder[meta_path] = meta
+
+        filename = slugify(
             f"{flight['flight']}_{flight.get('date','')}_{flight.get('destination','')}"
         ) + ".json"
         file_path = folder / filename
-        existed   = file_path.exists()
+        existed = file_path.exists()
 
-        payload = {**flight, "saved_at": now.isoformat()}
+        payload = {
+            **flight,
+            "saved_at": now.isoformat(),
+            "storage_date_dir": flight_date_dir,
+            "storage_shift": shift,
+        }
         file_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
         entry = meta["flights"].get(filename, {
-            "flight":     flight["flight"],
-            "date":       flight.get("date", ""),
-            "dest":       flight.get("destination", ""),
+            "flight": flight["flight"],
+            "date": flight.get("date", ""),
+            "dest": flight.get("destination", ""),
             "created_at": now.isoformat(),
             "updated_at": now.isoformat(),
-            "updates":    0,
+            "updates": 0,
         })
         if existed:
             entry["updates"] = int(entry.get("updates", 0)) + 1
-        entry["updated_at"]       = now.isoformat()
+        entry["updated_at"] = now.isoformat()
+        entry["storage_date_dir"] = flight_date_dir
+        entry["storage_shift"] = shift
         meta["flights"][filename] = entry
 
-    write_json(meta_path, meta)
-    return date_dir, shift, meta
+    for meta_path, meta in metas_by_folder.items():
+        write_json(meta_path, meta)
+
+    operational_meta = metas_by_folder.get(
+        DATA_DIR / operational_date_dir / shift / "meta.json",
+        {"flights": {}},
+    )
+    return operational_date_dir, shift, operational_meta, sorted(affected_date_dirs)
 
 
 
@@ -1167,7 +1199,7 @@ _SHIFT_TO_ROSTER_LABEL = {
 # Leave/off labels to separate from on-duty
 _LEAVE_LABELS = {"annual leave", "sick leave", "emergency leave", "off day", "training"}
 _ROSTER_EXCLUDED_DEPTS = {"officers"}
-_ROSTER_EXCLUDED_SNS = {"990737"}
+_ROSTER_EXCLUDED_SNS = set()  # no global SN exclusions — handled per-section
 
 
 def _normalize_shift_label(value: str) -> str:
@@ -1251,10 +1283,6 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
 
                 if dept_norm in _ROSTER_EXCLUDED_DEPTS:
                     continue
-                if sn in _ROSTER_EXCLUDED_SNS:
-                    continue
-                if "support" in f"{name} {dept}".lower():
-                    continue
 
                 on_duty.append(item)
 
@@ -1279,9 +1307,9 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         flights = []
 
     # ── Styles ──
-    hdr_bg      = "#0b3a78"
-    hdr_color   = "#ffffff"
-    hdr_border  = "#093068"
+    hdr_bg      = "#dce6f4"
+    hdr_color   = "#1b1f2a"
+    hdr_border  = "#a8bcd8"
     row_even    = "#ffffff"
     row_odd     = "#f4f7fc"
     cell_border = "#d0d9ee"
@@ -1537,11 +1565,13 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     # ── NIL case ──
     if not flights:
         data_rows = f"""
-      <tr>
-        <td colspan="12" style="padding:12px 10px; border:1px solid {cell_border};
+      <tr id="nil-row">
+        <td colspan="12" style="padding:10px 10px; border:1px solid {cell_border};
             color:{nil_color}; text-align:center; font-style:italic; font-size:12px;
             font-family:Calibri,Arial,sans-serif; background:{row_even};">
-          NIL — No offload data recorded for this shift.
+          <span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL \u2014 No offload data recorded for this shift.</span>
+          &nbsp;<button onclick="var r=document.getElementById('nil-row');if(r)r.remove();triggerAutosave();"
+            style="font-size:10px;padding:1px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;vertical-align:middle;">\u2715 Remove</button>
         </td>
       </tr>"""
         # Add 3 empty rows even for NIL
@@ -1569,7 +1599,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
       {data_rows}
     </table>"""
 
-    return f'<div style="margin-top:12px;">{table_html}</div>'
+    return f'<div class="offload-scroll" style="margin-top:12px;">{table_html}</div>'
 
 
 def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
@@ -1581,10 +1611,14 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
     hdr_style = "color:#0b3a78;font-weight:700;font-size:13px;"
     dept_hdr  = "color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;"
     ul_style  = "margin:2px 0 10px 20px;padding:0;"
+    ul_class  = "mp-list"
     nil_item  = '<li style="color:#64748b;">NIL</li>'
 
-    EXCLUDED_DEPTS = {"officers"}
-    EXCLUDED_SNS   = {"990737"}  # Said Al Amri
+    EXCLUDED_DEPTS   = {"officers"}
+    # هؤلاء يُعرضون في أقسامهم الخاصة (Inventory / Support Team) — لا في القسم العام
+    INVENTORY_SNS    = {"82592", "990737"}
+    SUPPORT_SNS      = {"82653", "82565"}
+    ALL_SPECIAL_SNS  = INVENTORY_SNS | SUPPORT_SNS
 
     def _is_support(e):
         return "support" in (e.get("name","") + e.get("dept","")).lower()
@@ -1592,7 +1626,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
     def _is_excluded(e):
         dept = e.get("dept","").strip().lower()
         sn   = str(e.get("sn","")).strip()
-        return dept in EXCLUDED_DEPTS or _is_support(e) or sn in EXCLUDED_SNS
+        return dept in EXCLUDED_DEPTS or sn in ALL_SPECIAL_SNS or _is_support(e)
 
     def _fmt_name(emp):
         raw  = emp.get("name","").strip()
@@ -1603,9 +1637,16 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
             sn_part   = m.group(2).strip()
             note      = m.group(3).strip() if m.group(3) else ""
             note_html = f' <em style="color:#888;font-size:11px;">({note})</em>' if note else ""
-            return f"SN {sn_part} — {name_part}{note_html}"
-        sn_html = f"SN {sn} — " if sn else ""
-        return f"{sn_html}{raw}"
+            return (
+                f'<span style="display:inline-block;width:200px;vertical-align:top;">{name_part}</span>'
+                f'<span style="color:#0b3a78;font-weight:700;">{sn_part}</span>'
+                f'{note_html}'
+            )
+        sn_html = (
+            f'<span style="display:inline-block;width:200px;vertical-align:top;">{raw}</span>'
+            f'<span style="color:#0b3a78;font-weight:700;">{sn}</span>'
+        ) if sn else raw
+        return sn_html
 
     # الموظفون الرئيسيون مجمّعون بالقسم
     # OrderedDict is already imported at module level
@@ -1622,23 +1663,23 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
     sup_in_roster = [
         e for e in on_duty
         if e.get("dept","").strip().lower() == "supervisors"
-        and str(e.get("sn","")).strip() not in EXCLUDED_SNS
+        and str(e.get("sn","")).strip() not in ALL_SPECIAL_SNS
     ]
     if sup_in_roster:
         sup_li_roster = "".join(f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>\n' for e in sup_in_roster)
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" style="{ul_style}">{sup_li_roster}</ul>
+      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}">{sup_li_roster}</ul>
       <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
     elif supervisor_display:
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" style="{ul_style}"><li contenteditable="true" style="outline:none;"><strong>{supervisor_display}</strong></li></ul>
+      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;"><strong>{supervisor_display}</strong></li></ul>
       <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
     else:
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" style="{ul_style}"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>
+      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>
       <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
 
     # ثانياً: باقي الأقسام من roster (تخطّى supervisors — مُعالَج أعلاه)
@@ -1649,58 +1690,89 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
         items_li = "".join(f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>\n' for e in emps)
         grouped_html += f"""
       <div style="{dept_hdr}">{dept}:</div>
-      <ul id="{dept_id}" style="{ul_style}">{items_li}</ul>
+      <ul id="{dept_id}" class="{ul_class}" style="{ul_style}">{items_li}</ul>
       <button onclick="addListItem('{dept_id}')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
 
     if not grouped_html:
-        grouped_html = f'<ul style="{ul_style}"><li style="color:#64748b;">No roster data available.</li></ul>'
+        grouped_html = f'<ul class="{ul_class}" style="{ul_style}"><li style="color:#64748b;">No roster data available.</li></ul>'
 
-    # C) Support Team
-    sup_li = "".join(f"<li>{_fmt_name(e)}</li>\n" for e in on_duty if _is_support(e))
+    # ── Inventory: من الروستر بـ SN ──
+    _inventory_from_roster = [e for e in on_duty if str(e.get("sn","")).strip() in INVENTORY_SNS]
+
+    def _fmt_emp_row(name, sn):
+        return (
+            f'<li contenteditable="true" style="outline:none;">'
+            f'<span style="display:inline-block;width:200px;vertical-align:top;">{name}</span>'
+            f'<span style="color:#0b3a78;font-weight:700;">{sn}</span>'
+            f'</li>'
+        )
+
+    if _inventory_from_roster:
+        _inventory_staff_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in _inventory_from_roster)
+    else:
+        _inventory_staff_items = '<li style="color:#64748b;">—</li>'
+
+    # ── C) Support Team: من الروستر بـ SN أو dept/name يحتوي support ──
+    _support_by_sn   = [e for e in on_duty if str(e.get("sn","")).strip() in SUPPORT_SNS]
+    _support_by_name = [e for e in on_duty if _is_support(e) and str(e.get("sn","")).strip() not in SUPPORT_SNS]
+    _seen_sup = set()
+    _combined_support = []
+    for e in _support_by_sn + _support_by_name:
+        k = str(e.get("sn","")).strip() or e.get("name","")
+        if k not in _seen_sup:
+            _seen_sup.add(k)
+            _combined_support.append(e)
+
+    if _combined_support:
+        _c_items = "\n".join(
+            f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>'
+            for e in _combined_support
+        )
+    else:
+        _c_items = '<li contenteditable="true" style="outline:none;">&nbsp;</li>'
 
     _btn_style = "font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;"
     _li_edit   = '<li contenteditable="true" style="outline:none;">&nbsp;</li>'
 
     # section_b
-    _b_items = _li_edit
     section_b = (
         f'<div style="{hdr_style}">B) CTU Staff On Duty:</div>'
-        f'<ul id="ul-ctu" style="{ul_style}">{_b_items}</ul>'
+        f'<ul id="ul-ctu" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
         f'<button onclick="addListItem(\'ul-ctu\')" style="{_btn_style}">+ Add</button>'
     )
 
-    # section_c — build items outside f-string
-    if sup_li:
-        _c_items = "".join(
-            f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>'
-            for e in on_duty if _is_support(e)
-        )
-    else:
-        _c_items = _li_edit
+    # Inventory section
+    section_inventory = (
+        f'<div style="{hdr_style}">Inventory:</div>'
+        f'<ul id="ul-inventory" class="{ul_class}" style="{ul_style}">{_inventory_staff_items}</ul>'
+        f'<button onclick="addListItem(\'ul-inventory\')" style="{_btn_style}">+ Add</button>'
+    )
+
+    # section_c
     section_c = (
         f'<div style="{hdr_style}">C) Support Team:</div>'
-        f'<ul id="ul-support" style="{ul_style}">{_c_items}</ul>'
+        f'<ul id="ul-support" class="{ul_class}" style="{ul_style}">{_c_items}</ul>'
         f'<button onclick="addListItem(\'ul-support\')" style="{_btn_style}">+ Add</button>'
     )
 
     section_d = (
         f'<div style="{hdr_style}">D) Sick Leave / No Show / Others:</div>'
-        f'<ul id="ul-sickleave" style="{ul_style}">{_li_edit}</ul>'
+        f'<ul id="ul-sickleave" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
         f'<button onclick="addListItem(\'ul-sickleave\')" style="{_btn_style}">+ Add</button>'
     )
     section_e = (
         f'<div style="{hdr_style}">E) Annual Leave / Course / Off in Lieu:</div>'
-        f'<ul id="ul-annualleave" style="{ul_style}">{_li_edit}</ul>'
+        f'<ul id="ul-annualleave" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
         f'<button onclick="addListItem(\'ul-annualleave\')" style="{_btn_style}">+ Add</button>'
     )
     section_f = (
         f'<div style="{hdr_style}">F) Trainee:</div>'
-        f'<ul id="ul-trainee" style="{ul_style}">{_li_edit}</ul>'
+        f'<ul id="ul-trainee" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
         f'<button onclick="addListItem(\'ul-trainee\')" style="{_btn_style}">+ Add</button>'
     )
     section_g = (
         f'<div style="{hdr_style}">G) Overtime Justification:</div>'
-        f'<ul id="ul-overtime" style="{ul_style}">{_li_edit}</ul>'
+        f'<ul id="ul-overtime" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
         f'<button onclick="addListItem(\'ul-overtime\')" style="{_btn_style}">+ Add</button>'
     )
 
@@ -1708,6 +1780,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
         <td colspan="2" valign="top" style="{td_style}">
           {grouped_html}
           {section_b}
+          {section_inventory}
           {section_c}
           {section_d}
           {section_e}
@@ -1744,28 +1817,13 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     # ── Filter offload: only keep flights whose date matches the report date ──
     # datetime is already imported at module level
     def _flight_date_matches(flt_date_str: str, report_date: str) -> bool:
-        """Check if flight date (e.g. '27FEB', '27FEB25', '2025-02-27') matches report_date (YYYY-MM-DD)."""
+        """Strictly keep only flights whose parsed date equals report_date."""
         if not flt_date_str or not flt_date_str.strip():
-            return True  # no date = don't filter out
-        fd = flt_date_str.strip().upper()
-        try:
-            rd = datetime.strptime(report_date, "%Y-%m-%d")
-        except Exception:
-            return True
-        # Try various formats
-        for fmt in ("%d%b%y", "%d%b%Y", "%d%b", "%Y-%m-%d", "%d-%b-%y", "%d-%b-%Y"):
-            try:
-                parsed = datetime.strptime(fd, fmt)
-                # For formats without year, assume report year
-                if fmt == "%d%b":
-                    parsed = parsed.replace(year=rd.year)
-                if parsed.day == rd.day and parsed.month == rd.month and parsed.year == rd.year:
-                    return True
-                else:
-                    return False
-            except ValueError:
-                continue
-        return True  # unknown format = don't filter out
+            return False
+        parsed = normalize_flight_date(flt_date_str, datetime.now(ZoneInfo(TIMEZONE)))
+        if not parsed:
+            return False
+        return parsed == report_date
 
     flights = [f for f in flights if _flight_date_matches(f.get("date", ""), date_dir)]
 
@@ -1779,7 +1837,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         try:
             info, source_name = fetch_flight_info_with_fallbacks(
                 flt,
-                flight_date=date_dir,
+                flight_date=normalize_flight_date(f.get("date", ""), datetime.now(ZoneInfo(TIMEZONE))) or date_dir,
                 dep_iata="MCT",
                 arr_iata=(f.get("destination") or "").strip() or None,
             )
@@ -1894,14 +1952,66 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Export Warehouse Activity Report — {date_display}</title>
+  <style>
+    *,*::before,*::after{{box-sizing:border-box;}}
+    body{{margin:0;padding:0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;}}
+    .page-wrap{{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;}}
+    #report-content{{width:100%;max-width:1100px;background:#fff;border:1px solid #d0d5e8;margin:0 auto;}}
+    .btn-bar{{max-width:1100px;margin:10px auto 20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:0 4px;}}
+    .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
+    /* جدول الأوفلود — يسمح بالتمرير الأفقي على الجوال */
+    .offload-scroll{{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}}
+    .offload-scroll table{{min-width:900px;width:100%;}}
+
+    /* ══════════════ MOBILE ══════════════ */
+    @media(max-width:700px){{
+      /* عام */
+      .page-wrap{{padding:4px 0 24px;}}
+      #report-content{{border-radius:0;border-left:0;border-right:0;}}
+
+      /* الهيدر */
+      .hdr-inner{{display:block!important;}}
+      .hdr-right{{display:none!important;}}  /* إخفاء "Transom Cargo" على الجوال */
+      .hdr-title{{font-size:15px!important;line-height:1.3!important;}}
+      .hdr-meta{{font-size:11px!important;margin-top:5px!important;line-height:1.6!important;}}
+
+      /* padding الأقسام */
+      .sec-pad{{padding-left:12px!important;padding-right:12px!important;}}
+
+      /* أزرار الأسفل */
+      .btn-bar{{justify-content:stretch;margin:8px 6px 16px;gap:6px;}}
+      .btn-bar button{{flex:1 1 45%;font-size:12px;padding:10px 4px;border-radius:6px;}}
+
+      /* التوقيع */
+      .sig-wrap td{{display:block!important;width:100%!important;padding-bottom:12px!important;border-right:none!important;}}
+
+      /* خط الأسماء في MANPOWER */
+      .mp-list li{{font-size:12px!important;line-height:1.7!important;}}
+      .mp-list span[style*="width:200px"]{{width:150px!important;}}
+
+      /* footer */
+      .report-footer-td{{padding:14px 12px!important;font-size:11px!important;}}
+
+      /* section headers — أصغر */
+      .sec-label{{font-size:11px!important;}}
+
+      /* النصوص العامة */
+      .sec-body{{font-size:12.5px!important;}}
+      ul li{{font-size:12.5px!important;}}
+    }}
+
+    @media(max-width:400px){{
+      .btn-bar button{{flex:1 1 100%;}}
+      .hdr-title{{font-size:13px!important;}}
+    }}
+  </style>
 </head>
-<body style="margin:0; padding:0; background-color:#eef1f7; font-family:Calibri, Arial, sans-serif;">
+<body>
+<div class="page-wrap">
+<div style="max-width:1100px;margin:0 auto;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eef1f7; padding:20px 0;">
-<tr><td align="left" style="padding:0 10px;">
-
-<table width="1100" cellpadding="0" cellspacing="0" border="0" id="report-content"
-       style="width:1100px; max-width:1100px; background-color:#ffffff; border:1px solid #d0d5e8;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" id="report-content"
+       style="background-color:#ffffff; border:1px solid #d0d5e8;">
 
   <!-- ═══ HEADER ═══ -->
   <tr>
@@ -1910,19 +2020,19 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         <tr>
           <td width="8" data-email-keep="1" style="background-color:#f59e0b; font-size:1px; line-height:1px;">&nbsp;</td>
           <td data-email-keep="1" style="padding:20px 22px 18px 16px; background-color:#1e5799;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" class="hdr-inner" style="display:table;">
               <tr>
-                <td data-email-keep="1" style="background-color:#1e5799;">
-                  <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:21px; font-weight:800; color:#ffffff; letter-spacing:0.5px; line-height:1.25;">
+                <td data-email-keep="1" class="hdr-left" style="background-color:#1e5799;">
+                  <div class="hdr-title" data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:21px; font-weight:800; color:#ffffff; letter-spacing:0.5px; line-height:1.25;">
                     <span style="color:#ffffff;">&#9992;&nbsp; Export Warehouse Activity Report</span>
                   </div>
-                  <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#ffffff; margin-top:7px; letter-spacing:0.2px;">
+                  <div class="hdr-meta" data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#ffffff; margin-top:7px; letter-spacing:0.2px;">
                     <span style="color:#ffffff;">Shift Date:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{date_display}</strong>
                     <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;Time:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl['time']} LT</strong>
                     <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl['en']} Shift</strong>
                   </div>
                 </td>
-                <td align="right" valign="middle" data-email-keep="1" style="padding-right:6px; background-color:#1e5799;">
+                <td align="right" valign="middle" data-email-keep="1" class="hdr-right" style="padding-right:6px; background-color:#1e5799;">
                   <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#93c5fd; line-height:1.5; text-align:right;">
                     <span style="color:#93c5fd;">Transom Cargo LLC.</span><br>
                     <strong style="color:#ffffff; font-weight:700;">Export Operations</strong>
@@ -1946,63 +2056,17 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     </td>
   </tr>
 
-    <!-- ═══ SHIFT SUMMARY ═══ -->
-  <tr>
-    <td style="padding:16px 24px 0 24px;">
-      <table width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
-          <td style="padding:6px 10px; background-color:#eef3fc;">
-            <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px; text-transform:uppercase;">Shift Summary</span>
-          </td>
-        </tr>
-      </table>
-      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px; border:1px solid #e0e7f5;">
-        <tr>
-          <td width="50%" style="padding:10px 12px; border-right:1px solid #e0e7f5; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
-            <strong style="color:#0b3a78;">✅ Flight Performance:</strong><br>
-            All flights departed on time (no cargo-related delay).
-          </td>
-          <td width="50%" style="padding:10px 12px; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
-            <strong style="color:#0b3a78;">🚫 Cargo Delay:</strong><br>
-            NIL
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:10px 12px; border-right:1px solid #e0e7f5; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top;">
-            <strong style="color:#0b3a78;">⚠️ DG Irregularities:</strong><br>
-            DG Embargo station check done.
-          </td>
-          <td style="padding:10px 12px; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top;">
-            <strong style="color:#0b3a78;">🦺 Safety Incidents:</strong><br>
-            Safety briefing done; PPE compliance confirmed.
-          </td>
-        </tr>
-        <tr>
-          <td style="padding:10px 12px; border-right:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
-            <strong style="color:#0b3a78;">📦 Offloaded / Missing AWB:</strong><br>
-            {offload_summary}
-          </td>
-          <td style="padding:10px 12px; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
-            <strong style="color:#0b3a78;">📋 UTL Report:</strong><br>
-            NIL
-          </td>
-        </tr>
-      </table>
-    </td>
-  </tr>
-
   <!-- ═══ SECTION 1: OPERATIONAL ACTIVITIES ═══ -->
-  <tr><td style="padding:18px 24px 0 24px;">
+  <tr><td class="sec-pad" style="padding:18px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">1.&nbsp; OPERATIONAL ACTIVITIES</span>
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">1.&nbsp; OPERATIONAL ACTIVITIES</span>
         </td>
       </tr>
     </table>
-    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <strong style="color:#0b3a78;">Load Plan:</strong>
       <ul id="ul-loadplan" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li></ul>
       <button onclick="addListItem('ul-loadplan')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
@@ -2019,44 +2083,45 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </td></tr>
 
   <!-- ═══ SECTION 2: BRIEFINGS ═══ -->
-  <tr><td style="padding:14px 24px 0 24px;">
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">2.&nbsp; BRIEFINGS CONDUCTED</span>
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">2.&nbsp; BRIEFINGS CONDUCTED</span>
         </td>
       </tr>
     </table>
-    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
-        <li>Safety toolbox conducted.</li>
-        <li>ULD and net serviceability checked.</li>
-        <li>Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
-        <li>Briefing on <strong>EY CCS 25-011</strong> (correct pallet stack build-up) – read &amp; sign completed.</li>
-        <li>Briefing on <strong>QR CGO CSA 09-25</strong> (weight scale discrepancies) – read &amp; sign completed.</li>
-        <li>Process briefing for shipments UWS discrepancies.</li>
-        <li><strong>WY instruction:</strong> No shipment to CAI with handwritten labels – read &amp; sign completed.</li>
-        <li>EY safety notification related to cargo handling discussed.</li>
-        <li>Staff reminded to complete LMS training and informed about new roster.</li>
-        <li>Instructions on attaching printed ULD tags on trolleys.</li>
-        <li>Stationery logbook kept at supervisor desk.</li>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul id="ul-briefings" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+        <li contenteditable="true" tabindex="60" style="outline:none;">Safety toolbox conducted.</li>
+        <li contenteditable="true" tabindex="61" style="outline:none;">ULD and net serviceability checked.</li>
+        <li contenteditable="true" tabindex="62" style="outline:none;">Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
+        <li contenteditable="true" tabindex="63" style="outline:none;">Briefing on <strong>EY CCS 25-011</strong> (correct pallet stack build-up) – read &amp; sign completed.</li>
+        <li contenteditable="true" tabindex="64" style="outline:none;">Briefing on <strong>QR CGO CSA 09-25</strong> (weight scale discrepancies) – read &amp; sign completed.</li>
+        <li contenteditable="true" tabindex="65" style="outline:none;">Process briefing for shipments UWS discrepancies.</li>
+        <li contenteditable="true" tabindex="66" style="outline:none;"><strong>WY instruction:</strong> No shipment to CAI with handwritten labels – read &amp; sign completed.</li>
+        <li contenteditable="true" tabindex="67" style="outline:none;">EY safety notification related to cargo handling discussed.</li>
+        <li contenteditable="true" tabindex="68" style="outline:none;">Staff reminded to complete LMS training and informed about new roster.</li>
+        <li contenteditable="true" tabindex="69" style="outline:none;">Instructions on attaching printed ULD tags on trolleys.</li>
+        <li contenteditable="true" tabindex="70" style="outline:none;">Stationery logbook kept at supervisor desk.</li>
       </ul>
+      <button onclick="addListItem('ul-briefings')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
   <!-- ═══ SECTION 3: FLIGHT PERFORMANCE ═══ -->
-  <tr><td style="padding:14px 24px 0 24px;">
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">3.&nbsp; FLIGHT PERFORMANCE</span>
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">3.&nbsp; FLIGHT PERFORMANCE</span>
         </td>
       </tr>
     </table>
-    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       ✅&nbsp; All flights departed on time; no delay related to Cargo.
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
@@ -2068,31 +2133,32 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       <tr>
         <td width="4" style="background-color:#5b6a8a;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#f4f5f9;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#3d4a63; letter-spacing:1px;">OPERATIONAL NOTES</span>
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#3d4a63; letter-spacing:1px;">OPERATIONAL NOTES</span>
         </td>
       </tr>
     </table>
-    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
-        <li>All flights departed on time as per RDM Mr. Saleh.</li>
-        <li>DG embargo station check completed.</li>
-        <li>Pigeonhole check done for any pending documents.</li>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul id="ul-opnotes" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+        <li contenteditable="true" tabindex="80" style="outline:none;">All flights departed on time as per RDM Mr. Saleh.</li>
+        <li contenteditable="true" tabindex="81" style="outline:none;">DG embargo station check completed.</li>
+        <li contenteditable="true" tabindex="82" style="outline:none;">Pigeonhole check done for any pending documents.</li>
       </ul>
+      <button onclick="addListItem('ul-opnotes')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#f4f5f9;border:1px solid #5b6a8a;color:#3d4a63;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
   <!-- ═══ SECTION 4: CHECKS & COMPLIANCE + OFFLOAD ═══ -->
-  <tr><td style="padding:14px 24px 0 24px;">
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">4.&nbsp; CHECKS &amp; COMPLIANCE</span>
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">4.&nbsp; CHECKS &amp; COMPLIANCE</span>
         </td>
       </tr>
     </table>
-    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <strong style="color:#0b3a78;">DG Check:</strong> DG Embargo station check done. AWB left behind: NIL.
     </div>
     <!-- عنوان جدول الأوفلود -->
@@ -2100,7 +2166,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       <tr>
         <td width="4" style="background-color:#c2410c;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#fff7ed;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#c2410c; letter-spacing:1px;">OFFLOADING CARGO #</span>
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#c2410c; letter-spacing:1px;">OFFLOADING CARGO #</span>
         </td>
       </tr>
     </table>
@@ -2109,16 +2175,16 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </td></tr>
 
   <!-- ═══ SECTION 5: SAFETY ═══ -->
-  <tr><td style="padding:14px 24px 0 24px;">
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#1a7a3c;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#edf7f1;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">5.&nbsp; SAFETY</span>
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">5.&nbsp; SAFETY</span>
         </td>
       </tr>
     </table>
-    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       Safety briefing conducted to all staff, drivers and porters. All checkers reminded to verify net expiration &amp; ULD serviceability.
       <br><br>
       <strong style="color:#1a7a3c;">✅ Note:</strong> All staff and drivers are wearing proper PPEs.
@@ -2127,12 +2193,12 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </td></tr>
 
   <!-- ═══ SECTION 6: MANPOWER ═══ -->
-  <tr><td style="padding:14px 24px 0 24px;">
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">6.&nbsp; MANPOWER</span>
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">6.&nbsp; MANPOWER</span>
         </td>
       </tr>
     </table>
@@ -2145,32 +2211,32 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </td></tr>
 
   <!-- ═══ SECTION 7: EQUIPMENT STATUS ═══ -->
-  <tr><td style="padding:14px 24px 0 24px;">
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#1a7a3c;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#edf7f1;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">7.&nbsp; EQUIPMENT STATUS</span>
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">7.&nbsp; EQUIPMENT STATUS</span>
         </td>
       </tr>
     </table>
-    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       ✅&nbsp; <strong>ALL EQUIPMENT ARE OK.</strong>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
   <!-- ═══ SECTION 8: HANDOVER ═══ -->
-  <tr><td style="padding:14px 24px 0 24px;">
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">8.&nbsp; HANDOVER DETAILS</span>
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">8.&nbsp; HANDOVER DETAILS</span>
         </td>
       </tr>
     </table>
-    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <ul style="margin:0 0 10px 22px; padding:0;">
         <li>READ AND SIGN.</li>
         <li>Shell &amp; Al-Maha Card Fuel.</li>
@@ -2184,7 +2250,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </td></tr>
 
   <!-- ═══ SECTION 9: OTHER ═══ -->
-  <tr><td style="padding:14px 24px 0 24px;">
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#7a5200;">&nbsp;</td>
@@ -2193,7 +2259,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         </td>
       </tr>
     </table>
-    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       &nbsp;
     </div>
   </td></tr>
@@ -2279,31 +2345,16 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </tr>
 
 </table>
-</td></tr>
-</table>
 
-<!-- ═══ BUTTONS BAR (خارج التقرير) ═══ -->
-<div style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
-
-  <button id="btn-copy"
-    type="button"
-    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#0b3a78; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(11,58,120,.25);">
-    📋 Copy Report
-  </button>
-
-  <button id="btn-manage-emails"
-    type="button"
-    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#475569; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(71,85,105,.25);">
-    📝 Edit Email List
-  </button>
-
-  <button id="btn-email"
-    type="button"
-    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#c2410c; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(194,65,12,.25);">
-    ✉️ Send Email Now
-  </button>
-
+<!-- ═══ BUTTONS BAR ═══ -->
+<div class="btn-bar">
+  <button id="btn-copy" type="button" style="background:#0b3a78;box-shadow:0 2px 8px rgba(11,58,120,.25);">📋 Copy Report</button>
+  <button id="btn-manage-emails" type="button" style="background:#475569;box-shadow:0 2px 8px rgba(71,85,105,.25);">📝 Edit Email List</button>
+  <button id="btn-email" type="button" style="background:#c2410c;box-shadow:0 2px 8px rgba(194,65,12,.25);">✉️ Send Email Now</button>
 </div>
+
+</div><!-- /max-width wrapper -->
+</div><!-- /page-wrap -->
 
 <script>
 (function(){{
@@ -2763,7 +2814,6 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   }}
 
   function sendEmailNow(){{
-    if(!askSendSecret()) return;
     openRecipientsManager('send').then(function(result){{
       if(!result || !result.selected || !result.selected.length) return;
       var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\\n\\nShift: {shift}\\nDate: {date_dir}\\nRecipients: ' + result.selected.join(', '));
@@ -2876,6 +2926,126 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   if(copyBtn) copyBtn.addEventListener('click', onCopyReport);
   if(manageBtn) manageBtn.addEventListener('click', openRecipientsFile);
   if(emailBtn) emailBtn.addEventListener('click', sendEmailNow);
+}})();
+
+/* ══════════════════════════════════════════════════════
+   AUTOSAVE — IndexedDB
+   يحفظ كل تعديل فوري (كل ضغطة حرف) ويستعيده عند التحميل
+   المفتاح: URL الصفحة (date_dir + shift فريد لكل تقرير)
+   ══════════════════════════════════════════════════════ */
+(function(){{
+  var DB_NAME = 'offload_autosave';
+  var STORE   = 'reports';
+  var PAGE_KEY = location.pathname;
+  var _db = null;
+  var _saveTimer = null;
+
+  function openDB(cb){{
+    if(_db){{ cb(_db); return; }}
+    var req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = function(e){{
+      e.target.result.createObjectStore(STORE, {{keyPath:'key'}});
+    }};
+    req.onsuccess = function(e){{ _db = e.target.result; cb(_db); }};
+    req.onerror   = function(){{ console.warn('[autosave] IndexedDB open failed'); }};
+  }}
+
+  function saveNow(){{
+    /* جمع كل العناصر القابلة للتعديل وحفظ قيمها */
+    var data = {{}};
+
+    /* contenteditable cells في الجدول */
+    document.querySelectorAll('[contenteditable="true"]').forEach(function(el){{
+      var id = el.id || el.dataset.saveKey;
+      if(!id){{
+        /* أنشئ مفتاح فريد من موضع العنصر في الـ DOM */
+        var path = [];
+        var node = el;
+        while(node && node !== document.body){{
+          var idx = Array.prototype.indexOf.call((node.parentElement||{{}}).children||[], node);
+          path.unshift((node.tagName||'')+'['+idx+']');
+          node = node.parentElement;
+        }}
+        id = path.join('>');
+        el.dataset.saveKey = id;
+      }}
+      data[id] = el.innerHTML;
+    }});
+
+    /* قوائم ul كاملة (للحفاظ على العناصر المضافة/المحذوفة) */
+    document.querySelectorAll('ul[id]').forEach(function(ul){{
+      data['__ul__'+ul.id] = ul.innerHTML;
+    }});
+
+    /* هل صف NIL موجود؟ */
+    data['__nil_row_removed__'] = !document.getElementById('nil-row');
+
+    openDB(function(db){{
+      var tx = db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).put({{key: PAGE_KEY, data: data, ts: Date.now()}});
+    }});
+  }}
+
+  /* استدعاء خارجي من زر حذف NIL */
+  window.triggerAutosave = function(){{ saveNow(); }};
+
+  function restoreSaved(){{
+    openDB(function(db){{
+      var tx = db.transaction(STORE,'readonly');
+      var req = tx.objectStore(STORE).get(PAGE_KEY);
+      req.onsuccess = function(e){{
+        var rec = e.target && e.target.result;
+        if(!rec || !rec.data) return;
+        var data = rec.data;
+
+        /* استعادة قوائم ul أولاً (تضمن وجود العناصر) */
+        Object.keys(data).forEach(function(k){{
+          if(k.indexOf('__ul__') === 0){{
+            var ul = document.getElementById(k.replace('__ul__',''));
+            if(ul) ul.innerHTML = data[k];
+          }}
+        }});
+
+        /* استعادة contenteditable */
+        Object.keys(data).forEach(function(k){{
+          if(k.indexOf('__') === 0) return;
+          var el = document.getElementById(k) || document.querySelector('[data-save-key="'+k+'"]');
+          if(el && el.isContentEditable) el.innerHTML = data[k];
+        }});
+
+        /* إزالة صف NIL إذا كان محذوفاً */
+        if(data['__nil_row_removed__']){{
+          var nr = document.getElementById('nil-row');
+          if(nr) nr.remove();
+        }}
+      }};
+    }});
+  }}
+
+  /* ── ربط الحفظ بكل حدث تعديل ── */
+  function _schedSave(){{
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(saveNow, 400);
+  }}
+
+  document.addEventListener('input',  _schedSave);
+  document.addEventListener('keyup',  _schedSave);
+
+  /* MutationObserver للقوائم (إضافة/حذف عناصر) */
+  var mo = new MutationObserver(function(muts){{
+    var changed = muts.some(function(m){{
+      return m.type==='childList' || m.type==='characterData';
+    }});
+    if(changed) _schedSave();
+  }});
+  mo.observe(document.body, {{childList:true, subtree:true, characterData:true}});
+
+  /* استعادة البيانات بعد تحميل الصفحة */
+  if(document.readyState === 'loading'){{
+    document.addEventListener('DOMContentLoaded', restoreSaved);
+  }} else {{
+    restoreSaved();
+  }}
 }})();
 </script>
 
@@ -3324,7 +3494,8 @@ var ROSTER_DAILY_BASE = "{ROSTER_PAGE_URL.rstrip('/')}/date/";
 var LEAVE_LABELS = ["annual leave","sick leave","emergency leave","off day","training"];
 var SHIFT_MAP = {{"shift1":"Morning","shift2":"Afternoon","shift3":"Night"}};
 var EXCLUDED_DEPTS = ["officers"];
-var EXCLUDED_SNS = ["990737"];
+var INVENTORY_SNS = ["82592","990737"];
+var SUPPORT_SNS   = ["82653","82565"];
 var mpData = null;
 
 function getCurrentShift() {{
@@ -3364,7 +3535,7 @@ function parseRosterHtml(html, shiftKey) {{
                 var raw = ne.textContent.trim();
                 var name = raw;
                 var sn = "";
-                var mx = raw.match(/^(.+?)\s*[-–]\s*(\d+)(?:\s*\(.*?\))?\s*$/);
+                var mx = raw.match(/^(.+?)\s*[-\u2013]\s*(\d+)(?:\s*\(.*?\))?\s*$/);
                 if (mx) {{
                     name = mx[1].trim();
                     sn = mx[2].trim();
@@ -3373,8 +3544,6 @@ function parseRosterHtml(html, shiftKey) {{
                 if (LEAVE_LABELS.indexOf(label) !== -1) return;
                 if (label !== target) return;
                 if (EXCLUDED_DEPTS.indexOf(deptNorm) !== -1) return;
-                if (EXCLUDED_SNS.indexOf(sn) !== -1) return;
-                if ((name + " " + dept).toLowerCase().indexOf("support") !== -1) return;
 
                 onDuty.push({{name:name, sn:sn, dept:dept}});
             }});
@@ -3383,9 +3552,13 @@ function parseRosterHtml(html, shiftKey) {{
     return onDuty;
 }}
 
+function buildEmpRow(name, sn) {{
+    return '<div class="mp-emp"><span class="emp-sn">' + sn + '</span><span class="emp-name">' + name + '</span></div>';
+}}
+
 function loadManpower() {{
     var el = document.getElementById("mp-content");
-    el.innerHTML = '<div class="mp-loading">جاري التحميل...</div>';
+    el.innerHTML = '<div class="mp-loading">\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0645\u064a\u0644...</div>';
 
     var dateStr = getTodayDate();
     var url = ROSTER_DAILY_BASE + dateStr + "/?t=" + Date.now();
@@ -3397,30 +3570,45 @@ function loadManpower() {{
         }})
         .then(function(htmlText) {{
             var shift = getCurrentShift();
-            var emps = parseRosterHtml(htmlText, shift);
-            if (!emps.length) {{
-                el.innerHTML = '<div class="mp-loading">لا توجد بيانات</div>';
-                return;
-            }}
+            var allEmps = parseRosterHtml(htmlText, shift);
+
+            var inventoryEmps = allEmps.filter(function(e) {{ return INVENTORY_SNS.indexOf(e.sn) !== -1; }});
+            var supportEmps   = allEmps.filter(function(e) {{ return SUPPORT_SNS.indexOf(e.sn) !== -1 || (e.name + " " + e.dept).toLowerCase().indexOf("support") !== -1; }});
+            var specialSNs = INVENTORY_SNS.concat(SUPPORT_SNS);
+            var mainEmps = allEmps.filter(function(e) {{
+                return specialSNs.indexOf(e.sn) === -1 && (e.name + " " + e.dept).toLowerCase().indexOf("support") === -1;
+            }});
+
             var grouped = {{}};
-            emps.forEach(function(e) {{
+            mainEmps.forEach(function(e) {{
                 if (!grouped[e.dept]) grouped[e.dept] = [];
                 grouped[e.dept].push(e);
             }});
+            mpData = grouped;
+
             var html = "";
             for (var dept in grouped) {{
                 html += '<div class="mp-dept">' + dept + '</div>';
-                grouped[dept].forEach(function(e) {{
-                    html += '<div class="mp-emp"><span class="emp-sn">SN ' + e.sn + '</span><span class="emp-name">' + e.name + '</span></div>';
-                }});
+                grouped[dept].forEach(function(e) {{ html += buildEmpRow(e.name, e.sn); }});
             }}
-            el.innerHTML = html;
-            mpData = grouped;
+
+            if (inventoryEmps.length) {{
+                html += '<div class="mp-dept">Inventory</div>';
+                inventoryEmps.forEach(function(e) {{ html += buildEmpRow(e.name, e.sn); }});
+            }}
+
+            if (supportEmps.length) {{
+                html += '<div class="mp-dept">C) Support Team</div>';
+                supportEmps.forEach(function(e) {{ html += buildEmpRow(e.name, e.sn); }});
+            }}
+
+            el.innerHTML = html || '<div class="mp-loading">\u0644\u0627 \u062a\u0648\u062c\u062f \u0628\u064a\u0627\u0646\u0627\u062a \u0644\u0644\u0645\u0646\u0627\u0648\u0628\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629</div>';
         }})
         .catch(function(err) {{
-            el.innerHTML = '<div class="mp-loading">خطأ: ' + err.message + '</div>';
+            el.innerHTML = '<div class="mp-loading">\u062e\u0637\u0623 \u0641\u064a \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0631\u0648\u0633\u062a\u0631: ' + err.message + '</div>';
         }});
 }}
+
 
 function openManpower() {{
     document.getElementById("mp-overlay").classList.add("open");
@@ -4102,11 +4290,12 @@ def main() -> None:
         return
 
     print(f"Extracted {len(flights)} flight(s). Saving…")
-    date_dir, shift, _ = save_flights(flights, email_dt)
+    operational_date_dir, shift, _, affected_date_dirs = save_flights(flights, email_dt)
 
-    print(f"Building report: {date_dir}/{shift}…")
     ensure_email_recipients_file()
-    build_shift_report(date_dir, shift)
+    for report_date_dir in affected_date_dirs or [operational_date_dir]:
+        print(f"Building report: {report_date_dir}/{shift}…")
+        build_shift_report(report_date_dir, shift)
     build_root_index(now)
 
     STATE_FILE.write_text(new_hash, encoding="utf-8")
