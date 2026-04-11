@@ -5,66 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Export Warehouse Activity Report — 14 MAR 2026</title>
-  <style>
-    *,*::before,*::after{box-sizing:border-box;}
-    body{margin:0;padding:0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;}
-    .page-wrap{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;}
-    #report-content{width:100%;max-width:1100px;background:#fff;border:1px solid #d0d5e8;margin:0 auto;}
-    .btn-bar{max-width:1100px;margin:10px auto 20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:0 4px;}
-    .btn-bar button{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}
-    /* جدول الأوفلود — يسمح بالتمرير الأفقي على الجوال */
-    .offload-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}
-    .offload-scroll table{min-width:900px;width:100%;}
-
-    /* ══════════════ MOBILE ══════════════ */
-    @media(max-width:700px){
-      /* عام */
-      .page-wrap{padding:4px 0 24px;}
-      #report-content{border-radius:0;border-left:0;border-right:0;}
-
-      /* الهيدر */
-      .hdr-inner{display:block!important;}
-      .hdr-right{display:none!important;}  /* إخفاء "Transom Cargo" على الجوال */
-      .hdr-title{font-size:15px!important;line-height:1.3!important;}
-      .hdr-meta{font-size:11px!important;margin-top:5px!important;line-height:1.6!important;}
-
-      /* padding الأقسام */
-      .sec-pad{padding-left:12px!important;padding-right:12px!important;}
-
-      /* أزرار الأسفل */
-      .btn-bar{justify-content:stretch;margin:8px 6px 16px;gap:6px;}
-      .btn-bar button{flex:1 1 45%;font-size:12px;padding:10px 4px;border-radius:6px;}
-
-      /* التوقيع */
-      .sig-wrap td{display:block!important;width:100%!important;padding-bottom:12px!important;border-right:none!important;}
-
-      /* خط الأسماء في MANPOWER */
-      .mp-list li{font-size:12px!important;line-height:1.7!important;}
-      .mp-list span[style*="width:200px"]{width:150px!important;}
-
-      /* footer */
-      .report-footer-td{padding:14px 12px!important;font-size:11px!important;}
-
-      /* section headers — أصغر */
-      .sec-label{font-size:11px!important;}
-
-      /* النصوص العامة */
-      .sec-body{font-size:12.5px!important;}
-      ul li{font-size:12.5px!important;}
-    }
-
-    @media(max-width:400px){
-      .btn-bar button{flex:1 1 100%;}
-      .hdr-title{font-size:13px!important;}
-    }
-  </style>
 </head>
-<body>
-<div class="page-wrap">
-<div style="max-width:1100px;margin:0 auto;">
+<body style="margin:0; padding:0; background-color:#eef1f7; font-family:Calibri, Arial, sans-serif;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" id="report-content"
-       style="background-color:#ffffff; border:1px solid #d0d5e8;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eef1f7; padding:20px 0;">
+<tr><td align="left" style="padding:0 10px;">
+
+<table width="1100" cellpadding="0" cellspacing="0" border="0" id="report-content"
+       style="width:1100px; max-width:1100px; background-color:#ffffff; border:1px solid #d0d5e8;">
 
   <!-- ═══ HEADER ═══ -->
   <tr>
@@ -73,19 +21,19 @@
         <tr>
           <td width="8" data-email-keep="1" style="background-color:#f59e0b; font-size:1px; line-height:1px;">&nbsp;</td>
           <td data-email-keep="1" style="padding:20px 22px 18px 16px; background-color:#1e5799;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" class="hdr-inner" style="display:table;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
               <tr>
-                <td data-email-keep="1" class="hdr-left" style="background-color:#1e5799;">
-                  <div class="hdr-title" data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:21px; font-weight:800; color:#ffffff; letter-spacing:0.5px; line-height:1.25;">
+                <td data-email-keep="1" style="background-color:#1e5799;">
+                  <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:21px; font-weight:800; color:#ffffff; letter-spacing:0.5px; line-height:1.25;">
                     <span style="color:#ffffff;">&#9992;&nbsp; Export Warehouse Activity Report</span>
                   </div>
-                  <div class="hdr-meta" data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#ffffff; margin-top:7px; letter-spacing:0.2px;">
+                  <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#ffffff; margin-top:7px; letter-spacing:0.2px;">
                     <span style="color:#ffffff;">Shift Date:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">14 MAR 2026</strong>
                     <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;Time:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">06:00 – 15:00 LT</strong>
                     <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><strong style="color:#fde68a; font-weight:700;">Morning Shift</strong>
                   </div>
                 </td>
-                <td align="right" valign="middle" data-email-keep="1" class="hdr-right" style="padding-right:6px; background-color:#1e5799;">
+                <td align="right" valign="middle" data-email-keep="1" style="padding-right:6px; background-color:#1e5799;">
                   <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#93c5fd; line-height:1.5; text-align:right;">
                     <span style="color:#93c5fd;">Transom Cargo LLC.</span><br>
                     <strong style="color:#ffffff; font-weight:700;">Export Operations</strong>
@@ -109,23 +57,69 @@
     </td>
   </tr>
 
+    <!-- ═══ SHIFT SUMMARY ═══ -->
+  <tr>
+    <td style="padding:16px 24px 0 24px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+          <td style="padding:6px 10px; background-color:#eef3fc;">
+            <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px; text-transform:uppercase;">Shift Summary</span>
+          </td>
+        </tr>
+      </table>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px; border:1px solid #e0e7f5;">
+        <tr>
+          <td width="50%" style="padding:10px 12px; border-right:1px solid #e0e7f5; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
+            <strong style="color:#0b3a78;">✅ Flight Performance:</strong><br>
+            All flights departed on time (no cargo-related delay).
+          </td>
+          <td width="50%" style="padding:10px 12px; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
+            <strong style="color:#0b3a78;">🚫 Cargo Delay:</strong><br>
+            NIL
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 12px; border-right:1px solid #e0e7f5; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top;">
+            <strong style="color:#0b3a78;">⚠️ DG Irregularities:</strong><br>
+            DG Embargo station check done.
+          </td>
+          <td style="padding:10px 12px; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top;">
+            <strong style="color:#0b3a78;">🦺 Safety Incidents:</strong><br>
+            Safety briefing done; PPE compliance confirmed.
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 12px; border-right:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
+            <strong style="color:#0b3a78;">📦 Offloaded / Missing AWB:</strong><br>
+            NIL
+          </td>
+          <td style="padding:10px 12px; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
+            <strong style="color:#0b3a78;">📋 UTL Report:</strong><br>
+            NIL
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
   <!-- ═══ SECTION 1: OPERATIONAL ACTIVITIES ═══ -->
-  <tr><td class="sec-pad" style="padding:18px 24px 0 24px;">
+  <tr><td style="padding:18px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">1.&nbsp; OPERATIONAL ACTIVITIES</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">1.&nbsp; OPERATIONAL ACTIVITIES</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <strong style="color:#0b3a78;">Load Plan:</strong>
-      <ul id="ul-loadplan" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <ul id="ul-loadplan" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li></ul>
       <button onclick="addListItem('ul-loadplan')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <br>
       <strong style="color:#0b3a78;">Advance Loading:</strong>
-      <ul id="ul-advloading" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <ul id="ul-advloading" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li></ul>
       <button onclick="addListItem('ul-advloading')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <br>
       <strong style="color:#0b3a78;">CSD Rescreening:</strong>
@@ -136,45 +130,44 @@
   </td></tr>
 
   <!-- ═══ SECTION 2: BRIEFINGS ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">2.&nbsp; BRIEFINGS CONDUCTED</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">2.&nbsp; BRIEFINGS CONDUCTED</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-briefings" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
-        <li contenteditable="true" tabindex="60" style="outline:none;">Safety toolbox conducted.</li>
-        <li contenteditable="true" tabindex="61" style="outline:none;">ULD and net serviceability checked.</li>
-        <li contenteditable="true" tabindex="62" style="outline:none;">Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
-        <li contenteditable="true" tabindex="63" style="outline:none;">Briefing on <strong>EY CCS 25-011</strong> (correct pallet stack build-up) – read &amp; sign completed.</li>
-        <li contenteditable="true" tabindex="64" style="outline:none;">Briefing on <strong>QR CGO CSA 09-25</strong> (weight scale discrepancies) – read &amp; sign completed.</li>
-        <li contenteditable="true" tabindex="65" style="outline:none;">Process briefing for shipments UWS discrepancies.</li>
-        <li contenteditable="true" tabindex="66" style="outline:none;"><strong>WY instruction:</strong> No shipment to CAI with handwritten labels – read &amp; sign completed.</li>
-        <li contenteditable="true" tabindex="67" style="outline:none;">EY safety notification related to cargo handling discussed.</li>
-        <li contenteditable="true" tabindex="68" style="outline:none;">Staff reminded to complete LMS training and informed about new roster.</li>
-        <li contenteditable="true" tabindex="69" style="outline:none;">Instructions on attaching printed ULD tags on trolleys.</li>
-        <li contenteditable="true" tabindex="70" style="outline:none;">Stationery logbook kept at supervisor desk.</li>
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+        <li>Safety toolbox conducted.</li>
+        <li>ULD and net serviceability checked.</li>
+        <li>Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
+        <li>Briefing on <strong>EY CCS 25-011</strong> (correct pallet stack build-up) – read &amp; sign completed.</li>
+        <li>Briefing on <strong>QR CGO CSA 09-25</strong> (weight scale discrepancies) – read &amp; sign completed.</li>
+        <li>Process briefing for shipments UWS discrepancies.</li>
+        <li><strong>WY instruction:</strong> No shipment to CAI with handwritten labels – read &amp; sign completed.</li>
+        <li>EY safety notification related to cargo handling discussed.</li>
+        <li>Staff reminded to complete LMS training and informed about new roster.</li>
+        <li>Instructions on attaching printed ULD tags on trolleys.</li>
+        <li>Stationery logbook kept at supervisor desk.</li>
       </ul>
-      <button onclick="addListItem('ul-briefings')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
   <!-- ═══ SECTION 3: FLIGHT PERFORMANCE ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">3.&nbsp; FLIGHT PERFORMANCE</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">3.&nbsp; FLIGHT PERFORMANCE</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       ✅&nbsp; All flights departed on time; no delay related to Cargo.
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
@@ -186,32 +179,31 @@
       <tr>
         <td width="4" style="background-color:#5b6a8a;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#f4f5f9;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#3d4a63; letter-spacing:1px;">OPERATIONAL NOTES</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#3d4a63; letter-spacing:1px;">OPERATIONAL NOTES</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-opnotes" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
-        <li contenteditable="true" tabindex="80" style="outline:none;">All flights departed on time as per RDM Mr. Saleh.</li>
-        <li contenteditable="true" tabindex="81" style="outline:none;">DG embargo station check completed.</li>
-        <li contenteditable="true" tabindex="82" style="outline:none;">Pigeonhole check done for any pending documents.</li>
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+        <li>All flights departed on time as per RDM Mr. Saleh.</li>
+        <li>DG embargo station check completed.</li>
+        <li>Pigeonhole check done for any pending documents.</li>
       </ul>
-      <button onclick="addListItem('ul-opnotes')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#f4f5f9;border:1px solid #5b6a8a;color:#3d4a63;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
   <!-- ═══ SECTION 4: CHECKS & COMPLIANCE + OFFLOAD ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">4.&nbsp; CHECKS &amp; COMPLIANCE</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">4.&nbsp; CHECKS &amp; COMPLIANCE</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <strong style="color:#0b3a78;">DG Check:</strong> DG Embargo station check done. AWB left behind: NIL.
     </div>
     <!-- عنوان جدول الأوفلود -->
@@ -219,22 +211,20 @@
       <tr>
         <td width="4" style="background-color:#c2410c;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#fff7ed;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#c2410c; letter-spacing:1px;">OFFLOADING CARGO #</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#c2410c; letter-spacing:1px;">OFFLOADING CARGO #</span>
         </td>
       </tr>
     </table>
-    <div class="offload-scroll" style="margin-top:12px;">
+    <div style="margin-top:12px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0"
            style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; margin-top:12px; margin-bottom:14px;">
-      <tr><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:40px;">ITEM</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">DATE</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">FLIGHT</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">STD/ETD</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:60px;">DEST</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:90px;">Email Received Time</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Physical Cargo Received from Ramp</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:90px;">Trolley/ ULD Number</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Process Completed in CMS</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Pieces Verification</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Reason</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; ">Remarks/Additional Information</td></tr>
+      <tr><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:40px;">ITEM</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:80px;">DATE</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:80px;">FLIGHT</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:80px;">STD/ETD</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:60px;">DEST</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:90px;">Email Received Time</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:100px;">Physical Cargo Received from Ramp</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:90px;">Trolley/ ULD Number</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:100px;">Offloading Process Completed in CMS</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:100px;">Offloading Pieces Verification</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; width:100px;">Offloading Reason</td><td style="padding:8px 6px; background-color:#0b3a78; color:#ffffff;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #093068; text-align:center; vertical-align:middle; ">Remarks/Additional Information</td></tr>
       
-      <tr id="nil-row">
-        <td colspan="12" style="padding:10px 10px; border:1px solid #d0d9ee;
+      <tr>
+        <td colspan="12" style="padding:12px 10px; border:1px solid #d0d9ee;
             color:#64748b; text-align:center; font-style:italic; font-size:12px;
             font-family:Calibri,Arial,sans-serif; background:#ffffff;">
-          <span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL — No offload data recorded for this shift.</span>
-          &nbsp;<button onclick="var r=document.getElementById('nil-row');if(r)r.remove();triggerAutosave();"
-            style="font-size:10px;padding:1px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;vertical-align:middle;">✕ Remove</button>
+          NIL — No offload data recorded for this shift.
         </td>
       </tr>
       <tr>
@@ -284,16 +274,16 @@
   </td></tr>
 
   <!-- ═══ SECTION 5: SAFETY ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#1a7a3c;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#edf7f1;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">5.&nbsp; SAFETY</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">5.&nbsp; SAFETY</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       Safety briefing conducted to all staff, drivers and porters. All checkers reminded to verify net expiration &amp; ULD serviceability.
       <br><br>
       <strong style="color:#1a7a3c;">✅ Note:</strong> All staff and drivers are wearing proper PPEs.
@@ -302,12 +292,12 @@
   </td></tr>
 
   <!-- ═══ SECTION 6: MANPOWER ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">6.&nbsp; MANPOWER</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">6.&nbsp; MANPOWER</span>
         </td>
       </tr>
     </table>
@@ -317,37 +307,36 @@
         <td colspan="2" valign="top" style="font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.8;">
           
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Supervisors:</div>
-      <ul id="ul-supervisors" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82593" data-name="Mohamed Al Kalbani" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN82593</span><span style="color:#1b1f2a;">Mohamed Al Kalbani</span></span></li>
+      <ul id="ul-supervisors" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82593 — Mohamed Al Kalbani</li>
 </ul>
       <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Load Control:</div>
-      <ul id="ul-dept-loadcontrol" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82114" data-name="Mubarak Al Nofli" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN82114</span><span style="color:#1b1f2a;">Mubarak Al Nofli</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82550" data-name="Saleh Al Aufi" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN82550</span><span style="color:#1b1f2a;">Saleh Al Aufi</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="81348" data-name="Assad Al Omairi" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN81348</span><span style="color:#1b1f2a;">Assad Al Omairi</span></span></li>
+      <ul id="ul-dept-loadcontrol" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82114 — Mubarak Al Nofli</li>
+<li contenteditable="true" style="outline:none;">SN 82550 — Saleh Al Aufi</li>
+<li contenteditable="true" style="outline:none;">SN 81348 — Assad Al Omairi</li>
 </ul>
       <button onclick="addListItem('ul-dept-loadcontrol')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Export Checker:</div>
-      <ul id="ul-dept-exportchecker" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82673" data-name="Khalifa Al Maqbali" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN82673</span><span style="color:#1b1f2a;">Khalifa Al Maqbali</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="80482" data-name="Waleed Al Hadabi" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN80482</span><span style="color:#1b1f2a;">Waleed Al Hadabi</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82666" data-name="Mohamed Al Maskari" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN82666</span><span style="color:#1b1f2a;">Mohamed Al Maskari</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82547" data-name="Mazin Al Hajri" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN82547</span><span style="color:#1b1f2a;">Mazin Al Hajri</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82439" data-name="Ghaith Al Habsi" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN82439</span><span style="color:#1b1f2a;">Ghaith Al Habsi</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82661" data-name="Mohamed Al Maskari" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN82661</span><span style="color:#1b1f2a;">Mohamed Al Maskari</span></span></li>
+      <ul id="ul-dept-exportchecker" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82673 — Khalifa Al Maqbali</li>
+<li contenteditable="true" style="outline:none;">SN 80482 — Waleed Al Hadabi</li>
+<li contenteditable="true" style="outline:none;">SN 82666 — Mohamed Al Maskari</li>
+<li contenteditable="true" style="outline:none;">SN 82547 — Mazin Al Hajri</li>
+<li contenteditable="true" style="outline:none;">SN 82439 — Ghaith Al Habsi</li>
+<li contenteditable="true" style="outline:none;">SN 82661 — Mohamed Al Maskari</li>
 </ul>
       <button onclick="addListItem('ul-dept-exportchecker')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Export Operators:</div>
-      <ul id="ul-dept-exportoperators" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82467" data-name="Khamis Al Hinai" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN82467</span><span style="color:#1b1f2a;">Khamis Al Hinai</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="81223" data-name="Mazin Al Siyabi" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN81223</span><span style="color:#1b1f2a;">Mazin Al Siyabi</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82429" data-name="Zakariya Al Balushi" style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;"><span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN82429</span><span style="color:#1b1f2a;">Zakariya Al Balushi</span></span></li>
+      <ul id="ul-dept-exportoperators" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">SN 82467 — Khamis Al Hinai</li>
+<li contenteditable="true" style="outline:none;">SN 81223 — Mazin Al Siyabi</li>
+<li contenteditable="true" style="outline:none;">SN 82429 — Zakariya Al Balushi</li>
 </ul>
       <button onclick="addListItem('ul-dept-exportoperators')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">B) CTU Staff On Duty:</div><ul id="ul-ctu" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-ctu')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Inventory:</div><ul id="ul-inventory" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li style="color:#64748b;">—</li></ul><button onclick="addListItem('ul-inventory')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">C) Support Team:</div><ul id="ul-support" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-support')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">D) Sick Leave / No Show / Others:</div><ul id="ul-sickleave" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-sickleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">E) Annual Leave / Course / Off in Lieu:</div><ul id="ul-annualleave" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-annualleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">F) Trainee:</div><ul id="ul-trainee" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-trainee')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">G) Overtime Justification:</div><ul id="ul-overtime" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-overtime')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">B) CTU Staff On Duty:</div><ul id="ul-ctu" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-ctu')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">C) Support Team:</div><ul id="ul-support" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-support')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">D) Sick Leave / No Show / Others:</div><ul id="ul-sickleave" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-sickleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">E) Annual Leave / Course / Off in Lieu:</div><ul id="ul-annualleave" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-annualleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">F) Trainee:</div><ul id="ul-trainee" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-trainee')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">G) Overtime Justification:</div><ul id="ul-overtime" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-overtime')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
         </td>
       </tr>
     </table>
@@ -355,32 +344,32 @@
   </td></tr>
 
   <!-- ═══ SECTION 7: EQUIPMENT STATUS ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#1a7a3c;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#edf7f1;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">7.&nbsp; EQUIPMENT STATUS</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">7.&nbsp; EQUIPMENT STATUS</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       ✅&nbsp; <strong>ALL EQUIPMENT ARE OK.</strong>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
   <!-- ═══ SECTION 8: HANDOVER ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">8.&nbsp; HANDOVER DETAILS</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">8.&nbsp; HANDOVER DETAILS</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <ul style="margin:0 0 10px 22px; padding:0;">
         <li>READ AND SIGN.</li>
         <li>Shell &amp; Al-Maha Card Fuel.</li>
@@ -394,7 +383,7 @@
   </td></tr>
 
   <!-- ═══ SECTION 9: OTHER ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#7a5200;">&nbsp;</td>
@@ -403,7 +392,7 @@
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       &nbsp;
     </div>
   </td></tr>
@@ -489,22 +478,31 @@
   </tr>
 
 </table>
+</td></tr>
+</table>
 
-<!-- ═══ BUTTONS BAR ═══ -->
-<div class="btn-bar">
-  <button id="btn-copy" type="button" style="background:#0b3a78;box-shadow:0 2px 8px rgba(11,58,120,.25);">📋 Copy Report</button>
-  <button id="btn-manage-emails" type="button" style="background:#475569;box-shadow:0 2px 8px rgba(71,85,105,.25);">📝 Edit Email List</button>
-  <button id="btn-email" type="button" style="background:#c2410c;box-shadow:0 2px 8px rgba(194,65,12,.25);">✉️ Send Email Now</button>
+<!-- ═══ BUTTONS BAR (خارج التقرير) ═══ -->
+<div style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+
+  <button id="btn-copy"
+    type="button"
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#0b3a78; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(11,58,120,.25);">
+    📋 Copy Report
+  </button>
+
+  <button id="btn-manage-emails"
+    type="button"
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#475569; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(71,85,105,.25);">
+    📝 Edit Email List
+  </button>
+
+  <button id="btn-email"
+    type="button"
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#c2410c; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(194,65,12,.25);">
+    ✉️ Send Email Now
+  </button>
+
 </div>
-
-</div><!-- /max-width wrapper -->
-</div><!-- /page-wrap -->
-
-<script>
-/* ── Config injected by Python build ── */
-window._AIRLABS_KEY        = '';          /* ضع مفتاح AirLabs هنا إذا توفّر */
-window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401": {"dest": "CGP", "std": "01:15"}, "WY103": {"dest": "LHR", "std": "01:35"}, "WY685": {"dest": "RUH", "std": "01:45"}, "WY849": {"dest": "CGK", "std": "01:50"}, "TK775": {"dest": "IST", "std": "01:55"}, "BS322": {"dest": "CGP", "std": "02:00"}, "WY251": {"dest": "MAA", "std": "02:05"}, "WY211": {"dest": "TRV", "std": "02:25"}, "WY671": {"dest": "JED", "std": "02:25"}, "WY225": {"dest": "COK", "std": "02:25"}, "6E1272": {"dest": "COK", "std": "03:00"}, "OV513": {"dest": "KHI", "std": "03:15"}, "WY241": {"dest": "DEL", "std": "03:20"}, "ET625": {"dest": "ADD", "std": "04:25"}, "3T263": {"dest": "PZU", "std": "04:30"}, "PC831": {"dest": "SAW", "std": "04:35"}, "GF561": {"dest": "BAH", "std": "07:30"}, "OV5051": {"dest": "OMM", "std": "08:00"}, "WY323": {"dest": "KHI", "std": "08:05"}, "WY223": {"dest": "COK", "std": "08:25"}, "WY317": {"dest": "DAC", "std": "08:25"}, "OV101": {"dest": "SLL", "std": "08:30"}, "OV283": {"dest": "JED", "std": "08:30"}, "OV251": {"dest": "FJR", "std": "08:30"}, "WY815": {"dest": "BKK", "std": "08:40"}, "WY823": {"dest": "KUL", "std": "08:45"}, "WY903": {"dest": "SLL", "std": "08:45"}, "WY283": {"dest": "BLR", "std": "09:10"}, "WY843": {"dest": "MNL", "std": "09:15"}, "WY203": {"dest": "BOM", "std": "09:20"}, "OV211": {"dest": "DMM", "std": "09:35"}, "WY231": {"dest": "HYD", "std": "10:10"}, "QR1149": {"dest": "DOH", "std": "10:15"}, "WY245": {"dest": "DEL", "std": "10:25"}, "WY831": {"dest": "HKT", "std": "10:30"}, "OV273": {"dest": "MED", "std": "10:55"}, "WY689": {"dest": "JED", "std": "10:55"}, "EY693": {"dest": "AUH", "std": "11:55"}, "WY905": {"dest": "SLL", "std": "12:30"}, "OV205": {"dest": "RUH", "std": "12:30"}, "WY413": {"dest": "AMM", "std": "13:00"}, "WY165": {"dest": "IST", "std": "13:00"}, "FZ42": {"dest": "DXB", "std": "13:10"}, "OV285": {"dest": "JED", "std": "13:10"}, "WY171": {"dest": "AMS", "std": "13:10"}, "OV103": {"dest": "SLL", "std": "13:15"}, "PF733": {"dest": "LHE", "std": "13:15"}, "WY117": {"dest": "FRA", "std": "13:20"}, "D0832": {"dest": "EMA", "std": "13:30"}, "WY699": {"dest": "TIF", "std": "13:35"}, "OV315": {"dest": "SPX", "std": "13:40"}, "WY683": {"dest": "RUH", "std": "13:55"}, "PF735": {"dest": "ISB", "std": "14:00"}, "OV135": {"dest": "DQM", "std": "14:00"}, "WY153": {"dest": "ZRH", "std": "14:05"}, "G9754": {"dest": "CAI", "std": "14:05"}, "BG122": {"dest": "CGP", "std": "14:10"}, "WY131": {"dest": "CDG", "std": "14:10"}, "OV293": {"dest": "AHB", "std": "14:10"}, "WY101": {"dest": "LHR", "std": "14:15"}, "WY693": {"dest": "DMM", "std": "14:30"}, "OV213": {"dest": "DMM", "std": "14:35"}, "WY405": {"dest": "CAI", "std": "14:40"}, "WY675": {"dest": "JED", "std": "14:50"}, "WY291": {"dest": "CCJ", "std": "15:10"}, "WY915": {"dest": "SLL", "std": "15:30"}, "OV5141": {"dest": "MSH", "std": "15:45"}, "WY123": {"dest": "MUC", "std": "15:45"}, "WY183": {"dest": "SVO", "std": "15:55"}, "OV253": {"dest": "FJR", "std": "16:35"}, "WY907": {"dest": "SLL", "std": "16:40"}, "FZ44": {"dest": "DXB", "std": "16:50"}, "D0856": {"dest": "LEJ", "std": "17:00"}, "EY695": {"dest": "AUH", "std": "17:10"}, "OV507": {"dest": "SKT", "std": "17:35"}, "WY909": {"dest": "SLL", "std": "17:40"}, "BG722": {"dest": "DAC", "std": "17:50"}, "OV105": {"dest": "SLL", "std": "18:00"}, "WY681": {"dest": "RUH", "std": "18:50"}, "OV107": {"dest": "SLL", "std": "19:00"}, "GF565": {"dest": "BAH", "std": "19:10"}, "WY921": {"dest": "SLL", "std": "19:40"}, "FZ48": {"dest": "DXB", "std": "20:45"}, "IX164": {"dest": "DEL", "std": "21:00"}, "IX712": {"dest": "CNN", "std": "21:10"}, "MU2052": {"dest": "PKX", "std": "21:15"}, "MS931": {"dest": "CAI", "std": "21:20"}, "WY821": {"dest": "KUL", "std": "21:25"}, "WY407": {"dest": "CAI", "std": "21:35"}, "WY677": {"dest": "MED", "std": "21:40"}, "WY673": {"dest": "JED", "std": "21:45"}, "WY817": {"dest": "BKK", "std": "21:50"}, "OV497": {"dest": "DAC", "std": "22:15"}, "OV437": {"dest": "CMB", "std": "22:15"}, "OV747": {"dest": "MAA", "std": "22:20"}, "OV773": {"dest": "CCJ", "std": "22:30"}, "OV735": {"dest": "HYD", "std": "22:30"}, "WY833": {"dest": "HKT", "std": "22:35"}, "WY707": {"dest": "DAR", "std": "22:50"}, "OV563": {"dest": "ISB", "std": "23:00"}, "QR1125": {"dest": "DOH", "std": "23:15"}, "OV705": {"dest": "LKO", "std": "23:20"}, "OV783": {"dest": "BLR", "std": "23:20"}, "IX550": {"dest": "TRV", "std": "23:25"}, "OV463": {"dest": "BKK", "std": "23:30"}, "6E1268": {"dest": "BOM", "std": "23:55"}, "GF567": {"dest": "BAH", "std": "23:55"}, "OV505": {"dest": "SKT", "std": "23:55"}};
-</script>
 
 <script>
 (function(){
@@ -612,18 +610,6 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
         }
       }
     });
-    /* إذا كانت القائمة من نوع flight-list → فعّل autocomplete الرحلة */
-    if(ul && (ul.dataset.flightList || ul.getAttribute('data-flight-list'))){
-      if(typeof setupFlightListItem === 'function') setupFlightListItem(li);
-    }
-    /* إذا كانت قائمة MANPOWER → فعّل autocomplete الـ SN */
-    if(ul && ul.id && (
-        ul.id.indexOf('ul-dept-')===0 ||
-        ['ul-supervisors','ul-ctu','ul-inventory','ul-support',
-         'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'].indexOf(ul.id)!==-1
-    )){
-      if(typeof setupManpowerLi === 'function') setupManpowerLi(li);
-    }
   }
 
   /* ربط الـ li الموجودة مسبقاً بالأحداث عند تحميل الصفحة */
@@ -976,6 +962,7 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
   }
 
   function sendEmailNow(){
+    if(!askSendSecret()) return;
     openRecipientsManager('send').then(function(result){
       if(!result || !result.selected || !result.selected.length) return;
       var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift1\nDate: 2026-03-14\nRecipients: ' + result.selected.join(', '));
@@ -1088,491 +1075,6 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
   if(copyBtn) copyBtn.addEventListener('click', onCopyReport);
   if(manageBtn) manageBtn.addEventListener('click', openRecipientsFile);
   if(emailBtn) emailBtn.addEventListener('click', sendEmailNow);
-})();
-
-/* ══════════════════════════════════════════════════════
-   SMART AUTOCOMPLETE — Load Plan / Advance Loading / Offload Table / MANPOWER
-   ══════════════════════════════════════════════════════ */
-(function(){
-
-  /* ── 0) Config & Helpers ── */
-  var AIRLABS_KEY = (typeof window._AIRLABS_KEY !== 'undefined') ? window._AIRLABS_KEY : '';
-  var FLT_RE = /^([A-Z]{2,3})(\d{1,4})$/i;
-
-  var LOCAL_FLIGHTS = {};
-  try { var lf = window._LOCAL_MCT_FLIGHTS; if(lf) LOCAL_FLIGHTS = lf; } catch(ex) {}
-
-  function todayFull() {
-    var now = new Date(Date.now() + 4*3600*1000);
-    var d   = now.getUTCDate();
-    var mon = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][now.getUTCMonth()];
-    var yr  = now.getUTCFullYear();
-    return (d<10?'0'+d:d)+mon+yr;
-  }
-  function todayISO() {
-    return new Date(Date.now() + 4*3600*1000).toISOString().slice(0,10);
-  }
-
-  function forceUpper(el) {
-    var old = el.innerText || '';
-    var up  = old.toUpperCase();
-    if(old !== up) { el.innerText = up; }
-    return el.innerText.replace(/ /g,'').trim().toUpperCase();
-  }
-
-  function showGhost(el, txt) {
-    var g = el.parentElement && el.parentElement.querySelector(':scope > .ghost-tip');
-    if(!g && el.tagName === 'TD') g = el.querySelector('.ghost-tip');
-    if(!g) {
-      g = document.createElement('span');
-      g.className = 'ghost-tip';
-      g.style.cssText = 'color:#94a3b8;font-style:italic;font-size:11px;display:block;pointer-events:none;user-select:none;white-space:nowrap;';
-      if(el.tagName === 'TD') { el.appendChild(g); }
-      else if(el.parentElement) { el.parentElement.insertBefore(g, el.nextSibling); }
-    }
-    g.textContent = '→ '+txt+' (Tab)';
-  }
-  function removeGhost(el) {
-    [el, el.parentElement].forEach(function(p) {
-      if(!p) return;
-      p.querySelectorAll('.ghost-tip').forEach(function(g) { g.remove(); });
-    });
-  }
-
-  /* ── Flight info fetch (local DB first, then AirLabs) ── */
-  function fetchFlightInfo(flt, isoDate, cb) {
-    var local = LOCAL_FLIGHTS[flt.toUpperCase()];
-    if(local && local.dest && local.std) { cb(local); return; }
-    if(!AIRLABS_KEY) { cb(local || null); return; }
-    var url = 'https://airlabs.co/api/v9/schedules?api_key='+AIRLABS_KEY
-            + '&flight_iata='+flt.toUpperCase()+'&dep_iata=MCT';
-    if(isoDate) url += '&flight_date='+isoDate;
-    fetch(url, {cache:'no-cache'})
-      .then(function(r) { return r.json(); })
-      .then(function(j) {
-        var rows = j.response || j.data || [];
-        if(!rows.length) {
-          return fetch('https://airlabs.co/api/v9/flights?api_key='+AIRLABS_KEY
-                      +'&flight_iata='+flt.toUpperCase()+'&dep_iata=MCT', {cache:'no-cache'})
-            .then(function(r2) { return r2.json(); })
-            .then(function(j2) {
-              var r2rows = j2.response || j2.data || [];
-              if(!r2rows.length) { cb(local||null); return; }
-              doRow(r2rows[0]);
-            });
-        }
-        doRow(rows[0]);
-      })
-      .catch(function() { cb(local||null); });
-    function doRow(row) {
-      cb({
-        std:  (row.dep_scheduled||row.dep_time||'').slice(11,16),
-        etd:  (row.dep_estimated||'').slice(11,16),
-        dest: (row.arr_iata||'').toUpperCase()
-      });
-    }
-  }
-
-  /* ══════════════════════════════════════
-     A) Load Plan & Advance Loading
-        • كتابة رقم رحلة → ghost suggestion
-        • Tab → تعبئة النص كاملاً
-        • Enter → سطر جديد بنفس الإعداد
-     ══════════════════════════════════════ */
-  function setupFlightListItem(li, isLoadPlan) {
-    if(li._flightSetup) return;   /* منع التكرار */
-    li._flightSetup = true;
-
-    var _ghost = '';
-    var _fetching = false;
-
-    /* input: كتابة رقم رحلة → fetch + ghost */
-    li.addEventListener('input', function() {
-      var txt = forceUpper(li).replace(/\s+/g,'');
-      if(!FLT_RE.test(txt)) { removeGhost(li); _ghost=''; return; }
-      var flt = txt;
-      _fetching = true;
-      showGhost(li, flt+'/???/'+todayFull()+'…');
-      fetchFlightInfo(flt, todayISO(), function(info) {
-        _fetching = false;
-        var dest = (info && info.dest) ? info.dest : '???';
-        if(isLoadPlan) {
-          _ghost = flt+'/'+dest+'/'+todayFull()+'.';
-        } else {
-          _ghost = flt+'/'+dest+'/'+todayFull()+' — Completed as per plan';
-        }
-        showGhost(li, _ghost);
-        li.dataset.ghostVal = _ghost;
-      });
-    });
-
-    /* keydown: Tab → قبول Ghost | Enter → سطر جديد */
-    li.addEventListener('keydown', function(e) {
-      if(e.key === 'Tab' && li.dataset.ghostVal) {
-        e.preventDefault();
-        li.innerText = li.dataset.ghostVal;
-        li.dataset.ghostVal = '';
-        removeGhost(li);
-        setCursorEnd(li);
-        if(typeof triggerAutosave==='function') triggerAutosave();
-
-      } else if(e.key === 'Enter') {
-        e.preventDefault();
-        removeGhost(li);
-        li.dataset.ghostVal = '';
-        var ul = li.parentElement;
-        if(!ul) return;
-        var newLi = document.createElement('li');
-        newLi.contentEditable = 'true';
-        newLi.style.outline = 'none';
-        newLi.innerHTML = '&nbsp;';
-        ul.insertBefore(newLi, li.nextSibling);
-        setupFlightListItem(newLi, isLoadPlan);   /* ← يربط على الـ li الجديدة مباشرة */
-        newLi.focus();
-        setCursorEnd(newLi);
-      }
-    });
-
-    li.addEventListener('blur', function() { removeGhost(li); });
-  }
-
-  function setCursorEnd(el) {
-    try {
-      var r = document.createRange();
-      r.selectNodeContents(el);
-      r.collapse(false);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(r);
-    } catch(ex) {}
-  }
-
-  /* ربط القوائم الموجودة عند تحميل الصفحة */
-  function initFlightLists() {
-    var ulLP  = document.getElementById('ul-loadplan');
-    var ulADV = document.getElementById('ul-advloading');
-    if(ulLP)  ulLP.querySelectorAll('li').forEach(function(li)  { setupFlightListItem(li, true);  });
-    if(ulADV) ulADV.querySelectorAll('li').forEach(function(li) { setupFlightListItem(li, false); });
-  }
-  if(document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initFlightLists);
-  } else {
-    initFlightLists();
-  }
-
-  /* "+ Add" button — نُعيد تعريف addListItem ليُضيف autocomplete */
-  var _orig = window.addListItem;
-  window.addListItem = function(ulId) {
-    _orig(ulId);
-    var ul = document.getElementById(ulId);
-    if(!ul) return;
-    var last = ul.lastElementChild;
-    if(!last) return;
-    var isLP = (ulId === 'ul-loadplan');
-    var isADV= (ulId === 'ul-advloading');
-    if(isLP || isADV) {
-      setupFlightListItem(last, isLP);
-    } else if(typeof setupManpowerLi === 'function') {
-      setupManpowerLi(last);
-    }
-  };
-
-  /* ══════════════════════════════════════
-     B) جدول الأوفلود
-        • click/focus على date → يكمل التاريخ
-        • input على flight → يجلب STD+DEST
-     ══════════════════════════════════════ */
-  function setupTableCell(td) {
-    if(td._cellSetup) return;   /* منع التكرار */
-    td._cellSetup = true;
-    var col = td.dataset.col;
-    if(!col) return;
-
-    if(col === 'date') {
-      function autoDate() {
-        var txt = td.innerText.replace(/ /g,'').trim();
-        if(!txt) {
-          td.innerText = todayFull();
-          if(typeof triggerAutosave==='function') triggerAutosave();
-        }
-      }
-      td.addEventListener('click',  autoDate);
-      td.addEventListener('focus',  autoDate);
-      td.addEventListener('input',  function() { forceUpper(td); });
-    }
-
-    if(col === 'flight') {
-      td.addEventListener('input', function() {
-        var flt = forceUpper(td).replace(/\s+/g,'');
-        if(!FLT_RE.test(flt)) { removeGhost(td); return; }
-        var row      = td.closest('tr');
-        var dateCell = row && row.querySelector('[data-col="date"]');
-        var stdCell  = row && row.querySelector('[data-col="std"]');
-        var destCell = row && row.querySelector('[data-col="dest"]');
-        var isoDate  = todayISO();
-        if(dateCell) {
-          var dv = dateCell.innerText.replace(/ /g,'').trim().toUpperCase();
-          var mons = {JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
-          var dm = dv.match(/^(\d{1,2})([A-Z]{3})(\d{2,4})?$/);
-          if(dm) {
-            var yr = dm[3] ? (dm[3].length===2 ? 2000+parseInt(dm[3]) : parseInt(dm[3])) : new Date().getFullYear();
-            isoDate = yr+'-'+(mons[dm[2]]||1).toString().padStart(2,'0')+'-'+dm[1].padStart(2,'0');
-          }
-        }
-        showGhost(td, 'fetching '+flt+'…');
-        fetchFlightInfo(flt, isoDate, function(info) {
-          removeGhost(td);
-          if(!info) return;
-          if(stdCell) {
-            var cur = stdCell.innerText.replace(/ /g,'').trim();
-            if(!cur) {
-              var std = info.std||'', etd = info.etd||'';
-              stdCell.innerText = (std && etd && std!==etd) ? std+'|'+etd : (std||etd||'');
-            }
-          }
-          if(destCell && !destCell.innerText.replace(/ /g,'').trim() && info.dest) {
-            destCell.innerText = info.dest;
-          }
-          if(typeof triggerAutosave==='function') triggerAutosave();
-        });
-      });
-    }
-  }
-
-  function initTableCells() {
-    document.querySelectorAll('[data-col]').forEach(setupTableCell);
-  }
-  if(document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initTableCells);
-  } else {
-    initTableCells();
-  }
-
-  /* ══════════════════════════════════════
-     C) MANPOWER — SN Autocomplete
-     ══════════════════════════════════════ */
-  function buildSnMap() {
-    var map = {};
-    document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {
-      var sn   = (el.dataset.sn  ||'').replace(/[^0-9]/g,'');
-      var name = (el.dataset.name||'').trim();
-      if(sn && name) map[sn] = name;
-    });
-    return map;
-  }
-  var snMap = {};
-  window.addEventListener('load', function() { snMap = buildSnMap(); });
-  setTimeout(function() { snMap = buildSnMap(); }, 1500);
-
-  function showSnDropdown(li, matches) {
-    var old = li.querySelector('.sn-drop');
-    if(old) old.remove();
-    if(!matches.length) return;
-    var dd = document.createElement('div');
-    dd.className = 'sn-drop';
-    dd.style.cssText = 'position:absolute;left:0;top:100%;background:#fff;border:1px solid #0b3a78;'
-                     + 'border-radius:6px;box-shadow:0 4px 16px rgba(11,58,120,.18);z-index:9999;'
-                     + 'min-width:240px;max-height:200px;overflow-y:auto;font-size:13px;';
-    matches.forEach(function(item) {
-      var opt = document.createElement('div');
-      opt.style.cssText = 'padding:7px 12px;cursor:pointer;display:flex;gap:10px;align-items:center;';
-      opt.innerHTML = '<span style="font-weight:700;color:#0b3a78;min-width:60px;">SN'+item.sn+'</span>'
-                    + '<span style="color:#1b1f2a;">'+item.name+'</span>';
-      opt.onmouseenter = function() { opt.style.background='#eef3fc'; };
-      opt.onmouseleave = function() { opt.style.background=''; };
-      opt.onmousedown  = function(ev) {
-        ev.preventDefault();
-        li.innerText = 'SN'+item.sn+' '+item.name;
-        dd.remove();
-        setCursorEnd(li);
-        if(typeof triggerAutosave==='function') triggerAutosave();
-      };
-      dd.appendChild(opt);
-    });
-    li.style.position = 'relative';
-    li.appendChild(dd);
-  }
-
-  function setupManpowerLi(li) {
-    if(li._mpSetup) return;
-    li._mpSetup = true;
-    li.addEventListener('input', function() {
-      var txt = li.innerText.replace(/ /g,' ').trim();
-      var old = li.querySelector('.sn-drop');
-      if(old) old.remove();
-      var snMatch = txt.match(/^(?:SN\s*)?(\d+)$/i);
-      if(!snMatch) return;
-      var typed = snMatch[1];
-      var matches = [];
-      Object.keys(snMap).forEach(function(sn) {
-        if(sn.indexOf(typed)===0) matches.push({sn:sn, name:snMap[sn]});
-      });
-      document.querySelectorAll('[data-sn]').forEach(function(el) {
-        var sn = el.dataset.sn||'', name = el.dataset.name||'';
-        if(sn.indexOf(typed)===0 && !matches.find(function(m) { return m.sn===sn; }))
-          matches.push({sn:sn, name:name});
-      });
-      if(matches.length) showSnDropdown(li, matches);
-    });
-    li.addEventListener('blur', function() {
-      setTimeout(function() {
-        var dd = li.querySelector('.sn-drop');
-        if(dd) dd.remove();
-      }, 200);
-    });
-  }
-
-  var MP_IDS = ['ul-supervisors','ul-ctu','ul-inventory','ul-support',
-                'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'];
-  function initManpower() {
-    MP_IDS.forEach(function(id) {
-      var ul = document.getElementById(id);
-      if(!ul) return;
-      ul.querySelectorAll('li').forEach(setupManpowerLi);
-      new MutationObserver(function(muts) {
-        muts.forEach(function(m) {
-          m.addedNodes.forEach(function(n) { if(n.tagName==='LI') setupManpowerLi(n); });
-        });
-      }).observe(ul, {childList:true});
-    });
-    document.querySelectorAll('[id^="ul-dept-"]').forEach(function(ul) {
-      ul.querySelectorAll('li').forEach(setupManpowerLi);
-      new MutationObserver(function(muts) {
-        muts.forEach(function(m) {
-          m.addedNodes.forEach(function(n) { if(n.tagName==='LI') setupManpowerLi(n); });
-        });
-      }).observe(ul, {childList:true});
-    });
-  }
-  if(document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initManpower);
-  } else {
-    initManpower();
-  }
-
-})();
-
-
-
-
-
-/* ══════════════════════════════════════════════════════
-   AUTOSAVE — IndexedDB
-   يحفظ كل تعديل فوري (كل ضغطة حرف) ويستعيده عند التحميل
-   المفتاح: URL الصفحة (date_dir + shift فريد لكل تقرير)
-   ══════════════════════════════════════════════════════ */
-(function(){
-  var DB_NAME = 'offload_autosave';
-  var STORE   = 'reports';
-  var PAGE_KEY = location.pathname;
-  var _db = null;
-  var _saveTimer = null;
-
-  function openDB(cb){
-    if(_db){ cb(_db); return; }
-    var req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = function(e){
-      e.target.result.createObjectStore(STORE, {keyPath:'key'});
-    };
-    req.onsuccess = function(e){ _db = e.target.result; cb(_db); };
-    req.onerror   = function(){ console.warn('[autosave] IndexedDB open failed'); };
-  }
-
-  function saveNow(){
-    /* جمع كل العناصر القابلة للتعديل وحفظ قيمها */
-    var data = {};
-
-    /* contenteditable cells في الجدول */
-    document.querySelectorAll('[contenteditable="true"]').forEach(function(el){
-      var id = el.id || el.dataset.saveKey;
-      if(!id){
-        /* أنشئ مفتاح فريد من موضع العنصر في الـ DOM */
-        var path = [];
-        var node = el;
-        while(node && node !== document.body){
-          var idx = Array.prototype.indexOf.call((node.parentElement||{}).children||[], node);
-          path.unshift((node.tagName||'')+'['+idx+']');
-          node = node.parentElement;
-        }
-        id = path.join('>');
-        el.dataset.saveKey = id;
-      }
-      data[id] = el.innerHTML;
-    });
-
-    /* قوائم ul كاملة (للحفاظ على العناصر المضافة/المحذوفة) */
-    document.querySelectorAll('ul[id]').forEach(function(ul){
-      data['__ul__'+ul.id] = ul.innerHTML;
-    });
-
-    /* هل صف NIL موجود؟ */
-    data['__nil_row_removed__'] = !document.getElementById('nil-row');
-
-    openDB(function(db){
-      var tx = db.transaction(STORE,'readwrite');
-      tx.objectStore(STORE).put({key: PAGE_KEY, data: data, ts: Date.now()});
-    });
-  }
-
-  /* استدعاء خارجي من زر حذف NIL */
-  window.triggerAutosave = function(){ saveNow(); };
-
-  function restoreSaved(){
-    openDB(function(db){
-      var tx = db.transaction(STORE,'readonly');
-      var req = tx.objectStore(STORE).get(PAGE_KEY);
-      req.onsuccess = function(e){
-        var rec = e.target && e.target.result;
-        if(!rec || !rec.data) return;
-        var data = rec.data;
-
-        /* استعادة قوائم ul أولاً (تضمن وجود العناصر) */
-        Object.keys(data).forEach(function(k){
-          if(k.indexOf('__ul__') === 0){
-            var ul = document.getElementById(k.replace('__ul__',''));
-            if(ul) ul.innerHTML = data[k];
-          }
-        });
-
-        /* استعادة contenteditable */
-        Object.keys(data).forEach(function(k){
-          if(k.indexOf('__') === 0) return;
-          var el = document.getElementById(k) || document.querySelector('[data-save-key="'+k+'"]');
-          if(el && el.isContentEditable) el.innerHTML = data[k];
-        });
-
-        /* إزالة صف NIL إذا كان محذوفاً */
-        if(data['__nil_row_removed__']){
-          var nr = document.getElementById('nil-row');
-          if(nr) nr.remove();
-        }
-      };
-    });
-  }
-
-  /* ── ربط الحفظ بكل حدث تعديل ── */
-  function _schedSave(){
-    clearTimeout(_saveTimer);
-    _saveTimer = setTimeout(saveNow, 400);
-  }
-
-  document.addEventListener('input',  _schedSave);
-  document.addEventListener('keyup',  _schedSave);
-
-  /* MutationObserver للقوائم (إضافة/حذف عناصر) */
-  var mo = new MutationObserver(function(muts){
-    var changed = muts.some(function(m){
-      return m.type==='childList' || m.type==='characterData';
-    });
-    if(changed) _schedSave();
-  });
-  mo.observe(document.body, {childList:true, subtree:true, characterData:true});
-
-  /* استعادة البيانات بعد تحميل الصفحة */
-  if(document.readyState === 'loading'){
-    document.addEventListener('DOMContentLoaded', restoreSaved);
-  } else {
-    restoreSaved();
-  }
 })();
 </script>
 

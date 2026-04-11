@@ -1,7 +1,7 @@
 {
   "flight": "OV783",
   "date": "22-MAR",
-  "std_etd": "23:20",
+  "std_etd": "19:20",
   "destination": "BLR",
   "format": "A",
   "items": [
@@ -18,8 +18,8 @@
   ],
   "email_time": "23:37",
   "saved_at": "2026-03-22T23:37:00+04:00",
-  "enrichment_source": "local_db",
-  "last_enriched": "2026-04-11T14:42:29.416284+04:00",
+  "enrichment_source": "Flightradar",
+  "last_enriched": "2026-04-11T22:43:42.501009+04:00",
   "retro_enriched_at": "2026-04-03T23:43:22.174997+04:00",
   "retro_enriched_source": "AirLabs"
 }

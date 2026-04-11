@@ -1,7 +1,7 @@
 {
   "flight": "OV2 05",
   "date": "20 -Mar",
-  "std_etd": "12:30",
+  "std_etd": "08:30",
   "destination": "RUH",
   "format": "A",
   "items": [
@@ -40,6 +40,6 @@
   "saved_at": "2026-03-20T11:43:00+04:00",
   "retro_enriched_at": "2026-04-10T14:31:34.846817+04:00",
   "retro_enriched_source": "Flightradar",
-  "enrichment_source": "local_db",
-  "last_enriched": "2026-04-11T14:42:12.823193+04:00"
+  "enrichment_source": "Flightradar",
+  "last_enriched": "2026-04-11T22:43:36.778659+04:00"
 }
