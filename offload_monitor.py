@@ -22,6 +22,10 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import requests
+import time
+import random
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 
 
@@ -33,10 +37,156 @@ from bs4 import BeautifulSoup
 SOURCE_CONFIDENCE = {
     "airlabs_schedules": 95,
     "airlabs_flights": 85,
+    "local_db": 75,          # ← mct_flights.json: أعلى من Flightradar وأقل من AirLabs
     "flightradar24": 60,
     "muscat_airport": 20,
     "manual_override": 100,
 }
+
+
+
+# ══════════════════════════════════════════════════════════════════
+#  HTTP Session مع headers واقعية وRetry تلقائي
+# ══════════════════════════════════════════════════════════════════
+
+_REALISTIC_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9,ar;q=0.8",
+    "Accept-Encoding": "gzip, deflate, br",
+    "DNT": "1",
+    "Connection": "keep-alive",
+    "Upgrade-Insecure-Requests": "1",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+    "Sec-Fetch-User": "?1",
+    "Cache-Control": "max-age=0",
+}
+
+# ── Rate-limit tracker ──
+_last_request_time: dict[str, float] = {}
+_MIN_DELAY_SECONDS = 3.0  # الحد الأدنى بين طلبين لنفس الموقع
+
+def _rate_limited_get(url: str, **kwargs) -> requests.Response:
+    """GET مع rate limiting تلقائي حسب الدومين — يستخدم الـ Session المشتركة."""
+    from urllib.parse import urlparse
+    domain = urlparse(url).netloc
+    now_ts = time.time()
+    last = _last_request_time.get(domain, 0)
+    wait = _MIN_DELAY_SECONDS - (now_ts - last) + random.uniform(0.5, 1.5)
+    if wait > 0:
+        time.sleep(wait)
+
+    # دمج الheaders
+    headers = dict(_REALISTIC_HEADERS)
+    headers.update(kwargs.pop("headers", {}))
+    kwargs["headers"] = headers
+
+    resp = _SESSION.get(url, **kwargs)
+    _last_request_time[domain] = time.time()
+    return resp
+
+# ══════════════════════════════════════════════════════════════════
+#  Session مشتركة (تُنشأ مرة واحدة فقط طوال عمر السكربت)
+# ══════════════════════════════════════════════════════════════════
+
+_SESSION = requests.Session()
+_SESSION.headers.update(_REALISTIC_HEADERS)
+_SESSION.mount("https://", HTTPAdapter(max_retries=Retry(
+    total=3,
+    backoff_factor=2,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"],
+)))
+_SESSION.mount("http://", HTTPAdapter(max_retries=Retry(
+    total=3,
+    backoff_factor=2,
+    status_forcelist=[429, 500, 502, 503, 504],
+    allowed_methods=["GET"],
+)))
+
+
+# ══════════════════════════════════════════════════════════════════
+#  Cache للرحلات المُجلَبة من الشبكة (يمنع الطلبات المكررة)
+# ══════════════════════════════════════════════════════════════════
+
+_flight_info_cache: dict[str, tuple[dict | None, str | None]] = {}
+
+
+# ══════════════════════════════════════════════════════════════════
+#  قاعدة البيانات المحلية  mct_flights.json
+# ══════════════════════════════════════════════════════════════════
+
+LOCAL_DB_PATH: Path = Path(os.getenv("MCT_FLIGHTS_DB", "mct_flights.json"))
+_local_db: dict[str, dict] | None = None   # None = لم يُحمَّل بعد
+
+
+def _load_local_db() -> dict[str, dict]:
+    """تحميل mct_flights.json مرة واحدة وتخزينه في الذاكرة."""
+    global _local_db
+    if _local_db is not None:
+        return _local_db
+
+    if not LOCAL_DB_PATH.exists():
+        print(f"  [local_db] {LOCAL_DB_PATH} not found — skipping local lookup.")
+        _local_db = {}
+        return _local_db
+
+    try:
+        raw = json.loads(LOCAL_DB_PATH.read_text(encoding="utf-8"))
+        # نوحّد المفاتيح: إزالة المسافات + أحرف كبيرة
+        _local_db = {
+            normalize_flight_number(k): v
+            for k, v in raw.items()
+            if isinstance(v, dict)
+        }
+        print(f"  [local_db] Loaded {len(_local_db)} flights from {LOCAL_DB_PATH}")
+    except Exception as exc:
+        print(f"  [local_db] Failed to load {LOCAL_DB_PATH}: {exc}")
+        _local_db = {}
+
+    return _local_db
+
+
+def fetch_flight_info_local_db(
+    flight_iata: str,
+    *,
+    flight_date: str | None = None,
+    dep_iata: str | None = None,
+    arr_iata: str | None = None,
+) -> dict | None:
+    """البحث في mct_flights.json كمصدر محلي فوري (بدون شبكة).
+
+    يُعيد dict بنفس شكل باقي المصادر، أو None إذا لم تُوجَد الرحلة.
+    ملاحظة: الـ STD في الملف هو الجدول الثابت فقط — لا يوجد ETD/ATD.
+    """
+    db = _load_local_db()
+    entry = db.get(normalize_flight_number(flight_iata))
+    if not entry:
+        return None
+
+    std  = (entry.get("std")  or "").strip()
+    etd  = (entry.get("etd")  or "").strip()   # اختياري في الملف
+    dest = (entry.get("dest") or "").strip().upper()
+
+    if not any([std, etd, dest]):
+        return None
+
+    print(f"  [local_db] {flight_iata} → dest={dest!r}, std={std!r}, etd={etd!r}")
+    return {
+        "std":        std,
+        "etd":        etd,
+        "atd":        "",
+        "dest":       dest,
+        "source":     "local_db",
+        "confidence": SOURCE_CONFIDENCE["local_db"],
+    }
+
 
 ONEDRIVE_URL: str = os.environ["ONEDRIVE_FILE_URL"]
 TIMEZONE: str     = "Asia/Muscat"
@@ -436,16 +586,15 @@ def fetch_flight_info_flightradar(
 
     url = f"https://www.flightradar24.com/data/flights/{flight_iata.lower()}"
     try:
-        resp = requests.get(
-            url,
-            timeout=30,
-            headers={
-                "User-Agent": "Mozilla/5.0",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Cache-Control": "no-cache",
-            },
-        )
+        resp = _rate_limited_get(url, timeout=30)
         resp.raise_for_status()
+    except requests.exceptions.HTTPError as exc:
+        if exc.response is not None and exc.response.status_code == 403:
+            print(f"  [Flightradar] 403 Forbidden for {flight_iata} — waiting 10s before next request")
+            time.sleep(10)
+        else:
+            print(f"  [Flightradar] request error for {flight_iata}: {exc}")
+        return None
     except Exception as exc:
         print(f"  [Flightradar] request error for {flight_iata}: {exc}")
         return None
@@ -524,16 +673,15 @@ def fetch_flight_info_muscatairport(
 
     url = "https://www.muscatairport.co.om/flight-status?date_type=0&type=2"
     try:
-        resp = requests.get(
-            url,
-            timeout=30,
-            headers={
-                "User-Agent": "Mozilla/5.0",
-                "Accept-Language": "en-US,en;q=0.9",
-                "Cache-Control": "no-cache",
-            },
-        )
+        resp = _rate_limited_get(url, timeout=30)
         resp.raise_for_status()
+    except requests.exceptions.HTTPError as exc:
+        if exc.response is not None and exc.response.status_code == 403:
+            print(f"  [MuscatAirport] 403 Forbidden for {flight_iata} — waiting 10s before next request")
+            time.sleep(10)
+        else:
+            print(f"  [MuscatAirport] request error for {flight_iata}: {exc}")
+        return None
     except Exception as exc:
         print(f"  [MuscatAirport] request error for {flight_iata}: {exc}")
         return None
@@ -583,21 +731,33 @@ def fetch_flight_info_with_fallbacks(
     dep_iata: str | None = None,
     arr_iata: str | None = None,
 ) -> tuple[dict | None, str | None]:
-    """Try AirLabs, then Flightradar24, then Muscat Airport.
+    """Try: LocalDB → AirLabs → Flightradar24.
 
-    IMPORTANT: يدمج النتائج من جميع المصادر حتى تمتلئ الحقول الثلاثة (std, etd, dest).
-    لا يتوقف عند أول مصدر بل يكمل البحث إذا بقيت حقول فارغة.
+    الترتيب الجديد:
+      1. local_db   (mct_flights.json) — فوري، بدون شبكة، conf=75
+      2. AirLabs    — شبكة، conf=85/95
+      3. Flightradar — شبكة، conf=60، فقط إذا بقيت حقول فارغة
+      ✗ MuscatAirport — مُعطَّل (يُعيد 403 دائمًا)
+
+    التوقف المبكر: إذا اكتملت (std + dest) من مصدر واحد → لا نكمل.
+    Cache: نتيجة كل رحلة تُخزَّن ولا تُعاد جلبها مرة ثانية.
     """
     flight_iata = normalize_flight_number(flight_iata)
+
+    # ── Cache check ──
+    cache_key = f"{flight_iata}:{flight_date or ''}"
+    if cache_key in _flight_info_cache:
+        print(f"  [cache] {flight_iata} → served from cache")
+        return _flight_info_cache[cache_key]
+
     sources = [
-        ("AirLabs", fetch_flight_info_airlabs),
+        ("local_db",   fetch_flight_info_local_db),
+        ("AirLabs",    fetch_flight_info_airlabs),
         ("Flightradar", fetch_flight_info_flightradar),
-        ("MuscatAirport", fetch_flight_info_muscatairport),
+        # MuscatAirport مُعطَّل — يُعيد 403 دائمًا ويُضيف 10 ثوانٍ تأخير
     ]
 
-    # ═══ FIX: Per-field confidence tracking ═══
-    # Higher-confidence sources OVERWRITE lower-confidence values.
-    # A null from a high-confidence source does NOT erase existing data.
+    # ═══ Per-field confidence tracking ═══
     final: dict[str, dict] = {
         "std":  {"val": "", "conf": 0},
         "etd":  {"val": "", "conf": 0},
@@ -607,6 +767,11 @@ def fetch_flight_info_with_fallbacks(
     used_sources: list[str] = []
 
     for source_name, fn in sources:
+        # ── توقف مبكر: إذا عندنا STD + DEST لا نحتاج المزيد ──
+        if final["std"]["val"] and final["dest"]["val"]:
+            print(f"  [fallback] {flight_iata}: STD+DEST complete after {used_sources} — skipping remaining sources")
+            break
+
         try:
             info = fn(
                 flight_iata,
@@ -616,8 +781,7 @@ def fetch_flight_info_with_fallbacks(
             )
         except Exception as exc:
             print(f"  [fallback] {source_name} failed for {flight_iata}: {exc}")
-            import time
-            time.sleep(2)
+            time.sleep(3)
             try:
                 info = fn(flight_iata, flight_date=flight_date, dep_iata=dep_iata, arr_iata=arr_iata)
             except Exception as exc2:
@@ -651,10 +815,14 @@ def fetch_flight_info_with_fallbacks(
         print(f"  [⚠ fallback] {flight_iata}: still missing after all sources: {', '.join(missing)}")
 
     if not any(merged[k].strip() for k in ("std", "etd", "dest")):
-        return None, None
+        result = (None, None)
+    else:
+        combined_source = "+".join(used_sources) if used_sources else None
+        result = (merged, combined_source)
 
-    combined_source = "+".join(used_sources) if used_sources else None
-    return merged, combined_source
+    # ── تخزين في الـ cache ──
+    _flight_info_cache[cache_key] = result
+    return result
 
 
 def get_shift(now: datetime) -> str:
@@ -1899,7 +2067,9 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         "shift3": {"ar": "ليل",      "en": "Night",      "time": "21:00 – 06:00"},
     }
     sl            = shift_labels.get(shift, {"ar": shift, "en": shift, "time": ""})
-    shift_label   = f"{sl['en']} Shift — {sl['time']}"
+    sl_en         = sl["en"]
+    sl_time       = sl["time"]
+    shift_label   = f"{sl_en} Shift — {sl_time}"
     total_flights = len(flights)
     total_items   = sum(len(f.get("items", [])) for f in flights)
 
@@ -1950,6 +2120,10 @@ def build_shift_report(date_dir: str, shift: str) -> None:
             date_display = d.strftime("%d %b %Y").upper()
     except Exception:
         date_display = date_dir
+
+    # ── تجهيز JSON للرحلات المحلية كمتغير خارج الـ f-string ──
+    # يجب أن يكون خارج الـ f-string لأن {} في JSON تُفسَّر كـ format expressions
+    local_flights_js = json.dumps(_load_local_db(), ensure_ascii=False)
 
     html = f"""<!DOCTYPE html>
 <html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -2034,8 +2208,8 @@ def build_shift_report(date_dir: str, shift: str) -> None:
                   </div>
                   <div class="hdr-meta" data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#ffffff; margin-top:7px; letter-spacing:0.2px;">
                     <span style="color:#ffffff;">Shift Date:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{date_display}</strong>
-                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;Time:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl['time']} LT</strong>
-                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl['en']} Shift</strong>
+                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;Time:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl_time} LT</strong>
+                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl_en} Shift</strong>
                   </div>
                 </td>
                 <td align="right" valign="middle" data-email-keep="1" class="hdr-right" style="padding-right:6px; background-color:#1e5799;">
@@ -2365,7 +2539,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 <script>
 /* ── Config injected by Python build ── */
 window._AIRLABS_KEY        = '';          /* ضع مفتاح AirLabs هنا إذا توفّر */
-window._LOCAL_MCT_FLIGHTS  = {"WY101": {"dest": "LHR", "std": "08:00"}, "WY103": {"dest": "LHR", "std": "21:30"}, "WY105": {"dest": "LHR", "std": "09:15"}, "WY111": {"dest": "LGW", "std": "09:30"}, "WY201": {"dest": "DXB", "std": "10:00"}, "WY203": {"dest": "DXB", "std": "16:00"}, "WY251": {"dest": "CAI", "std": "09:45"}, "WY253": {"dest": "CAI", "std": "22:00"}, "WY261": {"dest": "AMM", "std": "10:30"}, "WY263": {"dest": "AMM", "std": "22:30"}, "WY301": {"dest": "BOM", "std": "11:00"}, "WY303": {"dest": "BOM", "std": "23:00"}, "WY311": {"dest": "DEL", "std": "11:30"}, "WY313": {"dest": "DEL", "std": "23:30"}, "WY321": {"dest": "MAA", "std": "12:00"}, "WY331": {"dest": "HYD", "std": "12:30"}, "WY341": {"dest": "COK", "std": "13:00"}, "WY343": {"dest": "COK", "std": "23:45"}, "WY351": {"dest": "TRV", "std": "13:30"}, "WY361": {"dest": "BLR", "std": "14:00"}, "WY401": {"dest": "KHI", "std": "10:00"}, "WY411": {"dest": "LHE", "std": "10:30"}, "WY451": {"dest": "CMB", "std": "11:00"}, "WY461": {"dest": "DAC", "std": "11:30"}, "WY501": {"dest": "NBO", "std": "08:30"}, "WY503": {"dest": "NBO", "std": "21:00"}, "WY511": {"dest": "DAR", "std": "09:00"}, "WY521": {"dest": "ADD", "std": "07:30"}, "WY531": {"dest": "KRT", "std": "08:00"}, "WY551": {"dest": "JNB", "std": "09:30"}, "WY601": {"dest": "FRA", "std": "10:00"}, "WY611": {"dest": "MUC", "std": "10:30"}, "WY621": {"dest": "ZRH", "std": "11:00"}, "WY631": {"dest": "CDG", "std": "11:30"}, "WY641": {"dest": "AMS", "std": "12:00"}, "WY651": {"dest": "MAD", "std": "12:30"}, "WY661": {"dest": "MXP", "std": "13:00"}, "WY701": {"dest": "BKK", "std": "08:00"}, "WY711": {"dest": "KUL", "std": "09:00"}, "WY721": {"dest": "SIN", "std": "10:00"}, "WY731": {"dest": "CGK", "std": "11:00"}, "WY741": {"dest": "MNL", "std": "08:30"}, "WY751": {"dest": "PEK", "std": "09:30"}, "WY761": {"dest": "HKG", "std": "10:30"}, "WY771": {"dest": "NRT", "std": "11:30"}, "WY801": {"dest": "JFK", "std": "09:00"}, "WY811": {"dest": "IAD", "std": "10:00"}, "WY821": {"dest": "YYZ", "std": "11:00"}, "EY201": {"dest": "AUH", "std": "07:00"}, "EY203": {"dest": "AUH", "std": "14:00"}, "EY205": {"dest": "AUH", "std": "22:00"}, "QR1153": {"dest": "DOH", "std": "08:00"}, "QR1155": {"dest": "DOH", "std": "15:00"}, "QR1157": {"dest": "DOH", "std": "23:00"}, "FZ301": {"dest": "DXB", "std": "07:30"}, "FZ303": {"dest": "DXB", "std": "14:30"}, "G9201": {"dest": "SHJ", "std": "08:30"}, "G9203": {"dest": "SHJ", "std": "16:30"}, "XY502": {"dest": "RUH", "std": "09:00"}, "SV508": {"dest": "JED", "std": "10:00"}, "MS821": {"dest": "CAI", "std": "11:00"}, "TK754": {"dest": "IST", "std": "08:00"}, "LH630": {"dest": "FRA", "std": "09:00"}, "BA395": {"dest": "LHR", "std": "10:00"}};
+window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
 </script>
 
 <script>
@@ -3599,6 +3773,10 @@ def build_root_index(now: datetime) -> None:
         for shift in ("shift1", "shift2", "shift3"):
             shift_report = DOCS_DIR / day / shift / "index.html"
             meta_s = shift_meta.get(shift, {"label": shift, "ar": shift, "time": "", "icon": "✈"})
+            ms_icon  = meta_s["icon"]
+            ms_ar    = meta_s["ar"]
+            ms_label = meta_s["label"]
+            ms_time  = meta_s["time"]
             shift_flt_count = _count_matching_flights(DATA_DIR / day / shift, day)
             flt_txt = f"{shift_flt_count} flight{'s' if shift_flt_count != 1 else ''}" if shift_flt_count else ""
 
@@ -3606,10 +3784,10 @@ def build_root_index(now: datetime) -> None:
                 # مناوبة فيها تقرير — رابط
                 rows += f"""
             <a class="shift-card" href="{day}/{shift}/">
-                <div class="sc-icon">{meta_s['icon']}</div>
+                <div class="sc-icon">{ms_icon}</div>
                 <div class="sc-body">
-                    <div class="sc-title">{meta_s['ar']} <span class="sc-en">/ {meta_s['label']}</span></div>
-                    <div class="sc-time">{meta_s['time']}</div>
+                    <div class="sc-title">{ms_ar} <span class="sc-en">/ {ms_label}</span></div>
+                    <div class="sc-time">{ms_time}</div>
                 </div>
                 <div class="sc-right">
                     {f'<span class="sc-count">{flt_txt}</span>' if flt_txt else ''}
@@ -3620,10 +3798,10 @@ def build_root_index(now: datetime) -> None:
                 # مناوبة NIL — رابط قابل للضغط
                 rows += f"""
             <a class="shift-card" href="{day}/{shift}/">
-                <div class="sc-icon">{meta_s['icon']}</div>
+                <div class="sc-icon">{ms_icon}</div>
                 <div class="sc-body">
-                    <div class="sc-title">{meta_s['ar']} <span class="sc-en">/ {meta_s['label']}</span></div>
-                    <div class="sc-time">{meta_s['time']}</div>
+                    <div class="sc-title">{ms_ar} <span class="sc-en">/ {ms_label}</span></div>
+                    <div class="sc-time">{ms_time}</div>
                 </div>
                 <div class="sc-right">
                     <span style="font-size:11px;color:#94a3b8;font-weight:600;">NIL</span>
@@ -3648,6 +3826,8 @@ def build_root_index(now: datetime) -> None:
 
     if not days_html:
         days_html = "<div class='empty-day' style='text-align:center;padding:48px'>لا توجد تقارير بعد.</div>"
+
+    roster_base_url = ROSTER_PAGE_URL.rstrip('/') + "/date/"
 
     html = f"""<!doctype html>
 <html lang="ar" dir="rtl">
@@ -3912,7 +4092,7 @@ def build_root_index(now: datetime) -> None:
 
 <script>
 /* ── Manpower popup logic ── */
-var ROSTER_DAILY_BASE = "{ROSTER_PAGE_URL.rstrip('/')}/date/";
+var ROSTER_DAILY_BASE = "{roster_base_url}";
 var LEAVE_LABELS = ["annual leave","sick leave","emergency leave","off day","training"];
 var SHIFT_MAP = {{"shift1":"Morning","shift2":"Afternoon","shift3":"Night"}};
 var EXCLUDED_DEPTS = ["officers"];
