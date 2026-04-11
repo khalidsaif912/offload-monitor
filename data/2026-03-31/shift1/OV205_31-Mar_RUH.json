@@ -1,7 +1,7 @@
 {
   "flight": "OV205",
   "date": "31-Mar",
-  "std_etd": "12:20",
+  "std_etd": "08:30|10:59",
   "destination": "RUH",
   "format": "A",
   "items": [
@@ -29,7 +29,7 @@
   "email_time": "12:02",
   "saved_at": "2026-03-31T12:02:00+04:00",
   "enrichment_source": "Flightradar",
-  "last_enriched": "2026-03-31T15:29:24.688487+04:00",
+  "last_enriched": "2026-04-11T12:56:05.620460+04:00",
   "retro_enriched_at": "2026-04-04T14:04:51.458166+04:00",
   "retro_enriched_source": "AirLabs"
 }

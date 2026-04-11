@@ -1,7 +1,7 @@
 {
   "flight": "OV283",
   "date": "2-Apr",
-  "std_etd": "08:23",
+  "std_etd": "04:30",
   "destination": "JED",
   "format": "A",
   "items": [
@@ -19,6 +19,6 @@
   "email_time": "08:49",
   "saved_at": "2026-04-02T08:49:00+04:00",
   "_tz_fixed": "2026-04-03T12:39:29Z",
-  "enrichment_source": "AirLabs",
-  "last_enriched": "2026-04-04T11:53:25.753879+04:00"
+  "enrichment_source": "Flightradar",
+  "last_enriched": "2026-04-11T12:56:18.394488+04:00"
 }
