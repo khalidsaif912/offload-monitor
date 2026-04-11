@@ -1392,14 +1392,7 @@ def _fetch_daily_roster_html(date_dir: str) -> str:
 
 
 def fetch_roster_staff(date_dir: str, shift: str) -> dict:
-    """Fetch staff on duty from the daily roster HTML page for the given date/shift.
-
-    Returns:
-        {
-          "on_duty":  [{"name": str, "dept": str, "sn": str}, ...],
-          "on_leave": [{"name": str, "dept": str, "status": str}, ...],
-        }
-    """
+    """Fetch staff on duty from the daily roster HTML page for the given date/shift."""
     target_shift = _normalize_shift_label(_SHIFT_TO_ROSTER_LABEL.get(shift, shift))
     if not target_shift:
         return {"on_duty": [], "on_leave": []}
@@ -1416,8 +1409,7 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
 
     for dept_card in soup.select(".deptCard"):
         dept_el = dept_card.select_one(".deptTitle")
-        # 🔴 التصحيح هنا: تحويل القسم إلى نص صريح لمنع خطأ الـ Set
-        dept = str(dept_el.get_text(" ", strip=True) if dept_el else "Unknown").strip()
+        dept = (dept_el.get_text(" ", strip=True) if dept_el else "Unknown").strip()
         dept_norm = dept.lower()
 
         for shift_card in dept_card.select("details.shiftCard"):
@@ -1428,17 +1420,16 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
                 if not name_el:
                     continue
 
-                raw_name = str(name_el.get_text(" ", strip=True))
+                raw_name = name_el.get_text(" ", strip=True)
                 sn = ""
                 name = raw_name
 
                 m = re.match(r"^(.+?)\s*[-–]\s*(\d+)(?:\s*\(.*?\))?\s*$", raw_name)
                 if m:
-                    name = str(m.group(1)).strip()
-                    sn = str(m.group(2)).strip()
+                    name = m.group(1).strip()
+                    sn = m.group(2).strip()
 
-                # 🔴 التصحيح هنا: إجبار جميع المتغيرات لتكون نصوصاً (Strings)
-                item = {"name": str(name), "sn": str(sn), "dept": str(dept)}
+                item = {"name": name, "sn": sn, "dept": dept}
 
                 if shift_label in _LEAVE_LABELS:
                     item["status"] = shift_label.title()
@@ -1454,8 +1445,9 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
                 on_duty.append(item)
 
     print(f"  [roster-html] {date_dir}/{shift}: {len(on_duty)} on duty, {len(on_leave)} on leave")
+    
+    # التصحيح الحاسم هنا: استخدام قوس واحد فقط { } وليس اثنين {{ }}
     return {"on_duty": on_duty, "on_leave": on_leave}
-
 
 
 
