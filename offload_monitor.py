@@ -1416,8 +1416,9 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
 
     for dept_card in soup.select(".deptCard"):
         dept_el = dept_card.select_one(".deptTitle")
-        dept = dept_el.get_text(" ", strip=True) if dept_el else "Unknown"
-        dept_norm = dept.strip().lower()
+        # 🔴 التصحيح هنا: تحويل القسم إلى نص صريح لمنع خطأ الـ Set
+        dept = str(dept_el.get_text(" ", strip=True) if dept_el else "Unknown").strip()
+        dept_norm = dept.lower()
 
         for shift_card in dept_card.select("details.shiftCard"):
             shift_label = _normalize_shift_label(shift_card.get("data-shift") or "")
@@ -1427,19 +1428,17 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
                 if not name_el:
                     continue
 
-                raw_name = name_el.get_text(" ", strip=True)
+                raw_name = str(name_el.get_text(" ", strip=True))
                 sn = ""
                 name = raw_name
 
-                # Matches both:
-                #   Mohamed Al Amri - 81404
-                #   Mohamed Al Subhi - 82592 (Inventory)
                 m = re.match(r"^(.+?)\s*[-–]\s*(\d+)(?:\s*\(.*?\))?\s*$", raw_name)
                 if m:
-                    name = m.group(1).strip()
-                    sn = m.group(2).strip()
+                    name = str(m.group(1)).strip()
+                    sn = str(m.group(2)).strip()
 
-                item = {"name": name, "sn": sn, "dept": dept}
+                # 🔴 التصحيح هنا: إجبار جميع المتغيرات لتكون نصوصاً (Strings)
+                item = {"name": str(name), "sn": str(sn), "dept": str(dept)}
 
                 if shift_label in _LEAVE_LABELS:
                     item["status"] = shift_label.title()
@@ -1455,9 +1454,7 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
                 on_duty.append(item)
 
     print(f"  [roster-html] {date_dir}/{shift}: {len(on_duty)} on duty, {len(on_leave)} on leave")
-    all_depts = sorted({e.get('dept','?') for e in on_duty + on_leave})
-    print(f"  [roster-debug] all depts seen: {all_depts}")
-    return {{"on_duty": on_duty, "on_leave": on_leave}}
+    return {"on_duty": on_duty, "on_leave": on_leave}
 
 
 
@@ -1823,10 +1820,12 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
 
     # الموظفون الرئيسيون مجمّعون بالقسم
     # OrderedDict is already imported at module level
-    main_emps = [e for e in on_duty if not _is_excluded(e)]
+main_emps = [e for e in on_duty if not _is_excluded(e)]
     by_dept = OrderedDict()
     for emp in main_emps:
-        by_dept.setdefault(emp.get("dept","Other"), []).append(emp)
+        # 🔴 التصحيح هنا: سحب القسم كنص صريح حتى لا تنهار أداة setdefault
+        dept_key = str(emp.get("dept", "Other")).strip()
+        by_dept.setdefault(dept_key, []).append(emp)
 
     # الأقسام التي تُعالج يدوياً — لا تُكرَّر في الـ loop أدناه
     MANUAL_DEPTS = {"supervisors"}
