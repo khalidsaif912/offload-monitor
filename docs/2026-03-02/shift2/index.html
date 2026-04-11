@@ -1158,10 +1158,18 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
   function fetchFlightInfo(flt, isoDate, cb){
     /* 1) بحث في الـ JSON المحلي أولاً */
     var local = LOCAL_FLIGHTS[flt.toUpperCase()];
-    if(local){ cb(local); }
 
-    /* 2) AirLabs */
-    if(!AIRLABS_KEY){ if(!local) cb(null); return; }
+    /* إذا وجدناها محلياً واكتملت البيانات → استخدمها مباشرة بدون شبكة */
+    if(local && local.dest && local.std){
+      cb(local);
+      return;   /* ← مهم: لا نكمل للشبكة */
+    }
+
+    /* 2) AirLabs — فقط إذا عندنا مفتاح */
+    if(!AIRLABS_KEY){
+      cb(local || null);   /* إرجاع المحلي حتى لو ناقص، أو null */
+      return;
+    }
     var url = 'https://airlabs.co/api/v9/schedules?api_key='+AIRLABS_KEY
             + '&flight_iata='+flt.toUpperCase()+'&dep_iata=MCT';
     if(isoDate) url += '&flight_date='+isoDate;
@@ -1234,16 +1242,20 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
   document.querySelectorAll('ul[data-flight-list]').forEach(function(ul){
     ul.querySelectorAll('li').forEach(setupFlightListItem);
     ul._flightList = true;
+    /* مراقبة إضافة li جديدة عبر "+ Add" */
+    new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        m.addedNodes.forEach(function(n){
+          if(n.tagName === 'LI') setupFlightListItem(n);
+        });
+      });
+    }).observe(ul, {childList:true});
   });
 
   var _origAddListItem = window.addListItem;
   window.addListItem = function(ulId){
     _origAddListItem(ulId);
-    var ul = document.getElementById(ulId);
-    if(ul && (ul._flightList || ul.dataset.flightList)){
-      var last = ul.lastElementChild;
-      if(last) setupFlightListItem(last);
-    }
+    /* لا حاجة لإعادة ربط — MutationObserver يفعل ذلك تلقائياً */
   };
 
   /* ════════════════════════════════════
@@ -1319,15 +1331,23 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
   /* قاموس SN → Name من الروستر المحمّل في الصفحة */
   function buildSnMap(){
     var map = {};
+
+    /* أولاً: من data-sn / data-name attributes (الأدق) */
+    document.querySelectorAll('[data-sn][data-name]').forEach(function(el){
+      var sn   = (el.dataset.sn   || '').replace(/[^0-9]/g,'');
+      var name = (el.dataset.name || '').trim();
+      if(sn && name) map[sn] = name;
+    });
+
+    /* ثانياً: من نص الـ li — صيغة: SN82592 Hamed Al Amri */
     document.querySelectorAll('[id^="ul-"] li, .mp-list li').forEach(function(li){
       var txt = li.innerText.replace(/ /g,' ').trim();
-      /* صيغة: SN82592 Hamed ... أو 82592 Hamed ... */
-      var m = txt.match(/^SN?\s*(\d{4,})\s+(.+)$/i);
-      if(!m) m = txt.match(/^(.+?)\s+(\d{4,})$/);
+      /* صيغة: SN82592 Hamed أو SN 82592 Hamed */
+      var m = txt.match(/^SN\s*(\d{4,})\s+(.+)$/i);
       if(m){
         var sn   = m[1].replace(/[^0-9]/g,'');
         var name = m[2].trim();
-        if(sn && name) map[sn] = name;
+        if(sn && name && !map[sn]) map[sn] = name;
       }
     });
     return map;
