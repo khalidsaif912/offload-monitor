@@ -544,36 +544,8 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
     li.style.outline = 'none';
     li.style.minWidth = '40px';
     li.innerHTML = '&nbsp;';
-    li.addEventListener('keydown', function(e){
-      /* Enter → أضف عنصراً جديداً */
-      if(e.key === 'Enter'){
-        e.preventDefault();
-        var newLi = document.createElement('li');
-        newLi.contentEditable = 'true';
-        newLi.style.outline = 'none';
-        newLi.innerHTML = '&nbsp;';
-        _attachLiEvents(newLi);
-        ul.insertBefore(newLi, li.nextSibling);
-        newLi.focus();
-        /* ضع cursor في النهاية */
-        var r = document.createRange();
-        r.selectNodeContents(newLi);
-        r.collapse(false);
-        var sel = window.getSelection();
-        sel.removeAllRanges();
-        sel.addRange(r);
-      }
-      /* Delete/Backspace على عنصر فارغ → احذفه */
-      if((e.key === 'Backspace' || e.key === 'Delete') && (li.innerText.trim()===''||li.innerText.trim()===' ')){
-        if(ul.children.length > 1){
-          e.preventDefault();
-          var prev = li.previousElementSibling || li.nextElementSibling;
-          ul.removeChild(li);
-          if(prev) prev.focus();
-        }
-      }
-    });
     ul.appendChild(li);
+    _attachLiEvents(li, ul);
     li.focus();
     var r = document.createRange();
     r.selectNodeContents(li);
@@ -581,11 +553,12 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
     var sel = window.getSelection();
     sel.removeAllRanges();
     sel.addRange(r);
-    _attachLiEvents(li);
   }
 
-  function _attachLiEvents(li){
-    var ul = li.parentElement;
+  function _attachLiEvents(li, ulRef){
+    /* ulRef مُمرَّر صراحةً لأن li قد لا تكون في DOM بعد */
+    function getUl(){ return ulRef || li.parentElement; }
+
     li.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){
         e.preventDefault();
@@ -593,8 +566,9 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
         newLi.contentEditable = 'true';
         newLi.style.outline = 'none';
         newLi.innerHTML = '&nbsp;';
-        _attachLiEvents(newLi);
-        li.parentElement.insertBefore(newLi, li.nextSibling);
+        var parentUl = li.parentElement;
+        parentUl.insertBefore(newLi, li.nextSibling);
+        _attachLiEvents(newLi, parentUl);
         newLi.focus();
         var r = document.createRange();
         r.selectNodeContents(newLi);
@@ -602,20 +576,23 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
         window.getSelection().removeAllRanges();
         window.getSelection().addRange(r);
       }
-      if((e.key === 'Backspace'||e.key==='Delete') && (li.innerText.trim()===''||li.innerText.trim()===' ')){
-        if(li.parentElement && li.parentElement.children.length > 1){
+      if((e.key==='Backspace'||e.key==='Delete') && (li.innerText.trim()===''||li.innerText.trim()===' ')){
+        var parentUl = li.parentElement;
+        if(parentUl && parentUl.children.length > 1){
           e.preventDefault();
           var prev = li.previousElementSibling || li.nextElementSibling;
-          li.parentElement.removeChild(li);
+          parentUl.removeChild(li);
           if(prev) prev.focus();
         }
       }
     });
-    /* إذا كانت القائمة من نوع flight-list → فعّل autocomplete الرحلة */
-    if(ul && (ul.dataset.flightList || ul.getAttribute('data-flight-list'))){
+
+    /* flight-list autocomplete */
+    var ul = getUl();
+    if(ul && ul.getAttribute('data-flight-list')){
       if(typeof setupFlightListItem === 'function') setupFlightListItem(li);
     }
-    /* إذا كانت قائمة MANPOWER → فعّل autocomplete الـ SN */
+    /* MANPOWER autocomplete */
     if(ul && ul.id && (
         ul.id.indexOf('ul-dept-')===0 ||
         ['ul-supervisors','ul-ctu','ul-inventory','ul-support',
@@ -625,7 +602,6 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
     }
   }
 
-  /* ربط الـ li الموجودة مسبقاً بالأحداث عند تحميل الصفحة */
   document.addEventListener('DOMContentLoaded', function(){
     var editableLists = [
       'ul-loadplan','ul-advloading','ul-csdrescreening',
@@ -636,13 +612,12 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
       var ul = document.getElementById(id);
       if(!ul) return;
       Array.from(ul.querySelectorAll('li[contenteditable]')).forEach(function(li){
-        _attachLiEvents(li);
+        _attachLiEvents(li, ul);
       });
     });
-    /* أيضاً أقسام الأقسام الديناميكية */
     document.querySelectorAll('ul[id^="ul-dept-"]').forEach(function(ul){
       Array.from(ul.querySelectorAll('li[contenteditable]')).forEach(function(li){
-        _attachLiEvents(li);
+        _attachLiEvents(li, ul);
       });
     });
   });
@@ -1243,8 +1218,7 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
   }
 
   document.querySelectorAll('ul[data-flight-list]').forEach(function(ul){
-    ul.querySelectorAll('li').forEach(setupFlightListItem);
-    /* مراقبة li جديدة تُضاف (عبر Enter أو "+ Add") */
+    ul.querySelectorAll('li').forEach(function(li){ setupFlightListItem(li); });
     new MutationObserver(function(muts){
       muts.forEach(function(m){
         m.addedNodes.forEach(function(n){
@@ -1253,16 +1227,6 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
       });
     }).observe(ul, {childList:true});
   });
-
-  var _origAddListItem = window.addListItem;
-  window.addListItem = function(ulId){
-    _origAddListItem(ulId);
-    var ul = document.getElementById(ulId);
-    if(ul && (ul._flightList || ul.dataset.flightList)){
-      var last = ul.lastElementChild;
-      if(last) setupFlightListItem(last);
-    }
-  };
 
   /* ════════════════════════════════════
      B) جدول الأوفلود
