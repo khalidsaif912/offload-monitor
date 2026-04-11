@@ -2067,7 +2067,9 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         "shift3": {"ar": "ليل",      "en": "Night",      "time": "21:00 – 06:00"},
     }
     sl            = shift_labels.get(shift, {"ar": shift, "en": shift, "time": ""})
-    shift_label   = f"{sl['en']} Shift — {sl['time']}"
+    sl_en         = sl["en"]
+    sl_time       = sl["time"]
+    shift_label   = f"{sl_en} Shift — {sl_time}"
     total_flights = len(flights)
     total_items   = sum(len(f.get("items", [])) for f in flights)
 
@@ -2202,8 +2204,8 @@ def build_shift_report(date_dir: str, shift: str) -> None:
                   </div>
                   <div class="hdr-meta" data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#ffffff; margin-top:7px; letter-spacing:0.2px;">
                     <span style="color:#ffffff;">Shift Date:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{date_display}</strong>
-                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;Time:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl['time']} LT</strong>
-                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl['en']} Shift</strong>
+                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;Time:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl_time} LT</strong>
+                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl_en} Shift</strong>
                   </div>
                 </td>
                 <td align="right" valign="middle" data-email-keep="1" class="hdr-right" style="padding-right:6px; background-color:#1e5799;">
