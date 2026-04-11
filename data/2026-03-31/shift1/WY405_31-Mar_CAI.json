@@ -1,7 +1,7 @@
 {
   "flight": "WY405",
   "date": "31-Mar",
-  "std_etd": "10:40",
+  "std_etd": "14:40",
   "destination": "CAI",
   "format": "A",
   "items": [
@@ -20,6 +20,6 @@
   "saved_at": "2026-03-31T14:18:00+04:00",
   "retro_enriched_at": "2026-04-03T16:39:30.152724+04:00",
   "retro_enriched_source": "AirLabs",
-  "enrichment_source": "Flightradar",
-  "last_enriched": "2026-04-11T12:56:09.417138+04:00"
+  "enrichment_source": "local_db",
+  "last_enriched": "2026-04-11T14:42:51.199689+04:00"
 }

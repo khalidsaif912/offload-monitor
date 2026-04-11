@@ -1,7 +1,7 @@
 {
   "flight": "WY683",
   "date": "01-APR",
-  "std_etd": "09:55",
+  "std_etd": "13:55",
   "destination": "RUH",
   "format": "A",
   "items": [
@@ -20,6 +20,6 @@
   "saved_at": "2026-04-01T14:26:00+04:00",
   "retro_enriched_at": "2026-04-03T16:39:30.152724+04:00",
   "retro_enriched_source": "AirLabs",
-  "enrichment_source": "Flightradar",
-  "last_enriched": "2026-04-11T12:56:14.022655+04:00"
+  "enrichment_source": "local_db",
+  "last_enriched": "2026-04-11T14:42:51.432180+04:00"
 }

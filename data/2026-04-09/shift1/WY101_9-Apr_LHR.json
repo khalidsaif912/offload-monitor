@@ -1,7 +1,7 @@
 {
   "flight": "WY101",
   "date": "9-Apr",
-  "std_etd": "10:15",
+  "std_etd": "14:15",
   "destination": "LHR",
   "format": "A",
   "items": [
@@ -19,5 +19,7 @@
   "email_time": "14:25",
   "saved_at": "2026-04-10T14:25:00+04:00",
   "storage_date_dir": "2026-04-09",
-  "storage_shift": "shift1"
+  "storage_shift": "shift1",
+  "enrichment_source": "local_db",
+  "last_enriched": "2026-04-11T14:42:53.327666+04:00"
 }
