@@ -1813,11 +1813,11 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
     # الموظفون الرئيسيون مجمّعون بالقسم
     # OrderedDict is already imported at module level
 main_emps = [e for e in on_duty if not _is_excluded(e)]
-    by_dept = OrderedDict()
-    for emp in main_emps:
-        # 🔴 التصحيح هنا: سحب القسم كنص صريح حتى لا تنهار أداة setdefault
-        dept_key = str(emp.get("dept", "Other")).strip()
-        by_dept.setdefault(dept_key, []).append(emp)
+by_dept = OrderedDict()
+for emp in main_emps:
+    # 🔴 التصحيح هنا: سحب القسم كنص صريح حتى لا تنهار أداة setdefault
+    dept_key = str(emp.get("dept", "Other")).strip()
+    by_dept.setdefault(dept_key, []).append(emp)
 
     # الأقسام التي تُعالج يدوياً — لا تُكرَّر في الـ loop أدناه
     MANUAL_DEPTS = {"supervisors"}
