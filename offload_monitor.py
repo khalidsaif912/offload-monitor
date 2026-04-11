@@ -1455,7 +1455,7 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
                 on_duty.append(item)
 
     print(f"  [roster-html] {date_dir}/{shift}: {len(on_duty)} on duty, {len(on_leave)} on leave")
-    all_depts = sorted({{e.get('dept','?') for e in on_duty + on_leave}})
+    all_depts = sorted({e.get('dept','?') for e in on_duty + on_leave})
     print(f"  [roster-debug] all depts seen: {all_depts}")
     return {{"on_duty": on_duty, "on_leave": on_leave}}
 
