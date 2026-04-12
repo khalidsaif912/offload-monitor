@@ -1922,11 +1922,40 @@ window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI",
     var li = isManpowerLiTarget(ev.target);
     if(li) setTimeout(function(){ handleManpowerInteractive(li, false); }, 30);
   });
+  function insertManpowerLineAfter(li) {
+    var ul = li && li.parentElement;
+    if(!ul) return null;
+    var newLi = createEditableListItem(ul);
+    ul.insertBefore(newLi, li.nextSibling);
+    _attachLiEvents(newLi);
+    focusEditableListItem(newLi, true);
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+    return newLi;
+  }
+
   document.addEventListener('keydown', function(ev) {
     var li = isManpowerLiTarget(ev.target);
     if(!li) return;
+
+    if(ev.key === 'Enter') {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+      closeSnDropdown();
+      insertManpowerLineAfter(li);
+      return;
+    }
+
+    if((ev.key === 'Backspace' || ev.key === 'Delete') && isEffectivelyEmptyManpowerLi(li)) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+      removeManpowerLiIfEmpty(li);
+      return;
+    }
+
     if(ev.key === 'Escape') { closeSnDropdown(); return; }
-  });
+  }, true);
   document.addEventListener('focusout', function(ev) {
     var li = isManpowerLiTarget(ev.target);
     if(!li) return;
