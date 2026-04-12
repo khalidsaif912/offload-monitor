@@ -2736,7 +2736,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 /* ── Config injected by Python build ── */
 window._AIRLABS_KEY        = '';          /* ضع مفتاح AirLabs هنا إذا توفّر */
 window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
-window._ALL_STAFF          = {all_staff_js};    /* كل موظفي الروستر {sn: name} */
+window._ALL_STAFF          = {all_staff_js};    /* كل موظفي الروستر */
 </script>
 
 <script>
