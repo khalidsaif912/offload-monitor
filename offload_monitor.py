@@ -2828,7 +2828,8 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
     }});
     /* إذا كانت القائمة من نوع flight-list → فعّل autocomplete الرحلة */
     if(ul && (ul.dataset.flightList || ul.getAttribute('data-flight-list'))){{
-      if(typeof setupFlightListItem === 'function') setupFlightListItem(li);
+      var isLP = !!(ul && ul.id === 'ul-loadplan');
+      if(typeof window.setupFlightListItem === 'function') window.setupFlightListItem(li, isLP);
     }}
     /* إذا كانت قائمة MANPOWER → فعّل autocomplete الـ SN */
     if(ul && ul.id && (
@@ -2836,7 +2837,7 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
         ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
          'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'].indexOf(ul.id)!==-1
     )){{
-      if(typeof setupManpowerLi === 'function') setupManpowerLi(li);
+      if(typeof window.setupManpowerLi === 'function') window.setupManpowerLi(li);
     }}
   }}
 
@@ -2844,7 +2845,7 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
   document.addEventListener('DOMContentLoaded', function(){{
     var editableLists = [
       'ul-loadplan','ul-advloading','ul-csdrescreening',
-      'ul-supervisors','ul-ctu','ul-support','ul-fd-export','ul-fd-import',
+      'ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
       'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'
     ];
     editableLists.forEach(function(id){{
@@ -3554,6 +3555,8 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
     if(ulLP)  ulLP.querySelectorAll('li').forEach(function(li)  {{ setupFlightListItem(li, true);  }});
     if(ulADV) ulADV.querySelectorAll('li').forEach(function(li) {{ setupFlightListItem(li, false); }});
   }}
+  window.setupFlightListItem = setupFlightListItem;
+  window.initFlightLists = initFlightLists;
   if(document.readyState === 'loading') {{
     document.addEventListener('DOMContentLoaded', initFlightLists);
   }} else {{
@@ -3909,6 +3912,14 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
       }}).observe(ul, {{childList:true}});
     }});
   }}
+  window.setupManpowerLi = setupManpowerLi;
+  window.initManpower = initManpower;
+  window.rebindSmartAutocomplete = function() {{
+    try {{ if(typeof window.initFlightLists === 'function') window.initFlightLists(); }} catch(ex) {{}}
+    try {{ if(typeof initTableCells === 'function') initTableCells(); }} catch(ex) {{}}
+    try {{ if(typeof window.initManpower === 'function') window.initManpower(); }} catch(ex) {{}}
+    try {{ if(typeof refreshSnMap === 'function') refreshSnMap(); }} catch(ex) {{}}
+  }};
   if(document.readyState === 'loading') {{
     document.addEventListener('DOMContentLoaded', initManpower);
   }} else {{
@@ -4011,6 +4022,11 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
           var nr = document.getElementById('nil-row');
           if(nr) nr.remove();
         }}
+
+        /* بعد استعادة innerHTML تُفقد listeners — أعد ربط autocomplete */
+        setTimeout(function(){{
+          try {{ if(typeof window.rebindSmartAutocomplete === 'function') window.rebindSmartAutocomplete(); }} catch(ex) {{}}
+        }}, 0);
       }};
     }});
   }}
