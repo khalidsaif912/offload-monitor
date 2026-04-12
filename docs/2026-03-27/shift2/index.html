@@ -1469,12 +1469,31 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
   /* ══════════════════════════════════════
      C) MANPOWER — SN Autocomplete
      ══════════════════════════════════════ */
+  function extractSnNamePair(text) {
+    var txt = String(text || '').replace(/ /g,' ').replace(/\s+/g,' ').trim();
+    if(!txt) return null;
+    var m = txt.match(/^(?:SN\s*)?(\d(3, 10))\s+(.+)$/i);
+    if(!m) return null;
+    var sn = String(m[1] || '').replace(/[^0-9]/g,'');
+    var name = String(m[2] || '').replace(/\s+/g,' ').trim();
+    if(!sn || !name) return null;
+    return { sn: sn, name: name };
+  }
+
+  function manpowerListSelector() {
+    return MP_IDS.map(function(id) { return '#' + id; }).concat(['ul[id^="ul-dept-"]']).join(',');
+  }
+
   function buildSnMap() {
     var map = {};
     document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {
       var sn   = String(el.dataset.sn || '').replace(/[^0-9]/g,'');
       var name = String(el.dataset.name || '').replace(/\s+/g,' ').trim();
       if(sn && name && !map[sn]) map[sn] = name;
+    });
+    document.querySelectorAll(manpowerListSelector() + ' li').forEach(function(li) {
+      var pair = extractSnNamePair(cleanEditableText(li));
+      if(pair && !map[pair.sn]) map[pair.sn] = pair.name;
     });
     return map;
   }
@@ -1556,9 +1575,19 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
     return matches.slice(0, 10);
   }
 
+  function renderSnSelection(li, item) {
+    if(!li || !item) return;
+    li.innerHTML = '<span data-sn="' + escapeHtml(item.sn) + '" data-name="' + escapeHtml(item.name) + '" '
+                 + 'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
+                 + '<span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN' + escapeHtml(item.sn) + '</span>'
+                 + '<span style="color:#1b1f2a;">' + escapeHtml(item.name) + '</span>'
+                 + '</span>';
+  }
+
   function applySnSelection(li, item) {
     if(!li || !item) return;
-    li.innerText = 'SN' + item.sn + ' ' + item.name;
+    renderSnSelection(li, item);
+    refreshSnMap();
     closeSnDropdown();
     setCursorEnd(li);
     if(typeof triggerAutosave === 'function') triggerAutosave();
@@ -1675,6 +1704,17 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
     });
 
     li.addEventListener('blur', function() {
+      var typed = extractTypedSn(getManpowerText(li));
+      var matches = collectSnMatches(typed);
+      if(typed && matches.length === 1 && matches[0].sn === typed) {
+        applySnSelection(li, matches[0]);
+      } else {
+        var pair = extractSnNamePair(getManpowerText(li));
+        if(pair) {
+          renderSnSelection(li, pair);
+          refreshSnMap();
+        }
+      }
       setTimeout(closeSnDropdown, 200);
     });
   }
