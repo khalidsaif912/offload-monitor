@@ -227,6 +227,7 @@
     <table width="100%" cellpadding="0" cellspacing="0" border="0"
            style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; margin-top:12px; margin-bottom:14px;">
       <tr><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:40px;">ITEM</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">DATE</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">FLIGHT</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">STD/ETD</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:60px;">DEST</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:90px;">Email Received Time</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Physical Cargo Received from Ramp</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:90px;">Trolley/ ULD Number</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Process Completed in CMS</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Pieces Verification</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Reason</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; ">Remarks/Additional Information</td></tr>
+      <tbody id="offload-tbody">
       
       <tr id="nil-row">
         <td colspan="12" style="padding:10px 10px; border:1px solid #d0d9ee;
@@ -239,11 +240,11 @@
       </tr>
       <tr>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;"><strong>1</strong></td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="date">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="flight">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="std">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="dest">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="email">&nbsp;</td>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
@@ -253,11 +254,11 @@
       </tr>
       <tr>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;"><strong>2</strong></td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="date">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="flight">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="std">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="dest">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="email">&nbsp;</td>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
@@ -267,11 +268,11 @@
       </tr>
       <tr>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;"><strong>3</strong></td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="date">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="flight">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="std">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="dest">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="email">&nbsp;</td>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
@@ -279,6 +280,7 @@
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
         <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
       </tr>
+      </tbody>
     </table></div>
     <div style="border-top:1px solid #e4e9f5; margin-top:16px;"></div>
   </td></tr>
@@ -1326,26 +1328,31 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
     }
 
     if(col === 'flight') {
-      td.addEventListener('input', function() {
+      var _lastFlt = '';
+      function onFlightInput() {
         var flt = forceUpper(td).replace(/\s+/g,'');
+        if(flt === _lastFlt) return;   /* لا تغيير حقيقي */
+        _lastFlt = flt;
         if(!FLT_RE.test(flt)) { removeGhost(td); return; }
         var row      = td.closest('tr');
         var dateCell = row && row.querySelector('[data-col="date"]');
         var stdCell  = row && row.querySelector('[data-col="std"]');
         var destCell = row && row.querySelector('[data-col="dest"]');
-        var isoDate  = todayISO();
+        var emailCell= row && row.querySelector('[data-col="email"]');
+        /* تعبئة التاريخ تلقائياً إذا كان فارغاً */
         if(dateCell) {
-          var dv = dateCell.innerText.replace(/ /g,'').trim().toUpperCase();
+          var dv = dateCell.innerText.replace(/ /g,'').trim();
+          if(!dv) { dateCell.innerText = todayFull(); dv = todayFull(); }
+        }
+        var isoDate = todayISO();
+        if(dateCell) {
+          var dv2 = (dateCell.innerText||'').replace(/ /g,'').trim().toUpperCase();
           var mons = {JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
-          var dm = dv.match(/^(\d{1,2})([A-Z]{3})(\d{2,4})?$/);
+          var dm = dv2.match(/^(\d{1,2})([A-Z]{3})(\d{2,4})?$/);
           if(dm) {
             var yr = dm[3] ? (dm[3].length===2 ? 2000+parseInt(dm[3]) : parseInt(dm[3])) : new Date().getFullYear();
             isoDate = yr+'-'+(mons[dm[2]]||1).toString().padStart(2,'0')+'-'+dm[1].padStart(2,'0');
           }
-        }
-        /* تعبئة التاريخ تلقائياً إذا كان فارغاً */
-        if(dateCell && !dateCell.innerText.replace(/ /g,'').trim()) {
-          dateCell.innerText = todayFull();
         }
         showGhost(td, 'fetching '+flt+'…');
         fetchFlightInfo(flt, isoDate, function(info) {
@@ -1353,25 +1360,29 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
           if(!info) return;
           if(stdCell) {
             var cur = stdCell.innerText.replace(/ /g,'').trim();
-            if(!cur) {
+            if(!cur || cur === ' ') {
               var std = info.std||'', etd = info.etd||'';
-              stdCell.innerText = (std && etd && std!==etd) ? std+'|'+etd : (std||etd||'');
+              stdCell.innerText = (std && etd && std!==etd) ? std+' | '+etd : (std||etd||'');
             }
           }
-          if(destCell && !destCell.innerText.replace(/ /g,'').trim() && info.dest) {
-            destCell.innerText = info.dest;
+          if(destCell) {
+            var dc = destCell.innerText.replace(/ /g,'').trim();
+            if((!dc) && info.dest) destCell.innerText = info.dest;
           }
           if(typeof triggerAutosave==='function') triggerAutosave();
         });
-      });
+      }
+      td.addEventListener('input',  onFlightInput);
+      td.addEventListener('keyup',  onFlightInput);  /* يشتغل عند paste أيضاً */
+      td.addEventListener('paste', function() { setTimeout(onFlightInput, 50); });
     }
   }
 
   function initTableCells() {
     document.querySelectorAll('[data-col]').forEach(setupTableCell);
     /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
-    var offloadTable = document.querySelector('.offload-scroll table tbody');
-    if(offloadTable) {
+    var tbody = document.getElementById('offload-tbody');
+    if(tbody) {
       new MutationObserver(function(muts) {
         muts.forEach(function(m) {
           m.addedNodes.forEach(function(n) {
@@ -1380,7 +1391,7 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
             }
           });
         });
-      }).observe(offloadTable, {childList:true});
+      }).observe(tbody, {childList:true});
     }
   }
   if(document.readyState === 'loading') {
