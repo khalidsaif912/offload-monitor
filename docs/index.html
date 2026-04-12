@@ -2240,6 +2240,7 @@
 <script>
 /* ── Manpower popup logic ── */
 var ROSTER_DAILY_BASE = "https://khalidsaif912.github.io/roster-site/date/";
+var IMPORT_ROSTER_RAW_BASE = "https://raw.githubusercontent.com/khalidsaif912/roster-site/main/docs/import/";
 var LEAVE_LABELS = ["annual leave","sick leave","emergency leave","off day","training"];
 var SHIFT_MAP = {"shift1":"Morning","shift2":"Afternoon","shift3":"Night"};
 var EXCLUDED_DEPTS = ["officers"];
@@ -2301,6 +2302,67 @@ function parseRosterHtml(html, shiftKey) {
     return onDuty;
 }
 
+function parseImportFlightDispatchText(html, shiftKey) {
+    var target = normShift(SHIFT_MAP[shiftKey] || shiftKey || "Morning");
+    var knownDepts = {
+        "documentation": "Documentation",
+        "flight dispatch (export)": "Flight Dispatch (Export)",
+        "flight dispatch (import)": "Flight Dispatch (Import)",
+        "import checkers": "Import Checkers",
+        "import operators": "Import Operators",
+        "release control": "Release Control",
+        "supervisors": "Supervisors"
+    };
+    var result = {
+        "Flight Dispatch (Export)": [],
+        "Flight Dispatch (Import)": []
+    };
+    var currentDept = "";
+    var currentShift = "";
+
+    (html || "")
+        .split(/?
+/)
+        .map(function(line) { return (line || "").replace(/\s+/g, " ").trim(); })
+        .filter(Boolean)
+        .forEach(function(line) {
+            var low = normShift(line);
+
+            if (knownDepts[low]) {
+                currentDept = low;
+                currentShift = "";
+                return;
+            }
+
+            if (!currentDept) return;
+
+            if (low.indexOf("morning") !== -1) { currentShift = "morning"; return; }
+            if (low.indexOf("afternoon") !== -1) { currentShift = "afternoon"; return; }
+            if (low.indexOf("night") !== -1) { currentShift = "night"; return; }
+            if (low.indexOf("off day") !== -1) { currentShift = "off day"; return; }
+            if (low.indexOf("annual leave") !== -1) { currentShift = "annual leave"; return; }
+            if (low.indexOf("sick leave") !== -1) { currentShift = "sick leave"; return; }
+            if (low.indexOf("emergency leave") !== -1) { currentShift = "emergency leave"; return; }
+            if (low.indexOf("training") !== -1) { currentShift = "training"; return; }
+
+            if (low.indexOf("total ") === 0) return;
+            if (low.indexOf("view full roster") === 0 || low.indexOf("last updated:") === 0) return;
+            if (currentDept !== "flight dispatch (export)" && currentDept !== "flight dispatch (import)") return;
+            if (currentShift !== target) return;
+
+            var mx = line.match(/^(.+?)\s*[·•\-–]\s*(\d(3, 6)).*$/);
+            if (!mx) return;
+
+            result[knownDepts[currentDept]].push({
+                name: mx[1].trim(),
+                sn: mx[2].trim(),
+                dept: knownDepts[currentDept]
+            });
+        });
+
+    return result;
+}
+
 function buildEmpRow(name, sn) {
     return '<div class="mp-emp"><span class="emp-sn">' + sn + '</span><span class="emp-name">' + name + '</span></div>';
 }
@@ -2310,52 +2372,64 @@ function loadManpower() {
     el.innerHTML = '<div class="mp-loading">جاري التحميل...</div>';
 
     var dateStr = getTodayDate();
-    var url = ROSTER_DAILY_BASE + dateStr + "/?t=" + Date.now();
+    var exportUrl = ROSTER_DAILY_BASE + dateStr + "/?t=" + Date.now();
+    var importUrl = IMPORT_ROSTER_RAW_BASE + dateStr + "/index.html?t=" + Date.now();
 
-    fetch(url)
-        .then(function(r) {
-            if (!r.ok) throw new Error("HTTP " + r.status);
+    Promise.allSettled([
+        fetch(exportUrl).then(function(r) {
+            if (!r.ok) throw new Error("Export HTTP " + r.status);
+            return r.text();
+        }),
+        fetch(importUrl).then(function(r) {
+            if (!r.ok) throw new Error("Import HTTP " + r.status);
             return r.text();
         })
-        .then(function(htmlText) {
-            var shift = getCurrentShift();
-            var allEmps = parseRosterHtml(htmlText, shift);
+    ])
+    .then(function(results) {
+        var shift = getCurrentShift();
+        var exportHtml = results[0].status === "fulfilled" ? results[0].value : "";
+        var importHtml = results[1].status === "fulfilled" ? results[1].value : "";
 
-            var inventoryEmps = allEmps.filter(function(e) { return INVENTORY_SNS.indexOf(e.sn) !== -1; });
-            var supportEmps   = allEmps.filter(function(e) { return SUPPORT_SNS.indexOf(e.sn) !== -1 || (e.name + " " + e.dept).toLowerCase().indexOf("support") !== -1; });
-            var specialSNs = INVENTORY_SNS.concat(SUPPORT_SNS);
-            var mainEmps = allEmps.filter(function(e) {
-                return specialSNs.indexOf(e.sn) === -1 && (e.name + " " + e.dept).toLowerCase().indexOf("support") === -1;
-            });
-
-            var grouped = {};
-            mainEmps.forEach(function(e) {
-                if (!grouped[e.dept]) grouped[e.dept] = [];
-                grouped[e.dept].push(e);
-            });
-            mpData = grouped;
-
-            var html = "";
-            for (var dept in grouped) {
-                html += '<div class="mp-dept">' + dept + '</div>';
-                grouped[dept].forEach(function(e) { html += buildEmpRow(e.name, e.sn); });
-            }
-
-            if (inventoryEmps.length) {
-                html += '<div class="mp-dept">Inventory</div>';
-                inventoryEmps.forEach(function(e) { html += buildEmpRow(e.name, e.sn); });
-            }
-
-            if (supportEmps.length) {
-                html += '<div class="mp-dept">C) Support Team</div>';
-                supportEmps.forEach(function(e) { html += buildEmpRow(e.name, e.sn); });
-            }
-
-            el.innerHTML = html || '<div class="mp-loading">لا توجد بيانات للمناوبة الحالية</div>';
-        })
-        .catch(function(err) {
-            el.innerHTML = '<div class="mp-loading">خطأ في تحميل الروستر: ' + err.message + '</div>';
+        var allEmps = exportHtml ? parseRosterHtml(exportHtml, shift) : [];
+        var inventoryEmps = allEmps.filter(function(e) { return INVENTORY_SNS.indexOf(e.sn) !== -1; });
+        var supportEmps   = allEmps.filter(function(e) { return SUPPORT_SNS.indexOf(e.sn) !== -1 || (e.name + " " + e.dept).toLowerCase().indexOf("support") !== -1; });
+        var specialSNs = INVENTORY_SNS.concat(SUPPORT_SNS);
+        var mainEmps = allEmps.filter(function(e) {
+            return specialSNs.indexOf(e.sn) === -1 && (e.name + " " + e.dept).toLowerCase().indexOf("support") === -1;
         });
+
+        var grouped = {};
+        mainEmps.forEach(function(e) {
+            if (!grouped[e.dept]) grouped[e.dept] = [];
+            grouped[e.dept].push(e);
+        });
+
+        if (inventoryEmps.length) grouped["Inventory"] = inventoryEmps.slice();
+        if (supportEmps.length) grouped["C) Support Team"] = supportEmps.slice();
+
+        if (importHtml) {
+            var fdGroups = parseImportFlightDispatchText(importHtml, shift);
+            if (fdGroups["Flight Dispatch (Export)"].length) {
+                grouped["Flight Dispatch (Export)"] = fdGroups["Flight Dispatch (Export)"].slice();
+            }
+            if (fdGroups["Flight Dispatch (Import)"].length) {
+                grouped["Flight Dispatch (Import)"] = fdGroups["Flight Dispatch (Import)"].slice();
+            }
+        }
+
+        mpData = grouped;
+
+        var html = "";
+        for (var dept in grouped) {
+            html += '<div class="mp-dept">' + dept + '</div>';
+            grouped[dept].forEach(function(e) { html += buildEmpRow(e.name, e.sn); });
+        }
+
+        el.innerHTML = html || '<div class="mp-loading">لا توجد بيانات للمناوبة الحالية</div>';
+    })
+    .catch(function(err) {
+        el.innerHTML = '<div class="mp-loading">خطأ في تحميل الروستر: ' + err.message + '</div>';
+    });
 }
 
 
