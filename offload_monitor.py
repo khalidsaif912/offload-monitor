@@ -1894,11 +1894,11 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             data_rows += f"""
       <tr>
         <td {_empty_td}><strong>{i}</strong></td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
+        <td {_empty_td} contenteditable="true" data-col="date">&nbsp;</td>
+        <td {_empty_td} contenteditable="true" data-col="flight">&nbsp;</td>
+        <td {_empty_td} contenteditable="true" data-col="std">&nbsp;</td>
+        <td {_empty_td} contenteditable="true" data-col="dest">&nbsp;</td>
+        <td {_empty_td} contenteditable="true" data-col="email">&nbsp;</td>
         <td {_empty_td} contenteditable="true">&nbsp;</td>
         <td {_empty_td} contenteditable="true">&nbsp;</td>
         <td {_empty_td} contenteditable="true">&nbsp;</td>
@@ -1911,7 +1911,9 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     <table width="100%" cellpadding="0" cellspacing="0" border="0"
            style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; margin-top:12px; margin-bottom:14px;">
       {col_headers}
+      <tbody id="offload-tbody">
       {data_rows}
+      </tbody>
     </table>"""
 
     return f'<div class="offload-scroll" style="margin-top:12px;">{table_html}</div>'
@@ -3532,26 +3534,31 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
     }}
 
     if(col === 'flight') {{
-      td.addEventListener('input', function() {{
+      var _lastFlt = '';
+      function onFlightInput() {{
         var flt = forceUpper(td).replace(/\s+/g,'');
+        if(flt === _lastFlt) return;   /* لا تغيير حقيقي */
+        _lastFlt = flt;
         if(!FLT_RE.test(flt)) {{ removeGhost(td); return; }}
         var row      = td.closest('tr');
         var dateCell = row && row.querySelector('[data-col="date"]');
         var stdCell  = row && row.querySelector('[data-col="std"]');
         var destCell = row && row.querySelector('[data-col="dest"]');
-        var isoDate  = todayISO();
+        var emailCell= row && row.querySelector('[data-col="email"]');
+        /* تعبئة التاريخ تلقائياً إذا كان فارغاً */
         if(dateCell) {{
-          var dv = dateCell.innerText.replace(/\u00a0/g,'').trim().toUpperCase();
+          var dv = dateCell.innerText.replace(/\u00a0/g,'').trim();
+          if(!dv) {{ dateCell.innerText = todayFull(); dv = todayFull(); }}
+        }}
+        var isoDate = todayISO();
+        if(dateCell) {{
+          var dv2 = (dateCell.innerText||'').replace(/\u00a0/g,'').trim().toUpperCase();
           var mons = {{JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12}};
-          var dm = dv.match(/^(\d{{1,2}})([A-Z]{{3}})(\d{{2,4}})?$/);
+          var dm = dv2.match(/^(\d{{1,2}})([A-Z]{{3}})(\d{{2,4}})?$/);
           if(dm) {{
             var yr = dm[3] ? (dm[3].length===2 ? 2000+parseInt(dm[3]) : parseInt(dm[3])) : new Date().getFullYear();
             isoDate = yr+'-'+(mons[dm[2]]||1).toString().padStart(2,'0')+'-'+dm[1].padStart(2,'0');
           }}
-        }}
-        /* تعبئة التاريخ تلقائياً إذا كان فارغاً */
-        if(dateCell && !dateCell.innerText.replace(/\u00a0/g,'').trim()) {{
-          dateCell.innerText = todayFull();
         }}
         showGhost(td, 'fetching '+flt+'\u2026');
         fetchFlightInfo(flt, isoDate, function(info) {{
@@ -3559,25 +3566,29 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
           if(!info) return;
           if(stdCell) {{
             var cur = stdCell.innerText.replace(/\u00a0/g,'').trim();
-            if(!cur) {{
+            if(!cur || cur === '\u00a0') {{
               var std = info.std||'', etd = info.etd||'';
-              stdCell.innerText = (std && etd && std!==etd) ? std+'|'+etd : (std||etd||'');
+              stdCell.innerText = (std && etd && std!==etd) ? std+'\u202f|\u202f'+etd : (std||etd||'');
             }}
           }}
-          if(destCell && !destCell.innerText.replace(/\u00a0/g,'').trim() && info.dest) {{
-            destCell.innerText = info.dest;
+          if(destCell) {{
+            var dc = destCell.innerText.replace(/\u00a0/g,'').trim();
+            if((!dc) && info.dest) destCell.innerText = info.dest;
           }}
           if(typeof triggerAutosave==='function') triggerAutosave();
         }});
-      }});
+      }}
+      td.addEventListener('input',  onFlightInput);
+      td.addEventListener('keyup',  onFlightInput);  /* يشتغل عند paste أيضاً */
+      td.addEventListener('paste', function() {{ setTimeout(onFlightInput, 50); }});
     }}
   }}
 
   function initTableCells() {{
     document.querySelectorAll('[data-col]').forEach(setupTableCell);
     /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
-    var offloadTable = document.querySelector('.offload-scroll table tbody');
-    if(offloadTable) {{
+    var tbody = document.getElementById('offload-tbody');
+    if(tbody) {{
       new MutationObserver(function(muts) {{
         muts.forEach(function(m) {{
           m.addedNodes.forEach(function(n) {{
@@ -3586,7 +3597,7 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
             }}
           }});
         }});
-      }}).observe(offloadTable, {{childList:true}});
+      }}).observe(tbody, {{childList:true}});
     }}
   }}
   if(document.readyState === 'loading') {{
