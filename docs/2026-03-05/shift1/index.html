@@ -549,39 +549,31 @@ window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI",
     var ul = document.getElementById(ulId);
     if(!ul) return;
     var li = createEditableListItem(ul);
-    li.addEventListener('keydown', function(e){
-      /* Enter → أضف عنصراً جديداً */
-      if(e.key === 'Enter'){
-        e.preventDefault();
-        var newLi = createEditableListItem(ul);
-        _attachLiEvents(newLi);
-        ul.insertBefore(newLi, li.nextSibling);
-        focusEditableListItem(newLi, true);
-      }
-      /* Delete/Backspace على عنصر فارغ → احذفه */
-      if((e.key === 'Backspace' || e.key === 'Delete') && (li.innerText.trim()===''||li.innerText.trim()===' ')){
-        if(ul.children.length > 1){
-          e.preventDefault();
-          var prev = li.previousElementSibling || li.nextElementSibling;
-          ul.removeChild(li);
-          if(prev) prev.focus();
-        }
-      }
-    });
     ul.appendChild(li);
-    focusEditableListItem(li, isManpowerListUl(ul));
     _attachLiEvents(li);
+    focusEditableListItem(li, isManpowerListUl(ul));
+    if(typeof triggerAutosave === 'function') triggerAutosave();
   }
 
   function _attachLiEvents(li){
+    if(!li || li._baseLiSetup) return;
+    li._baseLiSetup = true;
     var ul = li.parentElement;
+    if(!ul) return;
+
+    if(isManpowerListUl(ul)){
+      if(typeof window.setupManpowerLi === 'function') window.setupManpowerLi(li);
+      return;
+    }
+
     li.addEventListener('keydown', function(e){
       if(e.key === 'Enter'){
         e.preventDefault();
         var newLi = createEditableListItem(li.parentElement);
-        _attachLiEvents(newLi);
         li.parentElement.insertBefore(newLi, li.nextSibling);
-        focusEditableListItem(newLi, isManpowerListUl(li.parentElement));
+        _attachLiEvents(newLi);
+        focusEditableListItem(newLi, false);
+        return;
       }
       if((e.key === 'Backspace'||e.key==='Delete') && (li.innerText.trim()===''||li.innerText.trim()===' ')){
         if(li.parentElement && li.parentElement.children.length > 1){
@@ -592,18 +584,10 @@ window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI",
         }
       }
     });
-    /* إذا كانت القائمة من نوع flight-list → فعّل autocomplete الرحلة */
+
     if(ul && (ul.dataset.flightList || ul.getAttribute('data-flight-list'))){
       var isLP = !!(ul && ul.id === 'ul-loadplan');
       if(typeof window.setupFlightListItem === 'function') window.setupFlightListItem(li, isLP);
-    }
-    /* إذا كانت قائمة MANPOWER → فعّل autocomplete الـ SN */
-    if(ul && ul.id && (
-        ul.id.indexOf('ul-dept-')===0 ||
-        ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
-         'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'].indexOf(ul.id)!==-1
-    )){
-      if(typeof window.setupManpowerLi === 'function') window.setupManpowerLi(li);
     }
   }
 
@@ -1111,6 +1095,27 @@ window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI",
       .replace(/^[\s\-–—]+/, '')
       .replace(/\s+/g,' ')
       .trim();
+  }
+
+  function isEffectivelyEmptyManpowerLi(li) {
+    if(!li) return true;
+    var txt = getManpowerText ? getManpowerText(li) : cleanEditableText(li);
+    txt = String(txt || '').replace(/​/g, '').replace(/ /g, ' ').trim();
+    return !txt;
+  }
+
+  function removeManpowerLiIfEmpty(li) {
+    if(!li || !li.parentElement) return false;
+    if(!isEffectivelyEmptyManpowerLi(li)) return false;
+    var ul = li.parentElement;
+    if(ul.children.length <= 1) return false;
+    var prev = li.previousElementSibling;
+    var next = li.nextElementSibling;
+    ul.removeChild(li);
+    var target = prev || next;
+    if(target) focusEditableListItem(target, true);
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+    return true;
   }
 
   function normalizeFlightTyped(text) {
@@ -1729,7 +1734,7 @@ window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI",
   });
 
   function setupManpowerLi(li) {
-    if(li._mpSetup) return;
+    if(!li || li._mpSetup) return;
     li._mpSetup = true;
 
     function updateManpowerSuggestion() {
@@ -1751,10 +1756,6 @@ window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI",
       if(isFormattedManpowerEntry(li)) closeSnDropdown();
       else updateManpowerSuggestion();
     });
-    li.addEventListener('focusin', function() {
-      refreshSnMap();
-      if(isFormattedManpowerEntry(li)) closeSnDropdown();
-    });
     li.addEventListener('click', function() {
       refreshSnMap();
       if(isFormattedManpowerEntry(li)) closeSnDropdown();
@@ -1763,8 +1764,8 @@ window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI",
     li.addEventListener('input', function() {
       updateManpowerSuggestion();
     });
-    li.addEventListener('keyup', function() {
-      updateManpowerSuggestion();
+    li.addEventListener('keyup', function(ev) {
+      if(!['Enter','Tab','Escape'].includes(ev.key)) updateManpowerSuggestion();
     });
     li.addEventListener('paste', function(ev) {
       if(isFormattedManpowerEntry(li)) {
@@ -1781,15 +1782,18 @@ window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI",
     });
 
     li.addEventListener('keydown', function(ev) {
-      var isDigitKey = /^\d$/.test(ev.key || '');
-
-      if(isFormattedManpowerEntry(li) && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
-        if(ev.key === 'Backspace' || ev.key === 'Delete') {
-          ev.preventDefault();
-          replaceManpowerText(li, '');
-          closeSnDropdown();
-          return;
-        }
+      if(ev.key === 'Enter') {
+        ev.preventDefault();
+        ev.stopPropagation();
+        closeSnDropdown();
+        var ul = li.parentElement;
+        if(!ul) return;
+        var newLi = createEditableListItem(ul);
+        ul.insertBefore(newLi, li.nextSibling);
+        _attachLiEvents(newLi);
+        focusEditableListItem(newLi, true);
+        if(typeof triggerAutosave === 'function') triggerAutosave();
+        return;
       }
 
       if(ev.key === 'Escape') {
@@ -1797,31 +1801,29 @@ window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI",
         return;
       }
 
-      if(isFormattedManpowerEntry(li)) return;
-
       if(ev.key === 'Tab') {
-        var typed = extractTypedSn(getManpowerText(li));
-        var matches = collectSnMatches(typed);
-        if(matches.length) {
+        if(isFormattedManpowerEntry(li)) return;
+        var typedTab = extractTypedSn(getManpowerText(li));
+        var matchesTab = collectSnMatches(typedTab);
+        if(matchesTab.length) {
           ev.preventDefault();
-          applySnSelection(li, matches[0]);
+          applySnSelection(li, matchesTab[0]);
         }
         return;
       }
-      if(ev.key === 'Enter') {
-        ev.preventDefault();
-        closeSnDropdown();
-        var ul = li.parentElement;
-        if(!ul) return;
-        var newLi = document.createElement('li');
-        newLi.contentEditable = 'true';
-        newLi.style.outline = 'none';
-        newLi.innerHTML = '&nbsp;';
-        ul.insertBefore(newLi, li.nextSibling);
-        setupManpowerLi(newLi);
-        newLi.focus();
-        setCursorEnd(newLi);
-        return;
+
+      if((ev.key === 'Backspace' || ev.key === 'Delete')) {
+        if(isFormattedManpowerEntry(li)) {
+          ev.preventDefault();
+          replaceManpowerText(li, '');
+          closeSnDropdown();
+          return;
+        }
+        if(isEffectivelyEmptyManpowerLi(li)) {
+          ev.preventDefault();
+          removeManpowerLiIfEmpty(li);
+          return;
+        }
       }
     });
 
@@ -1928,28 +1930,6 @@ window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI",
     var li = isManpowerLiTarget(ev.target);
     if(!li) return;
     if(ev.key === 'Escape') { closeSnDropdown(); return; }
-    if(isFormattedManpowerEntry(li)) return;
-    if(ev.key === 'Tab') {
-      var typed = extractTypedSn(getManpowerText(li));
-      if(!typed) return;
-      var matches = collectSnMatches(typed);
-      if(matches.length) {
-        ev.preventDefault();
-        applySnSelection(li, matches[0]);
-      }
-      return;
-    }
-    if(ev.key === 'Enter') {
-      ev.preventDefault();
-      closeSnDropdown();
-      var ul = li.parentElement;
-      if(!ul) return;
-      var newLi = createEditableListItem(ul);
-      ul.insertBefore(newLi, li.nextSibling);
-      setupManpowerLi(newLi);
-      focusEditableListItem(newLi, true);
-      return;
-    }
   });
   document.addEventListener('focusout', function(ev) {
     var li = isManpowerLiTarget(ev.target);
