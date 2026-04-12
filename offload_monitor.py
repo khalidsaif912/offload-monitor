@@ -2023,7 +2023,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
     def _fmt_emp_row(name, sn):
         sn_display = f"SN{sn}" if sn else ""
         return (
-            f'<li contenteditable="true" style="outline:none;">'
+            f'<li contenteditable="true" style="outline:none;list-style:none;">'
             f'<span data-sn="{sn}" data-name="{name}" '
             f'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
             f'<span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">{sn_display}</span>'
@@ -2732,7 +2732,6 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 window._AIRLABS_KEY        = '';          /* ضع مفتاح AirLabs هنا إذا توفّر */
 window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
 window._ALL_STAFF          = {all_staff_js};
-window._MANPOWER_SOURCE    = window._ALL_STAFF;
 </script>
 
 <script>
@@ -3724,6 +3723,7 @@ window._MANPOWER_SOURCE    = window._ALL_STAFF;
 
   function buildSnMap() {{
     var map = {{}};
+    /* 1) كل موظفي الروستر المحقونين من Python */
     try {{
       var allStaff = window._MANPOWER_SOURCE || window._ALL_STAFF || {{}};
       Object.keys(allStaff).forEach(function(sn) {{
@@ -3732,11 +3732,13 @@ window._MANPOWER_SOURCE    = window._ALL_STAFF;
         if(snClean && name && !map[snClean]) map[snClean] = name;
       }});
     }} catch(ex) {{}}
+    /* 2) الموظفون الظاهرون في DOM */
     document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {{
       var sn   = String(el.dataset.sn || '').replace(/[^0-9]/g,'');
       var name = String(el.dataset.name || '').replace(/\s+/g,' ').trim();
       if(sn && name && !map[sn]) map[sn] = name;
     }});
+    /* 3) نص مكتوب يدوياً */
     document.querySelectorAll(manpowerListSelector() + ' li').forEach(function(li) {{
       var pair = extractSnNamePair(cleanEditableText(li));
       if(pair && !map[pair.sn]) map[pair.sn] = pair.name;
@@ -3763,6 +3765,15 @@ window._MANPOWER_SOURCE    = window._ALL_STAFF;
     return String(text || '').replace(/[&<>\"]/g, function(ch) {{
       return ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : '&quot;';
     }});
+  }}
+
+  function normalizeManpowerEditable(li) {{
+    /* لا نُبدّل شيئاً — التنسيق (span data-sn) يجب أن يبقى كما هو.
+       نُنظّف فقط إذا كان محتوى الـ li نصاً خاماً بدون span منسق. */
+    if(!li) return;
+    var hasFormatted = li.querySelector && li.querySelector('[data-sn][data-name]');
+    if(hasFormatted) return;   /* ← منسق → لا تلمسه */
+    /* نص خام فقط — لا نحتاج تنسيقاً هنا */
   }}
 
   function getManpowerText(li) {{
@@ -3905,55 +3916,6 @@ window._MANPOWER_SOURCE    = window._ALL_STAFF;
     snDropdownTarget = li;
   }}
 
-  function createEmptyManpowerLi() {{
-    var li = document.createElement('li');
-    li.contentEditable = 'true';
-    li.style.outline = 'none';
-    li.innerHTML = '&nbsp;';
-    if(typeof _attachLiEvents === 'function') _attachLiEvents(li);
-    if(typeof setupManpowerLi === 'function') setupManpowerLi(li);
-    return li;
-  }}
-
-  function getActiveEditableLi() {{
-    var sel = window.getSelection ? window.getSelection() : null;
-    if(sel && sel.anchorNode) {{
-      var node = sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
-      if(node && node.closest) {{
-        var li = node.closest('li[contenteditable]');
-        if(li) return li;
-      }}
-    }}
-    var active = document.activeElement;
-    if(active && active.closest) return active.closest('li[contenteditable]');
-    return null;
-  }}
-
-  function resolveManpowerLi(node) {{
-    var li = null;
-    if(node && node.closest) li = node.closest('li[contenteditable]');
-    if(!li) li = getActiveEditableLi();
-    if(!li || !li.parentElement || !li.parentElement.id) return null;
-    var ul = li.parentElement;
-    var id = ul.id || '';
-    if(id.indexOf('ul-dept-') === 0) return li;
-    if(MP_IDS.indexOf(id) !== -1) return li;
-    return null;
-  }}
-
-  function openSuggestionForLi(li) {{
-    if(!li) return;
-    refreshSnMap();
-    var typed = extractTypedSn(getManpowerText(li));
-    if(!typed) {{ closeSnDropdown(); return; }}
-    var matches = collectSnMatches(typed);
-    if(matches.length === 1 && matches[0].sn === typed) {{
-      applySnSelection(li, matches[0]);
-      return;
-    }}
-    if(matches.length) showSnDropdown(li, matches); else closeSnDropdown();
-  }}
-
   window.addEventListener('load', refreshSnMap);
   document.addEventListener('DOMContentLoaded', refreshSnMap);
   setTimeout(refreshSnMap, 300);
@@ -3967,38 +3929,70 @@ window._MANPOWER_SOURCE    = window._ALL_STAFF;
   document.addEventListener('click', function(ev) {{
     if(!snDropdownHost) return;
     if(snDropdownHost.contains(ev.target)) return;
-    var li = resolveManpowerLi(ev.target);
-    if(li && li === snDropdownTarget) return;
+    if(snDropdownTarget && snDropdownTarget.contains(ev.target)) return;
     closeSnDropdown();
   }});
 
   function setupManpowerLi(li) {{
-    if(!li || li._mpSetup) return;
+    if(li._mpSetup) return;
     li._mpSetup = true;
 
+    function updateManpowerSuggestion() {{
+      refreshSnMap();
+      closeSnDropdown();
+      if(isFormattedManpowerEntry(li)) return;
+      var typed = extractTypedSn(getManpowerText(li));
+      if(!typed) return;
+      var matches = collectSnMatches(typed);
+      if(matches.length === 1 && matches[0].sn === typed) {{
+        applySnSelection(li, matches[0]);
+        return;
+      }}
+      if(matches.length) showSnDropdown(li, matches);
+    }}
+
     li.addEventListener('focus', function() {{
-      setTimeout(function() {{ openSuggestionForLi(li); }}, 0);
+      refreshSnMap();
+      if(isFormattedManpowerEntry(li)) closeSnDropdown();
+      else updateManpowerSuggestion();
+    }});
+    li.addEventListener('focusin', function() {{
+      refreshSnMap();
+      if(isFormattedManpowerEntry(li)) closeSnDropdown();
     }});
     li.addEventListener('click', function() {{
-      setTimeout(function() {{ openSuggestionForLi(li); }}, 0);
+      refreshSnMap();
+      if(isFormattedManpowerEntry(li)) closeSnDropdown();
+      else updateManpowerSuggestion();
     }});
     li.addEventListener('input', function() {{
-      openSuggestionForLi(li);
+      updateManpowerSuggestion();
     }});
-    li.addEventListener('keyup', function(ev) {{
-      if(['Enter','Tab','Escape'].indexOf(ev.key) !== -1) return;
-      openSuggestionForLi(li);
+    li.addEventListener('keyup', function() {{
+      updateManpowerSuggestion();
     }});
-    li.addEventListener('paste', function() {{
-      setTimeout(function() {{ openSuggestionForLi(li); }}, 30);
+    li.addEventListener('paste', function(ev) {{
+      if(isFormattedManpowerEntry(li)) {{
+        var pasted = ((ev.clipboardData || window.clipboardData) && (ev.clipboardData || window.clipboardData).getData('text')) || '';
+        pasted = String(pasted || '').replace(/\s+/g, ' ').trim();
+        if(pasted) {{
+          ev.preventDefault();
+          replaceManpowerText(li, pasted);
+          updateManpowerSuggestion();
+          return;
+        }}
+      }}
+      setTimeout(function() {{ updateManpowerSuggestion(); }}, 30);
     }});
+
     li.addEventListener('keydown', function(ev) {{
       var isDigitKey = /^\d$/.test(ev.key || '');
+
       if(isFormattedManpowerEntry(li) && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {{
         if(isDigitKey) {{
           ev.preventDefault();
           replaceManpowerText(li, ev.key);
-          openSuggestionForLi(li);
+          updateManpowerSuggestion();
           return;
         }}
         if(ev.key === 'Backspace' || ev.key === 'Delete') {{
@@ -4008,10 +4002,14 @@ window._MANPOWER_SOURCE    = window._ALL_STAFF;
           return;
         }}
       }}
+
       if(ev.key === 'Escape') {{
         closeSnDropdown();
         return;
       }}
+
+      if(isFormattedManpowerEntry(li)) return;
+
       if(ev.key === 'Tab') {{
         var typed = extractTypedSn(getManpowerText(li));
         var matches = collectSnMatches(typed);
@@ -4022,34 +4020,28 @@ window._MANPOWER_SOURCE    = window._ALL_STAFF;
         return;
       }}
       if(ev.key === 'Enter') {{
-        ev.preventDefault();
-        closeSnDropdown();
-        var ul = li.parentElement;
-        if(!ul) return;
-        var newLi = createEmptyManpowerLi();
-        ul.insertBefore(newLi, li.nextSibling);
-        newLi.focus();
-        setCursorEnd(newLi);
-        if(typeof triggerAutosave === 'function') triggerAutosave();
+        /* Enter في MANPOWER يضيف سطراً جديداً بنقطة، ولا يقبل الاقتراح */
+        return;
       }}
     }});
+
     li.addEventListener('blur', function() {{
-      setTimeout(function() {{
-        var activeLi = resolveManpowerLi(document.activeElement);
-        if(activeLi === li) return;
-        var typed = extractTypedSn(getManpowerText(li));
-        var matches = collectSnMatches(typed);
-        if(typed && matches.length === 1 && matches[0].sn === typed) {{
-          applySnSelection(li, matches[0]);
-        }} else {{
-          var pair = extractSnNamePair(getManpowerText(li));
-          if(pair) {{
-            renderSnSelection(li, pair);
-            refreshSnMap();
-          }}
+      if(isFormattedManpowerEntry(li)) {{
+        setTimeout(closeSnDropdown, 200);
+        return;
+      }}
+      var typed = extractTypedSn(getManpowerText(li));
+      var matches = collectSnMatches(typed);
+      if(typed && matches.length === 1 && matches[0].sn === typed) {{
+        applySnSelection(li, matches[0]);
+      }} else {{
+        var pair = extractSnNamePair(getManpowerText(li));
+        if(pair) {{
+          renderSnSelection(li, pair);
+          refreshSnMap();
         }}
-        closeSnDropdown();
-      }}, 160);
+      }}
+      setTimeout(closeSnDropdown, 200);
     }});
   }}
 
@@ -4076,6 +4068,108 @@ window._MANPOWER_SOURCE    = window._ALL_STAFF;
       }}).observe(ul, {{childList:true}});
     }});
   }}
+
+  function _nodeToElement(node) {{
+    if(!node) return null;
+    if(node.nodeType === 1) return node;
+    if(node.nodeType === 3) return node.parentElement || null;
+    return node.parentElement || null;
+  }}
+
+  function _activeSelectionLi() {{
+    try {{
+      var sel = window.getSelection && window.getSelection();
+      if(!sel || !sel.anchorNode) return null;
+      var el = _nodeToElement(sel.anchorNode);
+      return el && el.closest ? el.closest('li[contenteditable]') : null;
+    }} catch(ex) {{
+      return null;
+    }}
+  }}
+
+  function isManpowerLiTarget(node) {{
+    var el = _nodeToElement(node);
+    var li = el && el.closest ? el.closest('li[contenteditable]') : null;
+    if(!li) li = _activeSelectionLi();
+    if(!li || !li.parentElement || !li.parentElement.id) return null;
+    var ul = li.parentElement;
+    var id = ul.id || '';
+    if(id.indexOf('ul-dept-') === 0) return li;
+    if(MP_IDS.indexOf(id) !== -1) return li;
+    return null;
+  }}
+
+  function handleManpowerInteractive(node, forceOpen) {{
+    var li = isManpowerLiTarget(node) || _activeSelectionLi() || isManpowerLiTarget(document.activeElement);
+    if(!li) return;
+    refreshSnMap();
+    if(isFormattedManpowerEntry(li) && !forceOpen) {{ closeSnDropdown(); return; }}
+    var typed = extractTypedSn(getManpowerText(li));
+    if(!typed) {{ closeSnDropdown(); return; }}
+    var matches = collectSnMatches(typed);
+    if(matches.length === 1 && matches[0].sn === typed) {{
+      applySnSelection(li, matches[0]);
+      return;
+    }}
+    if(matches.length) showSnDropdown(li, matches); else closeSnDropdown();
+  }}
+
+  document.addEventListener('focusin', function(ev) {{
+    var li = isManpowerLiTarget(ev.target);
+    if(li) handleManpowerInteractive(li, false);
+  }});
+  document.addEventListener('click', function(ev) {{
+    var li = isManpowerLiTarget(ev.target);
+    if(li) handleManpowerInteractive(li, false);
+  }});
+  document.addEventListener('input', function(ev) {{
+    var li = isManpowerLiTarget(ev.target) || _activeSelectionLi();
+    if(li) handleManpowerInteractive(li, false);
+  }});
+  document.addEventListener('keyup', function(ev) {{
+    var li = isManpowerLiTarget(ev.target) || _activeSelectionLi();
+    if(li && !['Enter','Tab','Escape'].includes(ev.key)) handleManpowerInteractive(li, false);
+  }});
+  document.addEventListener('paste', function(ev) {{
+    var li = isManpowerLiTarget(ev.target) || _activeSelectionLi();
+    if(li) setTimeout(function(){{ handleManpowerInteractive(li, false); }}, 30);
+  }});
+  document.addEventListener('keydown', function(ev) {{
+    var li = isManpowerLiTarget(ev.target);
+    if(!li) return;
+    if(ev.key === 'Escape') {{ closeSnDropdown(); return; }}
+    if(isFormattedManpowerEntry(li)) return;
+    if(ev.key === 'Tab') {{
+      var typed = extractTypedSn(getManpowerText(li));
+      if(!typed) return;
+      var matches = collectSnMatches(typed);
+      if(matches.length) {{
+        ev.preventDefault();
+        applySnSelection(li, matches[0]);
+      }}
+      return;
+    }}
+  }});
+  document.addEventListener('focusout', function(ev) {{
+    var li = isManpowerLiTarget(ev.target);
+    if(!li) return;
+    if(isFormattedManpowerEntry(li)) {{
+      setTimeout(closeSnDropdown, 200);
+      return;
+    }}
+    var typed = extractTypedSn(getManpowerText(li));
+    var matches = collectSnMatches(typed);
+    if(typed && matches.length === 1 && matches[0].sn === typed) {{
+      applySnSelection(li, matches[0]);
+    }} else {{
+      var pair = extractSnNamePair(getManpowerText(li));
+      if(pair) {{
+        renderSnSelection(li, pair);
+        refreshSnMap();
+      }}
+    }}
+    setTimeout(closeSnDropdown, 200);
+  }});
   window.setupManpowerLi = setupManpowerLi;
   window.initManpower = initManpower;
   window.rebindSmartAutocomplete = function() {{
