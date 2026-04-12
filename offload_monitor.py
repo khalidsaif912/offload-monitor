@@ -2303,6 +2303,20 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     # يجب أن يكون خارج الـ f-string لأن {} في JSON تُفسَّر كـ format expressions
     local_flights_js = json.dumps(_load_local_db(), ensure_ascii=False)
 
+    manpower_source = []
+    _seen_mp = set()
+    for emp in (roster.get('on_duty', []) + roster.get('on_leave', []) + import_roster.get('fd_export', []) + import_roster.get('fd_import', [])):
+        sn = str(emp.get('sn') or '').strip()
+        name = str(emp.get('name') or '').strip()
+        if not sn or not name:
+            continue
+        key = (sn, name.lower())
+        if key in _seen_mp:
+            continue
+        _seen_mp.add(key)
+        manpower_source.append({'sn': sn, 'name': name, 'dept': str(emp.get('dept') or '').strip()})
+    manpower_source_js = json.dumps(manpower_source, ensure_ascii=False)
+
     html = f"""<!DOCTYPE html>
 <html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -2718,6 +2732,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 /* ── Config injected by Python build ── */
 window._AIRLABS_KEY        = '';          /* ضع مفتاح AirLabs هنا إذا توفّر */
 window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
+window._MANPOWER_SOURCE    = {manpower_source_js};
 </script>
 
 <script>
@@ -3709,6 +3724,12 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
 
   function buildSnMap() {{
     var map = {{}};
+    var src = Array.isArray(window._MANPOWER_SOURCE) ? window._MANPOWER_SOURCE : [];
+    src.forEach(function(item) {{
+      var sn = String((item && item.sn) || '').replace(/[^0-9]/g,'');
+      var name = String((item && item.name) || '').replace(/\s+/g,' ').trim();
+      if(sn && name && !map[sn]) map[sn] = name;
+    }});
     document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {{
       var sn   = String(el.dataset.sn || '').replace(/[^0-9]/g,'');
       var name = String(el.dataset.name || '').replace(/\s+/g,' ').trim();
@@ -3744,7 +3765,7 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
 
   function normalizeManpowerEditable(li) {{
     if(!li) return;
-    if(li.querySelector && li.querySelector('[data-sn][data-name], span, div')) {{
+    if(li.querySelector && li.querySelector('[data-sn][data-name]')) {{
       var txt = cleanEditableText(li);
       li.textContent = txt || '';
       setCursorEnd(li);
@@ -3763,30 +3784,32 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
   }}
 
   function collectSnMatches(typed) {{
+    typed = String(typed || '').replace(/[^0-9]/g,'');
     if(!typed) return [];
     if(!Object.keys(snMap).length) refreshSnMap();
 
     var seen = {{}};
     var matches = [];
+    function pushItem(sn, name) {{
+      sn = String(sn || '').replace(/[^0-9]/g,'');
+      name = String(name || '').replace(/\s+/g,' ').trim();
+      if(!sn || !name || seen[sn]) return;
+      if(sn.indexOf(typed) !== 0) return;
+      seen[sn] = true;
+      matches.push({{sn: sn, name: name}});
+    }}
 
     Object.keys(snMap).forEach(function(snKey) {{
-      var sn = String(snKey || '').replace(/[^0-9]/g,'');
-      var name = String(snMap[snKey] || '').replace(/\s+/g,' ').trim();
-      if(!sn || !name || seen[sn]) return;
-      if(sn.indexOf(typed) === 0) {{
-        seen[sn] = true;
-        matches.push({{sn: sn, name: name}});
-      }}
+      pushItem(snKey, snMap[snKey]);
+    }});
+
+    var src = Array.isArray(window._MANPOWER_SOURCE) ? window._MANPOWER_SOURCE : [];
+    src.forEach(function(item) {{
+      pushItem(item && item.sn, item && item.name);
     }});
 
     document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {{
-      var sn = String(el.dataset.sn || '').replace(/[^0-9]/g,'');
-      var name = String(el.dataset.name || '').replace(/\s+/g,' ').trim();
-      if(!sn || !name || seen[sn]) return;
-      if(sn.indexOf(typed) === 0) {{
-        seen[sn] = true;
-        matches.push({{sn: sn, name: name}});
-      }}
+      pushItem(el.dataset.sn, el.dataset.name);
     }});
 
     matches.sort(function(a, b) {{
