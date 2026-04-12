@@ -1504,7 +1504,7 @@ window._ALL_STAFF          = {"82546": "Saleh Al Rashdi", "82551": "Omar Al Obai
     var map = {};
     /* 1) كل موظفي الروستر المحقونين من Python */
     try {
-      var allStaff = window._MANPOWER_SOURCE || window._ALL_STAFF || {};
+      var allStaff = window._ALL_STAFF || {};
       Object.keys(allStaff).forEach(function(sn) {
         var snClean = String(sn).replace(/[^0-9]/g,'');
         var name    = String(allStaff[sn] || '').replace(/\s+/g,' ').trim();
@@ -1799,8 +1799,13 @@ window._ALL_STAFF          = {"82546": "Saleh Al Rashdi", "82551": "Omar Al Obai
         return;
       }
       if(ev.key === 'Enter') {
-        /* Enter في MANPOWER يضيف سطراً جديداً بنقطة، ولا يقبل الاقتراح */
-        return;
+        var typed = extractTypedSn(getManpowerText(li));
+        if(!typed) return;
+        var matches = collectSnMatches(typed);
+        if(matches.length) {
+          ev.preventDefault();
+          applySnSelection(li, matches[0]);
+        }
       }
     });
 
@@ -1848,28 +1853,8 @@ window._ALL_STAFF          = {"82546": "Saleh Al Rashdi", "82551": "Omar Al Obai
     });
   }
 
-  function _nodeToElement(node) {
-    if(!node) return null;
-    if(node.nodeType === 1) return node;
-    if(node.nodeType === 3) return node.parentElement || null;
-    return node.parentElement || null;
-  }
-
-  function _activeSelectionLi() {
-    try {
-      var sel = window.getSelection && window.getSelection();
-      if(!sel || !sel.anchorNode) return null;
-      var el = _nodeToElement(sel.anchorNode);
-      return el && el.closest ? el.closest('li[contenteditable]') : null;
-    } catch(ex) {
-      return null;
-    }
-  }
-
   function isManpowerLiTarget(node) {
-    var el = _nodeToElement(node);
-    var li = el && el.closest ? el.closest('li[contenteditable]') : null;
-    if(!li) li = _activeSelectionLi();
+    var li = node && node.closest ? node.closest('li[contenteditable]') : null;
     if(!li || !li.parentElement || !li.parentElement.id) return null;
     var ul = li.parentElement;
     var id = ul.id || '';
@@ -1879,7 +1864,7 @@ window._ALL_STAFF          = {"82546": "Saleh Al Rashdi", "82551": "Omar Al Obai
   }
 
   function handleManpowerInteractive(node, forceOpen) {
-    var li = isManpowerLiTarget(node) || _activeSelectionLi() || isManpowerLiTarget(document.activeElement);
+    var li = isManpowerLiTarget(node);
     if(!li) return;
     refreshSnMap();
     if(isFormattedManpowerEntry(li) && !forceOpen) { closeSnDropdown(); return; }
@@ -1902,15 +1887,15 @@ window._ALL_STAFF          = {"82546": "Saleh Al Rashdi", "82551": "Omar Al Obai
     if(li) handleManpowerInteractive(li, false);
   });
   document.addEventListener('input', function(ev) {
-    var li = isManpowerLiTarget(ev.target) || _activeSelectionLi();
+    var li = isManpowerLiTarget(ev.target);
     if(li) handleManpowerInteractive(li, false);
   });
   document.addEventListener('keyup', function(ev) {
-    var li = isManpowerLiTarget(ev.target) || _activeSelectionLi();
+    var li = isManpowerLiTarget(ev.target);
     if(li && !['Enter','Tab','Escape'].includes(ev.key)) handleManpowerInteractive(li, false);
   });
   document.addEventListener('paste', function(ev) {
-    var li = isManpowerLiTarget(ev.target) || _activeSelectionLi();
+    var li = isManpowerLiTarget(ev.target);
     if(li) setTimeout(function(){ handleManpowerInteractive(li, false); }, 30);
   });
   document.addEventListener('keydown', function(ev) {
@@ -1918,7 +1903,7 @@ window._ALL_STAFF          = {"82546": "Saleh Al Rashdi", "82551": "Omar Al Obai
     if(!li) return;
     if(ev.key === 'Escape') { closeSnDropdown(); return; }
     if(isFormattedManpowerEntry(li)) return;
-    if(ev.key === 'Tab') {
+    if(ev.key === 'Tab' || ev.key === 'Enter') {
       var typed = extractTypedSn(getManpowerText(li));
       if(!typed) return;
       var matches = collectSnMatches(typed);
@@ -1926,7 +1911,6 @@ window._ALL_STAFF          = {"82546": "Saleh Al Rashdi", "82551": "Omar Al Obai
         ev.preventDefault();
         applySnSelection(li, matches[0]);
       }
-      return;
     }
   });
   document.addEventListener('focusout', function(ev) {
