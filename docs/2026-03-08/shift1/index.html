@@ -1124,8 +1124,48 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
   function forceUpper(el) {
     var old = el.innerText || '';
     var up  = old.toUpperCase();
-    if(old !== up) { el.innerText = up; }
+    if(old !== up) { el.innerText = up; setCursorEnd(el); }
     return el.innerText.replace(/ /g,'').trim().toUpperCase();
+  }
+
+  function cleanEditableText(el) {
+    return String((el && el.innerText) || '').replace(/ /g,' ').replace(/\s+/g,' ').trim();
+  }
+
+  function normalizeFlightTyped(text) {
+    var raw = String(text || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if(!raw) return '';
+    if(/^\d(1, 5)$/.test(raw)) return raw;
+    return raw;
+  }
+
+  function flightCandidatesFromTyped(typed) {
+    var out = [];
+    var seen = {};
+    var digitsOnly = /^\d{1,5}$/.test(typed || '');
+
+    Object.keys(LOCAL_FLIGHTS || {}).forEach(function(code) {
+      var key = String(code || '').toUpperCase().replace(/\s+/g,'');
+      if(!key || seen[key]) return;
+      var m = key.match(/^([A-Z]{2,3})(\d{1,5})$/);
+      if(!m) return;
+      var num = m[2];
+      if((digitsOnly && num.indexOf(typed) === 0) || (!digitsOnly && key.indexOf(typed) === 0)) {
+        seen[key] = true;
+        out.push(key);
+      }
+    });
+
+    out.sort(function(a,b) {
+      var ad = a.replace(/^[A-Z]+/, '');
+      var bd = b.replace(/^[A-Z]+/, '');
+      if(ad === typed && bd !== typed) return -1;
+      if(bd === typed && ad !== typed) return 1;
+      if(a === typed && b !== typed) return -1;
+      if(b === typed && a !== typed) return 1;
+      return a.localeCompare(b);
+    });
+    return out.slice(0, 8);
   }
 
   function showGhost(el, txt) {
@@ -1211,33 +1251,61 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
     li._flightSetup = true;
 
     var _ghost = '';
-    var _fetching = false;
+    var _reqId = 0;
 
-    /* input: كتابة رقم رحلة → fetch + ghost */
-    li.addEventListener('input', function() {
-      var txt = forceUpper(li).replace(/\s+/g,'');
-      if(!FLT_RE.test(txt)) { removeGhost(li); _ghost=''; return; }
-      var flt = txt;
-      _fetching = true;
-      showGhost(li, flt+'/???/'+todayFull()+'…');
+    function applyFlightGhost(flt, info) {
+      var dest = (info && info.dest) ? info.dest : '???';
+      _ghost = isLoadPlan
+        ? (flt + '/' + dest + '/' + todayFull() + '.')
+        : (flt + '/' + dest + '/' + todayFull() + ' — Completed as per plan');
+      li.dataset.ghostVal = _ghost;
+      showGhost(li, _ghost);
+    }
+
+    function updateFlightSuggestion() {
+      var typed = normalizeFlightTyped(cleanEditableText(li));
+      if(!typed) { removeGhost(li); li.dataset.ghostVal=''; return; }
+
+      var candidates = flightCandidatesFromTyped(typed);
+      var flt = '';
+      if(FLT_RE.test(typed)) flt = typed;
+      else if(candidates.length === 1) flt = candidates[0];
+      else if(candidates.length > 1) {
+        li.dataset.ghostVal = candidates[0];
+        showGhost(li, candidates.slice(0, 4).join('   '));
+        return;
+      } else {
+        removeGhost(li); li.dataset.ghostVal=''; return;
+      }
+
+      var reqId = ++_reqId;
+      showGhost(li, flt + '/???/' + todayFull() + '…');
       fetchFlightInfo(flt, todayISO(), function(info) {
-        _fetching = false;
-        var dest = (info && info.dest) ? info.dest : '???';
-        if(isLoadPlan) {
-          _ghost = flt+'/'+dest+'/'+todayFull()+'.';
-        } else {
-          _ghost = flt+'/'+dest+'/'+todayFull()+' — Completed as per plan';
-        }
-        showGhost(li, _ghost);
-        li.dataset.ghostVal = _ghost;
+        if(reqId !== _reqId) return;
+        applyFlightGhost(flt, info);
       });
-    });
+    }
+
+    li.addEventListener('focus', updateFlightSuggestion);
+    li.addEventListener('input', updateFlightSuggestion);
+    li.addEventListener('keyup', updateFlightSuggestion);
+    li.addEventListener('paste', function() { setTimeout(updateFlightSuggestion, 30); });
 
     /* keydown: Tab → قبول Ghost | Enter → سطر جديد */
     li.addEventListener('keydown', function(e) {
       if(e.key === 'Tab' && li.dataset.ghostVal) {
         e.preventDefault();
-        li.innerText = li.dataset.ghostVal;
+        var acceptVal = li.dataset.ghostVal;
+        var candidates = flightCandidatesFromTyped(normalizeFlightTyped(cleanEditableText(li)));
+        if(!/\//.test(acceptVal) && candidates.length) {
+          acceptVal = candidates[0];
+          li.innerText = acceptVal;
+          setCursorEnd(li);
+          li.dataset.ghostVal = '';
+          updateFlightSuggestion();
+          return;
+        }
+        li.innerText = acceptVal;
         li.dataset.ghostVal = '';
         removeGhost(li);
         setCursorEnd(li);
@@ -1260,7 +1328,7 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
       }
     });
 
-    li.addEventListener('blur', function() { removeGhost(li); });
+    li.addEventListener('blur', function() { setTimeout(function() { if(document.activeElement !== li) removeGhost(li); }, 120); });
   }
 
   function setCursorEnd(el) {
@@ -1434,8 +1502,17 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
     });
   }
 
+  function normalizeManpowerEditable(li) {
+    if(!li) return;
+    if(li.querySelector && li.querySelector('[data-sn][data-name], span, div')) {
+      var txt = cleanEditableText(li);
+      li.textContent = txt || '';
+      setCursorEnd(li);
+    }
+  }
+
   function getManpowerText(li) {
-    return String(li.innerText || '').replace(/ /g,' ').replace(/\s+/g,' ').trim();
+    return cleanEditableText(li);
   }
 
   function extractTypedSn(text) {
@@ -1550,8 +1627,7 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
     if(li._mpSetup) return;
     li._mpSetup = true;
 
-    li.addEventListener('focus', function() { refreshSnMap(); });
-    li.addEventListener('input', function() {
+    function updateManpowerSuggestion() {
       closeSnDropdown();
       var typed = extractTypedSn(getManpowerText(li));
       if(!typed) return;
@@ -1561,11 +1637,32 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
         return;
       }
       if(matches.length) showSnDropdown(li, matches);
+    }
+
+    li.addEventListener('focus', function() {
+      refreshSnMap();
+      normalizeManpowerEditable(li);
+      updateManpowerSuggestion();
     });
+    li.addEventListener('input', function() {
+      normalizeManpowerEditable(li);
+      updateManpowerSuggestion();
+    });
+    li.addEventListener('keyup', updateManpowerSuggestion);
+    li.addEventListener('paste', function() { setTimeout(function() { normalizeManpowerEditable(li); updateManpowerSuggestion(); }, 30); });
 
     li.addEventListener('keydown', function(ev) {
       if(ev.key === 'Escape') {
         closeSnDropdown();
+        return;
+      }
+      if(ev.key === 'Tab') {
+        var typed = extractTypedSn(getManpowerText(li));
+        var matches = collectSnMatches(typed);
+        if(matches.length) {
+          ev.preventDefault();
+          applySnSelection(li, matches[0]);
+        }
         return;
       }
       if(ev.key === 'Enter') {
