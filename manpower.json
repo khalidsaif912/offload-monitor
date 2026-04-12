@@ -4,7 +4,8 @@
     "source_pages": [
       "https://khalidsaif912.github.io/roster-site/",
       "https://khalidsaif912.github.io/roster-site/import"
-    ]
+    ],
+    "note": "تم إزالة رموز الورديات من أرقام الموظفين حسب الطلب"
   },
   "departments": {
     "Main_Roster": {
@@ -12,25 +13,25 @@
         "total": 13,
         "shifts": {
           "Morning": [
-            {"name": "WAFAA SALIM", "id": "81021ME06"},
-            {"name": "ALA AL WAHAIBI", "id": "82473ME07"},
-            {"name": "MAHMOOD AL HADIDI", "id": "82452MN06"},
-            {"name": "AHMED ALRUJAIBI", "id": "82476MN06"},
-            {"name": "JAMAL AL SINANI", "id": "81399MN06"}
+            {"name": "WAFAA SALIM", "id": "81021"},
+            {"name": "ALA AL WAHAIBI", "id": "82473"},
+            {"name": "MAHMOOD AL HADIDI", "id": "82452"},
+            {"name": "AHMED ALRUJAIBI", "id": "82476"},
+            {"name": "JAMAL AL SINANI", "id": "81399"}
           ],
           "Afternoon": [
-            {"name": "MOHAMMED AL YAARUBI", "id": "82444AN13"},
-            {"name": "YOUSUF AL WAHEEDI", "id": "82100AN13"}
+            {"name": "MOHAMMED AL YAARUBI", "id": "82444"},
+            {"name": "YOUSUF AL WAHEEDI", "id": "82100"}
           ],
           "Night": [
-            {"name": "IBRAHIM AL QUTAITI", "id": "81351NN21"},
-            {"name": "MOHAMMED AL WAHAIBI", "id": "82541NN21"}
+            {"name": "IBRAHIM AL QUTAITI", "id": "81351"},
+            {"name": "MOHAMMED AL WAHAIBI", "id": "82541"}
           ],
           "Off_Day": [
-            {"name": "GLENDO", "id": "80215O"},
-            {"name": "HAIFA AL BALUSHI", "id": "82664O"},
-            {"name": "MAHAMAD AL MAHARBI", "id": "82460O"},
-            {"name": "MAHANAD AL HADI", "id": "82665O"}
+            {"name": "GLENDO", "id": "80215"},
+            {"name": "HAIFA AL BALUSHI", "id": "82664"},
+            {"name": "MAHAMAD AL MAHARBI", "id": "82460"},
+            {"name": "MAHANAD AL HADI", "id": "82665"}
           ]
         }
       },
@@ -38,20 +39,20 @@
         "total": 8,
         "shifts": {
           "Morning": [
-            {"name": "MAHMOOD AL BALUSHI", "id": "82431MN06"},
-            {"name": "ISMAIL AL MAHARBI", "id": "82331MN06"}
+            {"name": "MAHMOOD AL BALUSHI", "id": "82431"},
+            {"name": "ISMAIL AL MAHARBI", "id": "82331"}
           ],
           "Afternoon": [
-            {"name": "AHMED AL HADI", "id": "82654AN13"}
+            {"name": "AHMED AL HADI", "id": "82654"}
           ],
           "Night": [
-            {"name": "KHALIFA AL SAADI", "id": "82537NN21"}
+            {"name": "KHALIFA AL SAADI", "id": "82537"}
           ],
           "Off_Day": [
-            {"name": "HAITHAM AL BALUSHI", "id": "82419O"},
-            {"name": "ALI AL SHAMSI", "id": "82425O"},
-            {"name": "BADAR AL BUSAIDI", "id": "82414O"},
-            {"name": "MOHAMMED AL SAADI", "id": "82420O"}
+            {"name": "HAITHAM AL BALUSHI", "id": "82419"},
+            {"name": "ALI AL SHAMSI", "id": "82425"},
+            {"name": "BADAR AL BUSAIDI", "id": "82414"},
+            {"name": "MOHAMMED AL SAADI", "id": "82420"}
           ]
         }
       },
@@ -59,21 +60,21 @@
         "total": 9,
         "shifts": {
           "Morning": [
-            {"name": "SAID AL SADI", "id": "82410MN06"},
-            {"name": "NASSER AL OMAIRI", "id": "82416MN06"}
+            {"name": "SAID AL SADI", "id": "82410"},
+            {"name": "NASSER AL OMAIRI", "id": "82416"}
           ],
           "Afternoon": [
-            {"name": "TALAL AL HUSEINI", "id": "82417AN13"},
-            {"name": "BADAR AL BURTAMANI", "id": "82423AN13"}
+            {"name": "TALAL AL HUSEINI", "id": "82417"},
+            {"name": "BADAR AL BURTAMANI", "id": "82423"}
           ],
           "Night": [
-            {"name": "ABDULLAH AL MAHARBI", "id": "82428NN21"},
-            {"name": "YAARAB AL RAQADI", "id": "82571NN21"}
+            {"name": "ABDULLAH AL MAHARBI", "id": "82428"},
+            {"name": "YAARAB AL RAQADI", "id": "82571"}
           ],
           "Off_Day": [
-            {"name": "YOUNIS AL SIYABI", "id": "80480O"},
-            {"name": "ANWAR AL AMRI", "id": "82566O"},
-            {"name": "SAMI AL HADABI", "id": "80479O"}
+            {"name": "YOUNIS AL SIYABI", "id": "80480"},
+            {"name": "ANWAR AL AMRI", "id": "82566"},
+            {"name": "SAMI AL HADABI", "id": "80479"}
           ]
         }
       },
@@ -81,33 +82,33 @@
         "total": 21,
         "shifts": {
           "Morning": [
-            {"name": "BADAR AL SHEHHI", "id": "82583MN06"},
-            {"name": "IBRAHIM AL HADHRAMI", "id": "82668MN06"},
-            {"name": "HISHAM AL MAHARBI", "id": "82454MN06"},
-            {"name": "AHMED AL FARSI", "id": "82456MN06"}
+            {"name": "BADAR AL SHEHHI", "id": "82583"},
+            {"name": "IBRAHIM AL HADHRAMI", "id": "82668"},
+            {"name": "HISHAM AL MAHARBI", "id": "82454"},
+            {"name": "AHMED AL FARSI", "id": "82456"}
           ],
           "Afternoon": [
-            {"name": "ANWAR AL HABSI", "id": "82496AN13"},
-            {"name": "WAHEB AL BARAIDAI", "id": "82470AN13"},
-            {"name": "MOHAMMED AL MAWALI", "id": "82614AN13"}
+            {"name": "ANWAR AL HABSI", "id": "82496"},
+            {"name": "WAHEB AL BARAIDAI", "id": "82470"},
+            {"name": "MOHAMMED AL MAWALI", "id": "82614"}
           ],
           "Night": [
-            {"name": "OMAR AL FUTAISI", "id": "82107NN21"},
-            {"name": "MAHMOOD AL SHAMSI", "id": "82286NN21"},
-            {"name": "MOOSA AL BALUSHI", "id": "82667NN21"},
-            {"name": "SANAD AL HARTHI", "id": "82642NN21"}
+            {"name": "OMAR AL FUTAISI", "id": "82107"},
+            {"name": "MAHMOOD AL SHAMSI", "id": "82286"},
+            {"name": "MOOSA AL BALUSHI", "id": "82667"},
+            {"name": "SANAD AL HARTHI", "id": "82642"}
           ],
           "Off_Day": [
-            {"name": "SALIM AL MAAWALI", "id": "80481O"},
-            {"name": "NASSER AL MAAMARI", "id": "82590O"},
-            {"name": "SULEIMAN AL MAHARBI", "id": "80833O"},
-            {"name": "AHMED AL HUSAINI", "id": "82455O"},
-            {"name": "JABER AL JULANDANI", "id": "81983O"},
-            {"name": "ABDULLAH AL SINAWI", "id": "82663O"},
-            {"name": "KHALID AL BALUSHI", "id": "8336O"},
-            {"name": "ADIL AL BULUSHI", "id": "82457O"},
-            {"name": "HILAL AL SHAMAKHI", "id": "81991O"},
-            {"name": "MAJID AL GHAFRI", "id": "82049O"}
+            {"name": "SALIM AL MAAWALI", "id": "80481"},
+            {"name": "NASSER AL MAAMARI", "id": "82590"},
+            {"name": "SULEIMAN AL MAHARBI", "id": "80833"},
+            {"name": "AHMED AL HUSAINI", "id": "82455"},
+            {"name": "JABER AL JULANDANI", "id": "81983"},
+            {"name": "ABDULLAH AL SINAWI", "id": "82663"},
+            {"name": "KHALID AL BALUSHI", "id": "8336"},
+            {"name": "ADIL AL BULUSHI", "id": "82457"},
+            {"name": "HILAL AL SHAMAKHI", "id": "81991"},
+            {"name": "MAJID AL GHAFRI", "id": "82049"}
           ]
         }
       },
@@ -115,26 +116,26 @@
         "total": 14,
         "shifts": {
           "Morning": [
-            {"name": "MOHD AL HADDABI", "id": "990895MN06"},
-            {"name": "FARIZ AL BALUSHI", "id": "80478MN06"},
-            {"name": "AHMED AL AMRI", "id": "81080MN06"},
-            {"name": "HAMED AL FAKHRI", "id": "8836MN06"}
+            {"name": "MOHD AL HADDABI", "id": "990895"},
+            {"name": "FARIZ AL BALUSHI", "id": "80478"},
+            {"name": "AHMED AL AMRI", "id": "81080"},
+            {"name": "HAMED AL FAKHRI", "id": "8836"}
           ],
           "Afternoon": [
-            {"name": "JUMA AL HABSI", "id": "81151AN13"},
-            {"name": "SAID AL HADI", "id": "81152AN13"},
-            {"name": "MOHAMMED AL BALUCHI", "id": "82330AN13"}
+            {"name": "JUMA AL HABSI", "id": "81151"},
+            {"name": "SAID AL HADI", "id": "81152"},
+            {"name": "MOHAMMED AL BALUCHI", "id": "82330"}
           ],
           "Night": [
-            {"name": "KHALID AL ZADJALI", "id": "82458NN21"},
-            {"name": "MOHAMED AL MAAWALI", "id": "82535NN21"},
-            {"name": "KHAMIS AL KASBI", "id": "990751NN21"}
+            {"name": "KHALID AL ZADJALI", "id": "82458"},
+            {"name": "MOHAMED AL MAAWALI", "id": "82535"},
+            {"name": "KHAMIS AL KASBI", "id": "990751"}
           ],
           "Off_Day": [
-            {"name": "ALI AL RIYAMI", "id": "82459O"},
-            {"name": "SAID AL AMRI", "id": "80834O"},
-            {"name": "YASIR AL GHARABI", "id": "990786O"},
-            {"name": "QAIS AL MUKHAINI", "id": "82435O"}
+            {"name": "ALI AL RIYAMI", "id": "82459"},
+            {"name": "SAID AL AMRI", "id": "80834"},
+            {"name": "YASIR AL GHARABI", "id": "990786"},
+            {"name": "QAIS AL MUKHAINI", "id": "82435"}
           ]
         }
       },
@@ -142,17 +143,17 @@
         "total": 5,
         "shifts": {
           "Morning": [
-            {"name": "MOHAMMED AL KULAIBI", "id": "81079MN06"}
+            {"name": "MOHAMMED AL KULAIBI", "id": "81079"}
           ],
           "Afternoon": [
-            {"name": "MAHIR AL BALUSHI", "id": "82422AN13"}
+            {"name": "MAHIR AL BALUSHI", "id": "82422"}
           ],
           "Night": [
-            {"name": "HISHAM AL SIYABI", "id": "82434NN21"}
+            {"name": "HISHAM AL SIYABI", "id": "82434"}
           ],
           "Off_Day": [
-            {"name": "QASIM AL GHARIBI", "id": "82412O"},
-            {"name": "MOOSA AL HADI", "id": "82536O"}
+            {"name": "QASIM AL GHARIBI", "id": "82412"},
+            {"name": "MOOSA AL HADI", "id": "82536"}
           ]
         }
       },
@@ -160,17 +161,17 @@
         "total": 5,
         "shifts": {
           "Morning": [
-            {"name": "UDUGAMA", "id": "8901MN06"}
+            {"name": "UDUGAMA", "id": "8901"}
           ],
           "Afternoon": [
-            {"name": "MOHAMMED SAID", "id": "81032AN13"}
+            {"name": "MOHAMMED SAID", "id": "81032"}
           ],
           "Night": [
-            {"name": "SAMEER MAHMOOD", "id": "990896NN21"}
+            {"name": "SAMEER MAHMOOD", "id": "990896"}
           ],
           "Off_Day": [
-            {"name": "FRITZ", "id": "80269O"},
-            {"name": "FROILAN", "id": "80535O"}
+            {"name": "FRITZ", "id": "80269"},
+            {"name": "FROILAN", "id": "80535"}
           ]
         }
       }
@@ -180,11 +181,11 @@
         "total": 4,
         "shifts": {
           "Morning": [
-            {"name": "Rodolfo Magcaling", "id": "80235ME07"},
-            {"name": "Adil Al Balushi", "id": "81392ME07"}
+            {"name": "Rodolfo Magcaling", "id": "80235"},
+            {"name": "Adil Al Balushi", "id": "81392"}
           ],
           "Off_Day": [
-            {"name": "Salim Al Masroori", "id": "8926OFF"}
+            {"name": "Salim Al Masroori", "id": "8926"}
           ],
           "Annual_Leave": [
             {"name": "Rajaram", "id": "8899", "leave_period": "FROM 1 TO 13"}
@@ -195,18 +196,18 @@
         "total": 6,
         "shifts": {
           "Morning": [
-            {"name": "Jay Macalino", "id": "80250MN06"},
-            {"name": "Said Al Amri", "id": "990737MN06"}
+            {"name": "Jay Macalino", "id": "80250"},
+            {"name": "Said Al Amri", "id": "990737"}
           ],
           "Afternoon": [
-            {"name": "Talal Al Balushi", "id": "81300AN13"}
+            {"name": "Talal Al Balushi", "id": "81300"}
           ],
           "Night": [
-            {"name": "Mohamed Al Amri", "id": "81404NN21"}
+            {"name": "Mohamed Al Amri", "id": "81404"}
           ],
           "Off_Day": [
-            {"name": "Saleh Al Rashdi", "id": "82546OFF"},
-            {"name": "Mohamed Al Kalbani", "id": "82593OFF"}
+            {"name": "Saleh Al Rashdi", "id": "82546"},
+            {"name": "Mohamed Al Kalbani", "id": "82593"}
           ]
         }
       },
@@ -214,25 +215,25 @@
         "total": 15,
         "shifts": {
           "Morning": [
-            {"name": "Al Muthana Al Shamfari", "id": "82445MN06"},
-            {"name": "Ahmed Al Muqaini", "id": "82548MN06"},
-            {"name": "Qasim Al Maqbali", "id": "81409MN06"}
+            {"name": "Al Muthana Al Shamfari", "id": "82445"},
+            {"name": "Ahmed Al Muqaini", "id": "82548"},
+            {"name": "Qasim Al Maqbali", "id": "81409"}
           ],
           "Afternoon": [
-            {"name": "Hamed Al Fulaiti", "id": "82596AN13"},
-            {"name": "Ahmed Al Kharusi", "id": "82575AN13"},
-            {"name": "Jaafar Al Balushi", "id": "81258AN13"}
+            {"name": "Hamed Al Fulaiti", "id": "82596"},
+            {"name": "Ahmed Al Kharusi", "id": "82575"},
+            {"name": "Jaafar Al Balushi", "id": "81258"}
           ],
           "Night": [
-            {"name": "Marwan Al Difai", "id": "82437NN21"},
-            {"name": "Mohamed Al Siyabi", "id": "81402NN21"}
+            {"name": "Marwan Al Difai", "id": "82437"},
+            {"name": "Mohamed Al Siyabi", "id": "81402"}
           ],
           "Off_Day": [
-            {"name": "Mubarak Al Nofli", "id": "82114OFF"},
-            {"name": "Mudathir Al Hajri", "id": "82441OFF"},
-            {"name": "Omar Al Obaidi", "id": "82551OFF"},
-            {"name": "Assad Al Omairi", "id": "81348OFF"},
-            {"name": "Bushra Al Wahiebi", "id": "82657OFF"}
+            {"name": "Mubarak Al Nofli", "id": "82114"},
+            {"name": "Mudathir Al Hajri", "id": "82441"},
+            {"name": "Omar Al Obaidi", "id": "82551"},
+            {"name": "Assad Al Omairi", "id": "81348"},
+            {"name": "Bushra Al Wahiebi", "id": "82657"}
           ],
           "Annual_Leave": [
             {"name": "Habib Al Balushi", "id": "82600", "leave_period": "FROM 10 TO 23"},
@@ -244,41 +245,41 @@
         "total": 33,
         "shifts": {
           "Morning": [
-            {"name": "Saif Al Mahrizi", "id": "82649MN06"},
-            {"name": "Ahmed Al Mawali", "id": "82283MN06"},
-            {"name": "Yousuf Al Balushi", "id": "82587MN06"},
-            {"name": "Ali Al Mamari", "id": "82574MN06"},
-            {"name": "Hosni Al Sulti", "id": "80695MN06"}
+            {"name": "Saif Al Mahrizi", "id": "82649"},
+            {"name": "Ahmed Al Mawali", "id": "82283"},
+            {"name": "Yousuf Al Balushi", "id": "82587"},
+            {"name": "Ali Al Mamari", "id": "82574"},
+            {"name": "Hosni Al Sulti", "id": "80695"}
           ],
           "Afternoon": [
-            {"name": "Ammar Al Hashmi", "id": "82659AN13"},
-            {"name": "Ali Yousuf Al Balushi", "id": "990752AN13"},
-            {"name": "Raad Al Farsi", "id": "82578AN13"},
-            {"name": "Adil Al Zadjali", "id": "8584AN13"},
-            {"name": "Riyadh Al Jabri", "id": "82555AN13"}
+            {"name": "Ammar Al Hashmi", "id": "82659"},
+            {"name": "Ali Yousuf Al Balushi", "id": "990752"},
+            {"name": "Raad Al Farsi", "id": "82578"},
+            {"name": "Adil Al Zadjali", "id": "8584"},
+            {"name": "Riyadh Al Jabri", "id": "82555"}
           ],
           "Night": [
-            {"name": "Mohamed Al Mazroie", "id": "82658NN21"},
-            {"name": "Khalil Al Hinai", "id": "82671NN21"},
-            {"name": "Ali Al Farsi", "id": "81393NN21"},
-            {"name": "Mohamed Al Mamari", "id": "82674NN21"},
-            {"name": "Ahmed Al Bakari", "id": "81832NN21"},
-            {"name": "Riyadh Al Sulti", "id": "82424NN21"}
+            {"name": "Mohamed Al Mazroie", "id": "82658"},
+            {"name": "Khalil Al Hinai", "id": "82671"},
+            {"name": "Ali Al Farsi", "id": "81393"},
+            {"name": "Mohamed Al Mamari", "id": "82674"},
+            {"name": "Ahmed Al Bakari", "id": "81832"},
+            {"name": "Riyadh Al Sulti", "id": "82424"}
           ],
           "Off_Day": [
-            {"name": "Khalifa Al Maqbali", "id": "82673OFF"},
-            {"name": "Wissam Al Kharusi", "id": "82464OFF"},
-            {"name": "Rashid Al Farsi", "id": "82615OFF"},
-            {"name": "Dawood Al Siyabi", "id": "82672OFF"},
-            {"name": "Fahim Al Hashni", "id": "8930OFF"},
-            {"name": "Waleed Al Hadabi", "id": "80482OFF"},
-            {"name": "Abdullah Al Shukeili", "id": "82645OFF"},
-            {"name": "Mohamed Al Maskari", "id": "82666OFF"},
-            {"name": "Mazin Al Hajri", "id": "82547OFF"},
-            {"name": "Ali Al Marjubi", "id": "82577OFF"},
-            {"name": "Ghaith Al Habsi", "id": "82439OFF"},
-            {"name": "Mohamed Al Maskari", "id": "82661OFF"},
-            {"name": "Khalid Al Raqadi", "id": "8715OFF"},
+            {"name": "Khalifa Al Maqbali", "id": "82673"},
+            {"name": "Wissam Al Kharusi", "id": "82464"},
+            {"name": "Rashid Al Farsi", "id": "82615"},
+            {"name": "Dawood Al Siyabi", "id": "82672"},
+            {"name": "Fahim Al Hashni", "id": "8930"},
+            {"name": "Waleed Al Hadabi", "id": "80482"},
+            {"name": "Abdullah Al Shukeili", "id": "82645"},
+            {"name": "Mohamed Al Maskari", "id": "82666"},
+            {"name": "Mazin Al Hajri", "id": "82547"},
+            {"name": "Ali Al Marjubi", "id": "82577"},
+            {"name": "Ghaith Al Habsi", "id": "82439"},
+            {"name": "Mohamed Al Maskari", "id": "82661"},
+            {"name": "Khalid Al Raqadi", "id": "8715"},
             {"name": "Mohamed Al Subhi", "id": "82592", "note": "Inventory"}
           ],
           "Annual_Leave": [
@@ -292,33 +293,33 @@
         "total": 19,
         "shifts": {
           "Morning": [
-            {"name": "Badar Al Hamadani", "id": "81307MN06"},
-            {"name": "Muadh Al Qasimi", "id": "82534MN06"},
-            {"name": "Faisal Al Balushi", "id": "82656MN06"},
-            {"name": "Jamal Al Hadi", "id": "82565MN06"}
+            {"name": "Badar Al Hamadani", "id": "81307"},
+            {"name": "Muadh Al Qasimi", "id": "82534"},
+            {"name": "Faisal Al Balushi", "id": "82656"},
+            {"name": "Jamal Al Hadi", "id": "82565"}
           ],
           "Afternoon": [
-            {"name": "Mohana Al Subhi", "id": "8714AN13"},
-            {"name": "Mohamed Al Falahi", "id": "8762AN13"},
-            {"name": "Issa Al Douyani", "id": "8647AN13"},
-            {"name": "Ahmed Al Sabii", "id": "82653AN13"}
+            {"name": "Mohana Al Subhi", "id": "8714"},
+            {"name": "Mohamed Al Falahi", "id": "8762"},
+            {"name": "Issa Al Douyani", "id": "8647"},
+            {"name": "Ahmed Al Sabii", "id": "82653"}
           ],
           "Night": [
-            {"name": "Mohamed Al Amri", "id": "81224NN21"},
-            {"name": "Ahmed Al Balushi", "id": "82415NN21"},
-            {"name": "Salim Sulieman", "id": "8722NN21"}
+            {"name": "Mohamed Al Amri", "id": "81224"},
+            {"name": "Ahmed Al Balushi", "id": "82415"},
+            {"name": "Salim Sulieman", "id": "8722"}
           ],
           "Off_Day": [
-            {"name": "Khamis Al Hinai", "id": "82467OFF"},
-            {"name": "Mazin Al Siyabi", "id": "81223OFF"},
-            {"name": "Adil Al Oraimi", "id": "8941OFF"},
-            {"name": "Zakariya Al Balushi", "id": "82429OFF"},
-            {"name": "Salim Al Harassi", "id": "8542OFF"},
-            {"name": "Badar Al Fulaiti", "id": "82468OFF"}
+            {"name": "Khamis Al Hinai", "id": "82467"},
+            {"name": "Mazin Al Siyabi", "id": "81223"},
+            {"name": "Adil Al Oraimi", "id": "8941"},
+            {"name": "Zakariya Al Balushi", "id": "82429"},
+            {"name": "Salim Al Harassi", "id": "8542"},
+            {"name": "Badar Al Fulaiti", "id": "82468"}
           ],
           "Training": [
-            {"name": "Ghassan Al Tarsi", "id": "82588TR"},
-            {"name": "Said Al Fahkri", "id": "8744TR"}
+            {"name": "Ghassan Al Tarsi", "id": "82588"},
+            {"name": "Said Al Fahkri", "id": "8744"}
           ]
         }
       }
@@ -328,6 +329,7 @@
     "total_employees_scraped": 152,
     "flight_dispatch_export_count": 8,
     "flight_dispatch_import_count": 9,
-    "departments_count": 12
+    "departments_count": 12,
+    "ids_cleaned": true
   }
 }
