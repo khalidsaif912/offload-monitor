@@ -1406,71 +1406,181 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
   function buildSnMap() {
     var map = {};
     document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {
-      var sn   = (el.dataset.sn  ||'').replace(/[^0-9]/g,'');
-      var name = (el.dataset.name||'').trim();
-      if(sn && name) map[sn] = name;
+      var sn   = String(el.dataset.sn || '').replace(/[^0-9]/g,'');
+      var name = String(el.dataset.name || '').replace(/\s+/g,' ').trim();
+      if(sn && name && !map[sn]) map[sn] = name;
     });
     return map;
   }
+
   var snMap = {};
-  window.addEventListener('load', function() { snMap = buildSnMap(); });
-  setTimeout(function() { snMap = buildSnMap(); }, 1500);
+  var snDropdownHost = null;
+  var snDropdownTarget = null;
+
+  function refreshSnMap() {
+    snMap = buildSnMap();
+    return snMap;
+  }
+
+  function closeSnDropdown() {
+    if(snDropdownHost && snDropdownHost.parentNode) snDropdownHost.parentNode.removeChild(snDropdownHost);
+    snDropdownHost = null;
+    snDropdownTarget = null;
+  }
+
+  function escapeHtml(text) {
+    return String(text || '').replace(/[&<>"]/g, function(ch) {
+      return ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : '&quot;';
+    });
+  }
+
+  function getManpowerText(li) {
+    return String(li.innerText || '').replace(/ /g,' ').replace(/\s+/g,' ').trim();
+  }
+
+  function extractTypedSn(text) {
+    var txt = String(text || '').replace(/ /g,' ').trim();
+    if(!txt) return '';
+    var m = txt.match(/^(?:SN\s*)?(\d(1, 10))/i);
+    return m ? m[1] : '';
+  }
+
+  function collectSnMatches(typed) {
+    if(!typed) return [];
+    if(!Object.keys(snMap).length) refreshSnMap();
+
+    var seen = {};
+    var matches = [];
+
+    Object.keys(snMap).forEach(function(snKey) {
+      var sn = String(snKey || '').replace(/[^0-9]/g,'');
+      var name = String(snMap[snKey] || '').replace(/\s+/g,' ').trim();
+      if(!sn || !name || seen[sn]) return;
+      if(sn.indexOf(typed) === 0) {
+        seen[sn] = true;
+        matches.push({sn: sn, name: name});
+      }
+    });
+
+    document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {
+      var sn = String(el.dataset.sn || '').replace(/[^0-9]/g,'');
+      var name = String(el.dataset.name || '').replace(/\s+/g,' ').trim();
+      if(!sn || !name || seen[sn]) return;
+      if(sn.indexOf(typed) === 0) {
+        seen[sn] = true;
+        matches.push({sn: sn, name: name});
+      }
+    });
+
+    matches.sort(function(a, b) {
+      if(a.sn === typed && b.sn !== typed) return -1;
+      if(b.sn === typed && a.sn !== typed) return 1;
+      return a.sn.localeCompare(b.sn);
+    });
+
+    return matches.slice(0, 10);
+  }
+
+  function applySnSelection(li, item) {
+    if(!li || !item) return;
+    li.innerText = 'SN' + item.sn + ' ' + item.name;
+    closeSnDropdown();
+    setCursorEnd(li);
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+  }
+
+  function positionSnDropdown(li, dd) {
+    if(!li || !dd) return;
+    var rect = li.getBoundingClientRect();
+    dd.style.left = (window.scrollX + rect.left) + 'px';
+    dd.style.top = (window.scrollY + rect.bottom + 4) + 'px';
+    dd.style.minWidth = Math.max(rect.width, 240) + 'px';
+  }
 
   function showSnDropdown(li, matches) {
-    var old = li.querySelector('.sn-drop');
-    if(old) old.remove();
+    closeSnDropdown();
     if(!matches.length) return;
+
     var dd = document.createElement('div');
     dd.className = 'sn-drop';
-    dd.style.cssText = 'position:absolute;left:0;top:100%;background:#fff;border:1px solid #0b3a78;'
-                     + 'border-radius:6px;box-shadow:0 4px 16px rgba(11,58,120,.18);z-index:9999;'
-                     + 'min-width:240px;max-height:200px;overflow-y:auto;font-size:13px;';
+    dd.setAttribute('contenteditable', 'false');
+    dd.style.cssText = 'position:absolute;background:#fff;border:1px solid #0b3a78;'
+                     + 'border-radius:6px;box-shadow:0 4px 16px rgba(11,58,120,.18);z-index:99999;'
+                     + 'max-height:220px;overflow-y:auto;font-size:13px;';
+
     matches.forEach(function(item) {
       var opt = document.createElement('div');
+      opt.setAttribute('contenteditable', 'false');
       opt.style.cssText = 'padding:7px 12px;cursor:pointer;display:flex;gap:10px;align-items:center;';
-      opt.innerHTML = '<span style="font-weight:700;color:#0b3a78;min-width:60px;">SN'+item.sn+'</span>'
-                    + '<span style="color:#1b1f2a;">'+item.name+'</span>';
-      opt.onmouseenter = function() { opt.style.background='#eef3fc'; };
-      opt.onmouseleave = function() { opt.style.background=''; };
-      opt.onmousedown  = function(ev) {
+      opt.innerHTML = '<span style="font-weight:700;color:#0b3a78;min-width:70px;">SN' + escapeHtml(item.sn) + '</span>'
+                    + '<span style="color:#1b1f2a;">' + escapeHtml(item.name) + '</span>';
+      opt.onmouseenter = function() { opt.style.background = '#eef3fc'; };
+      opt.onmouseleave = function() { opt.style.background = ''; };
+      opt.onmousedown = function(ev) {
         ev.preventDefault();
-        li.innerText = 'SN'+item.sn+' '+item.name;
-        dd.remove();
-        setCursorEnd(li);
-        if(typeof triggerAutosave==='function') triggerAutosave();
+        applySnSelection(li, item);
       };
       dd.appendChild(opt);
     });
-    li.style.position = 'relative';
-    li.appendChild(dd);
+
+    document.body.appendChild(dd);
+    positionSnDropdown(li, dd);
+    snDropdownHost = dd;
+    snDropdownTarget = li;
   }
+
+  window.addEventListener('load', refreshSnMap);
+  document.addEventListener('DOMContentLoaded', refreshSnMap);
+  setTimeout(refreshSnMap, 300);
+  setTimeout(refreshSnMap, 1500);
+  window.addEventListener('resize', function() {
+    if(snDropdownHost && snDropdownTarget) positionSnDropdown(snDropdownTarget, snDropdownHost);
+  });
+  window.addEventListener('scroll', function() {
+    if(snDropdownHost && snDropdownTarget) positionSnDropdown(snDropdownTarget, snDropdownHost);
+  }, true);
+  document.addEventListener('click', function(ev) {
+    if(!snDropdownHost) return;
+    if(snDropdownHost.contains(ev.target)) return;
+    if(snDropdownTarget && snDropdownTarget.contains(ev.target)) return;
+    closeSnDropdown();
+  });
 
   function setupManpowerLi(li) {
     if(li._mpSetup) return;
     li._mpSetup = true;
+
+    li.addEventListener('focus', function() { refreshSnMap(); });
     li.addEventListener('input', function() {
-      var txt = li.innerText.replace(/ /g,' ').trim();
-      var old = li.querySelector('.sn-drop');
-      if(old) old.remove();
-      var snMatch = txt.match(/^(?:SN\s*)?(\d+)$/i);
-      if(!snMatch) return;
-      var typed = snMatch[1];
-      var matches = [];
-      Object.keys(snMap).forEach(function(sn) {
-        if(sn.indexOf(typed)===0) matches.push({sn:sn, name:snMap[sn]});
-      });
-      document.querySelectorAll('[data-sn]').forEach(function(el) {
-        var sn = el.dataset.sn||'', name = el.dataset.name||'';
-        if(sn.indexOf(typed)===0 && !matches.find(function(m) { return m.sn===sn; }))
-          matches.push({sn:sn, name:name});
-      });
+      closeSnDropdown();
+      var typed = extractTypedSn(getManpowerText(li));
+      if(!typed) return;
+      var matches = collectSnMatches(typed);
+      if(matches.length === 1 && matches[0].sn === typed) {
+        applySnSelection(li, matches[0]);
+        return;
+      }
       if(matches.length) showSnDropdown(li, matches);
     });
+
+    li.addEventListener('keydown', function(ev) {
+      if(ev.key === 'Escape') {
+        closeSnDropdown();
+        return;
+      }
+      if(ev.key === 'Enter') {
+        var typed = extractTypedSn(getManpowerText(li));
+        if(!typed) return;
+        var matches = collectSnMatches(typed);
+        if(matches.length) {
+          ev.preventDefault();
+          applySnSelection(li, matches[0]);
+        }
+      }
+    });
+
     li.addEventListener('blur', function() {
-      setTimeout(function() {
-        var dd = li.querySelector('.sn-drop');
-        if(dd) dd.remove();
-      }, 200);
+      setTimeout(closeSnDropdown, 200);
     });
   }
 
