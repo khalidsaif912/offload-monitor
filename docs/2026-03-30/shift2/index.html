@@ -1555,7 +1555,25 @@ window._ALL_STAFF          = {"82551": "Omar Al Obaidi", "81348": "Assad Al Omai
   }
 
   function getManpowerText(li) {
+    if(!li) return '';
+    var selected = li.querySelector && li.querySelector('[data-sn][data-name]');
+    if(selected) {
+      var snSel = String(selected.dataset.sn || '').replace(/[^0-9]/g,'');
+      var nameSel = String(selected.dataset.name || '').replace(/\s+/g,' ').trim();
+      if(snSel && nameSel) return 'SN' + snSel + ' ' + nameSel;
+    }
     return cleanEditableText(li);
+  }
+
+  function isFormattedManpowerEntry(li) {
+    return !!(li && li.querySelector && li.querySelector('[data-sn][data-name]'));
+  }
+
+  function replaceManpowerText(li, text) {
+    if(!li) return;
+    li.textContent = text || '';
+    setCursorEnd(li);
+    if(typeof triggerAutosave === 'function') triggerAutosave();
   }
 
   function extractTypedSn(text) {
@@ -1566,39 +1584,56 @@ window._ALL_STAFF          = {"82551": "Omar Al Obaidi", "81348": "Assad Al Omai
   }
 
   function collectSnMatches(typed) {
+    typed = String(typed || '').replace(/[^0-9]/g,'');
     if(!typed) return [];
     if(!Object.keys(snMap).length) refreshSnMap();
 
     var seen = {};
-    var matches = [];
+    var entries = [];
+
+    function pushEntry(snVal, nameVal) {
+      var sn = String(snVal || '').replace(/[^0-9]/g,'');
+      var name = String(nameVal || '').replace(/\s+/g,' ').trim();
+      if(!sn || !name || seen[sn]) return;
+      seen[sn] = true;
+      entries.push({ sn: sn, name: name });
+    }
 
     Object.keys(snMap).forEach(function(snKey) {
-      var sn = String(snKey || '').replace(/[^0-9]/g,'');
-      var name = String(snMap[snKey] || '').replace(/\s+/g,' ').trim();
-      if(!sn || !name || seen[sn]) return;
-      if(sn.indexOf(typed) === 0) {
-        seen[sn] = true;
-        matches.push({sn: sn, name: name});
-      }
+      pushEntry(snKey, snMap[snKey]);
     });
 
     document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {
-      var sn = String(el.dataset.sn || '').replace(/[^0-9]/g,'');
-      var name = String(el.dataset.name || '').replace(/\s+/g,' ').trim();
-      if(!sn || !name || seen[sn]) return;
-      if(sn.indexOf(typed) === 0) {
-        seen[sn] = true;
-        matches.push({sn: sn, name: name});
-      }
+      pushEntry(el.dataset.sn, el.dataset.name);
     });
 
-    matches.sort(function(a, b) {
-      if(a.sn === typed && b.sn !== typed) return -1;
-      if(b.sn === typed && a.sn !== typed) return 1;
-      return a.sn.localeCompare(b.sn);
-    });
-
-    return matches.slice(0, 10);
+    return entries
+      .map(function(item) {
+        var idx = item.sn.indexOf(typed);
+        var rank = -1;
+        if(item.sn === typed) rank = 0;
+        else if(idx === 0) rank = 1;
+        else if(typed.length >= 2 && idx > 0) rank = 2;
+        else return null;
+        return {
+          sn: item.sn,
+          name: item.name,
+          _rank: rank,
+          _idx: idx < 0 ? 999 : idx,
+          _delta: Math.abs(item.sn.length - typed.length)
+        };
+      })
+      .filter(Boolean)
+      .sort(function(a, b) {
+        if(a._rank !== b._rank) return a._rank - b._rank;
+        if(a._idx !== b._idx) return a._idx - b._idx;
+        if(a._delta !== b._delta) return a._delta - b._delta;
+        return a.sn.localeCompare(b.sn);
+      })
+      .slice(0, 10)
+      .map(function(item) {
+        return { sn: item.sn, name: item.name };
+      });
   }
 
   function renderSnSelection(li, item) {
@@ -1681,9 +1716,9 @@ window._ALL_STAFF          = {"82551": "Omar Al Obaidi", "81348": "Assad Al Omai
     li._mpSetup = true;
 
     function updateManpowerSuggestion() {
+      refreshSnMap();
       closeSnDropdown();
-      /* إذا منسق مسبقاً → لا تعيد التنسيق */
-      if(li.querySelector && li.querySelector('[data-sn][data-name]')) return;
+      if(isFormattedManpowerEntry(li)) return;
       var typed = extractTypedSn(getManpowerText(li));
       if(!typed) return;
       var matches = collectSnMatches(typed);
@@ -1696,12 +1731,17 @@ window._ALL_STAFF          = {"82551": "Omar Al Obaidi", "81348": "Assad Al Omai
 
     li.addEventListener('focus', function() {
       refreshSnMap();
+      if(isFormattedManpowerEntry(li)) closeSnDropdown();
+      else updateManpowerSuggestion();
     });
     li.addEventListener('focusin', function() {
       refreshSnMap();
+      if(isFormattedManpowerEntry(li)) closeSnDropdown();
     });
     li.addEventListener('click', function() {
       refreshSnMap();
+      if(isFormattedManpowerEntry(li)) closeSnDropdown();
+      else updateManpowerSuggestion();
     });
     li.addEventListener('input', function() {
       updateManpowerSuggestion();
@@ -1709,13 +1749,45 @@ window._ALL_STAFF          = {"82551": "Omar Al Obaidi", "81348": "Assad Al Omai
     li.addEventListener('keyup', function() {
       updateManpowerSuggestion();
     });
-    li.addEventListener('paste', function() { setTimeout(function() { updateManpowerSuggestion(); }, 30); });
+    li.addEventListener('paste', function(ev) {
+      if(isFormattedManpowerEntry(li)) {
+        var pasted = ((ev.clipboardData || window.clipboardData) && (ev.clipboardData || window.clipboardData).getData('text')) || '';
+        pasted = String(pasted || '').replace(/\s+/g, ' ').trim();
+        if(pasted) {
+          ev.preventDefault();
+          replaceManpowerText(li, pasted);
+          updateManpowerSuggestion();
+          return;
+        }
+      }
+      setTimeout(function() { updateManpowerSuggestion(); }, 30);
+    });
 
     li.addEventListener('keydown', function(ev) {
+      var isDigitKey = /^\d$/.test(ev.key || '');
+
+      if(isFormattedManpowerEntry(li) && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
+        if(isDigitKey) {
+          ev.preventDefault();
+          replaceManpowerText(li, ev.key);
+          updateManpowerSuggestion();
+          return;
+        }
+        if(ev.key === 'Backspace' || ev.key === 'Delete') {
+          ev.preventDefault();
+          replaceManpowerText(li, '');
+          closeSnDropdown();
+          return;
+        }
+      }
+
       if(ev.key === 'Escape') {
         closeSnDropdown();
         return;
       }
+
+      if(isFormattedManpowerEntry(li)) return;
+
       if(ev.key === 'Tab') {
         var typed = extractTypedSn(getManpowerText(li));
         var matches = collectSnMatches(typed);
@@ -1737,8 +1809,7 @@ window._ALL_STAFF          = {"82551": "Omar Al Obaidi", "81348": "Assad Al Omai
     });
 
     li.addEventListener('blur', function() {
-      /* إذا منسق مسبقاً → لا تغير شيء */
-      if(li.querySelector && li.querySelector('[data-sn][data-name]')) {
+      if(isFormattedManpowerEntry(li)) {
         setTimeout(closeSnDropdown, 200);
         return;
       }
@@ -1791,15 +1862,11 @@ window._ALL_STAFF          = {"82551": "Omar Al Obaidi", "81348": "Assad Al Omai
     return null;
   }
 
-  function handleManpowerInteractive(node) {
+  function handleManpowerInteractive(node, forceOpen) {
     var li = isManpowerLiTarget(node);
     if(!li) return;
-    /* إذا كان العنصر منسقاً مسبقاً (يحتوي span[data-sn]) → لا تعيد التنسيق */
-    if(li.querySelector && li.querySelector('[data-sn][data-name]')) {
-      closeSnDropdown();
-      return;
-    }
     refreshSnMap();
+    if(isFormattedManpowerEntry(li) && !forceOpen) { closeSnDropdown(); return; }
     var typed = extractTypedSn(getManpowerText(li));
     if(!typed) { closeSnDropdown(); return; }
     var matches = collectSnMatches(typed);
@@ -1812,28 +1879,29 @@ window._ALL_STAFF          = {"82551": "Omar Al Obaidi", "81348": "Assad Al Omai
 
   document.addEventListener('focusin', function(ev) {
     var li = isManpowerLiTarget(ev.target);
-    if(li) handleManpowerInteractive(li);
+    if(li) handleManpowerInteractive(li, false);
   });
   document.addEventListener('click', function(ev) {
     var li = isManpowerLiTarget(ev.target);
-    if(li) handleManpowerInteractive(li);
+    if(li) handleManpowerInteractive(li, false);
   });
   document.addEventListener('input', function(ev) {
     var li = isManpowerLiTarget(ev.target);
-    if(li) handleManpowerInteractive(li);
+    if(li) handleManpowerInteractive(li, false);
   });
   document.addEventListener('keyup', function(ev) {
     var li = isManpowerLiTarget(ev.target);
-    if(li && !['Enter','Tab','Escape'].includes(ev.key)) handleManpowerInteractive(li);
+    if(li && !['Enter','Tab','Escape'].includes(ev.key)) handleManpowerInteractive(li, false);
   });
   document.addEventListener('paste', function(ev) {
     var li = isManpowerLiTarget(ev.target);
-    if(li) setTimeout(function(){ handleManpowerInteractive(li); }, 30);
+    if(li) setTimeout(function(){ handleManpowerInteractive(li, false); }, 30);
   });
   document.addEventListener('keydown', function(ev) {
     var li = isManpowerLiTarget(ev.target);
     if(!li) return;
     if(ev.key === 'Escape') { closeSnDropdown(); return; }
+    if(isFormattedManpowerEntry(li)) return;
     if(ev.key === 'Tab' || ev.key === 'Enter') {
       var typed = extractTypedSn(getManpowerText(li));
       if(!typed) return;
@@ -1847,8 +1915,7 @@ window._ALL_STAFF          = {"82551": "Omar Al Obaidi", "81348": "Assad Al Omai
   document.addEventListener('focusout', function(ev) {
     var li = isManpowerLiTarget(ev.target);
     if(!li) return;
-    /* إذا منسق مسبقاً → لا تغير شيء */
-    if(li.querySelector && li.querySelector('[data-sn][data-name]')) {
+    if(isFormattedManpowerEntry(li)) {
       setTimeout(closeSnDropdown, 200);
       return;
     }
@@ -1865,7 +1932,6 @@ window._ALL_STAFF          = {"82551": "Omar Al Obaidi", "81348": "Assad Al Omai
     }
     setTimeout(closeSnDropdown, 200);
   });
-
   window.setupManpowerLi = setupManpowerLi;
   window.initManpower = initManpower;
   window.rebindSmartAutocomplete = function() {
