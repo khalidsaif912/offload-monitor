@@ -1769,6 +1769,83 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
       }).observe(ul, {childList:true});
     });
   }
+
+  function isManpowerLiTarget(node) {
+    var li = node && node.closest ? node.closest('li[contenteditable]') : null;
+    if(!li || !li.parentElement || !li.parentElement.id) return null;
+    var ul = li.parentElement;
+    var id = ul.id || '';
+    if(id.indexOf('ul-dept-') === 0) return li;
+    if(MP_IDS.indexOf(id) !== -1) return li;
+    return null;
+  }
+
+  function handleManpowerInteractive(node) {
+    var li = isManpowerLiTarget(node);
+    if(!li) return;
+    refreshSnMap();
+    normalizeManpowerEditable(li);
+    var typed = extractTypedSn(getManpowerText(li));
+    if(!typed) { closeSnDropdown(); return; }
+    var matches = collectSnMatches(typed);
+    if(matches.length === 1 && matches[0].sn === typed) {
+      applySnSelection(li, matches[0]);
+      return;
+    }
+    if(matches.length) showSnDropdown(li, matches); else closeSnDropdown();
+  }
+
+  document.addEventListener('focusin', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(li) handleManpowerInteractive(li);
+  });
+  document.addEventListener('click', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(li) handleManpowerInteractive(li);
+  });
+  document.addEventListener('input', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(li) handleManpowerInteractive(li);
+  });
+  document.addEventListener('keyup', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(li && !['Enter','Tab','Escape'].includes(ev.key)) handleManpowerInteractive(li);
+  });
+  document.addEventListener('paste', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(li) setTimeout(function(){ handleManpowerInteractive(li); }, 30);
+  });
+  document.addEventListener('keydown', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(!li) return;
+    if(ev.key === 'Escape') { closeSnDropdown(); return; }
+    if(ev.key === 'Tab' || ev.key === 'Enter') {
+      var typed = extractTypedSn(getManpowerText(li));
+      if(!typed) return;
+      var matches = collectSnMatches(typed);
+      if(matches.length) {
+        ev.preventDefault();
+        applySnSelection(li, matches[0]);
+      }
+    }
+  });
+  document.addEventListener('focusout', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(!li) return;
+    var typed = extractTypedSn(getManpowerText(li));
+    var matches = collectSnMatches(typed);
+    if(typed && matches.length === 1 && matches[0].sn === typed) {
+      applySnSelection(li, matches[0]);
+    } else {
+      var pair = extractSnNamePair(getManpowerText(li));
+      if(pair) {
+        renderSnSelection(li, pair);
+        refreshSnMap();
+      }
+    }
+    setTimeout(closeSnDropdown, 200);
+  });
+
   window.setupManpowerLi = setupManpowerLi;
   window.initManpower = initManpower;
   window.rebindSmartAutocomplete = function() {
