@@ -1100,7 +1100,7 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
 
   /* ── 0) Config & Helpers ── */
   var AIRLABS_KEY = (typeof window._AIRLABS_KEY !== 'undefined') ? window._AIRLABS_KEY : '';
-  var FLT_RE = /^([A-Z]{2,3})(\d{1,4})$/i;
+  var FLT_RE = /^([A-Z]{2,3})(\d{1,5})$/i;
 
   var LOCAL_FLIGHTS = {};
   try { var lf = window._LOCAL_MCT_FLIGHTS; if(lf) LOCAL_FLIGHTS = lf; } catch(ex) {}
@@ -1143,10 +1143,29 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
   }
 
   /* ── Flight info fetch (local DB first, then AirLabs) ── */
+  function parseTime(val) {
+    if(!val) return '';
+    val = String(val).trim();
+    var iso = val.match(/T(\d{2}:\d{2})/);
+    if(iso) return iso[1];
+    var hm = val.match(/^(\d{1,2}:\d{2})$/);
+    if(hm) return hm[1];
+    var d4 = val.match(/^(\d{4})$/);
+    if(d4) return d4[1].slice(0,2)+':'+d4[1].slice(2);
+    return '';
+  }
+
   function fetchFlightInfo(flt, isoDate, cb) {
     var local = LOCAL_FLIGHTS[flt.toUpperCase()];
-    if(local && local.dest && local.std) { cb(local); return; }
-    if(!AIRLABS_KEY) { cb(local || null); return; }
+    if(local && (local.dest || local.std)) {
+      cb({
+        std:  parseTime(local.std  || ''),
+        etd:  parseTime(local.etd  || ''),
+        dest: (local.dest || '').toUpperCase()
+      });
+      return;
+    }
+    if(!AIRLABS_KEY) { cb(null); return; }
     var url = 'https://airlabs.co/api/v9/schedules?api_key='+AIRLABS_KEY
             + '&flight_iata='+flt.toUpperCase()+'&dep_iata=MCT';
     if(isoDate) url += '&flight_date='+isoDate;
@@ -1160,17 +1179,17 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
             .then(function(r2) { return r2.json(); })
             .then(function(j2) {
               var r2rows = j2.response || j2.data || [];
-              if(!r2rows.length) { cb(local||null); return; }
+              if(!r2rows.length) { cb(null); return; }
               doRow(r2rows[0]);
             });
         }
         doRow(rows[0]);
       })
-      .catch(function() { cb(local||null); });
+      .catch(function() { cb(null); });
     function doRow(row) {
       cb({
-        std:  (row.dep_scheduled||row.dep_time||'').slice(11,16),
-        etd:  (row.dep_estimated||'').slice(11,16),
+        std:  parseTime(row.dep_scheduled || ''),
+        etd:  parseTime(row.dep_estimated || ''),
         dest: (row.arr_iata||'').toUpperCase()
       });
     }
@@ -1321,6 +1340,10 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
             isoDate = yr+'-'+(mons[dm[2]]||1).toString().padStart(2,'0')+'-'+dm[1].padStart(2,'0');
           }
         }
+        /* تعبئة التاريخ تلقائياً إذا كان فارغاً */
+        if(dateCell && !dateCell.innerText.replace(/ /g,'').trim()) {
+          dateCell.innerText = todayFull();
+        }
         showGhost(td, 'fetching '+flt+'…');
         fetchFlightInfo(flt, isoDate, function(info) {
           removeGhost(td);
@@ -1343,6 +1366,19 @@ window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401":
 
   function initTableCells() {
     document.querySelectorAll('[data-col]').forEach(setupTableCell);
+    /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
+    var offloadTable = document.querySelector('.offload-scroll table tbody');
+    if(offloadTable) {
+      new MutationObserver(function(muts) {
+        muts.forEach(function(m) {
+          m.addedNodes.forEach(function(n) {
+            if(n.nodeType===1) {
+              n.querySelectorAll('[data-col]').forEach(setupTableCell);
+            }
+          });
+        });
+      }).observe(offloadTable, {childList:true});
+    }
   }
   if(document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initTableCells);
