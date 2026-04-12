@@ -1,0 +1,23 @@
+{
+  "flight": "IX164",
+  "date": "12-Apr",
+  "std_etd": "21:00",
+  "destination": "DEL",
+  "format": "A",
+  "items": [
+    {
+      "awb": "9877258064",
+      "pcs": "23",
+      "kgs": "583",
+      "description": "COU",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "23:01",
+  "saved_at": "2026-04-12T23:01:00+04:00",
+  "storage_date_dir": "2026-04-12",
+  "storage_shift": "shift3"
+}
