@@ -3329,10 +3329,13 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
   }}
 
   function forceUpper(el) {{
-    var old = el.innerText || '';
+    var old = cleanEditableText(el);
     var up  = old.toUpperCase();
-    if(old !== up) {{ el.innerText = up; setCursorEnd(el); }}
-    return el.innerText.replace(/\u00a0/g,'').trim().toUpperCase();
+    if(old !== up) {{
+      el.textContent = up;
+      setCursorEnd(el);
+    }}
+    return up;
   }}
 
   function cleanEditableText(el) {{
@@ -3606,8 +3609,16 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
 
     if(col === 'flight') {{
       var _lastFlt = '';
+      function normalizeFlightCell() {{
+        var raw = cleanEditableText(td).toUpperCase().replace(/[^A-Z0-9]/g,'');
+        if((td.textContent || '') !== raw) {{
+          td.textContent = raw;
+          setCursorEnd(td);
+        }}
+        return raw;
+      }}
       function onFlightInput() {{
-        var flt = forceUpper(td).replace(/\s+/g,'');
+        var flt = normalizeFlightCell();
         if(flt === _lastFlt) return;   /* لا تغيير حقيقي */
         _lastFlt = flt;
         if(!FLT_RE.test(flt)) {{ removeGhost(td); return; }}
@@ -3649,6 +3660,7 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
           if(typeof triggerAutosave==='function') triggerAutosave();
         }});
       }}
+      td.addEventListener('focus',  normalizeFlightCell);
       td.addEventListener('input',  onFlightInput);
       td.addEventListener('keyup',  onFlightInput);  /* يشتغل عند paste أيضاً */
       td.addEventListener('paste', function() {{ setTimeout(onFlightInput, 50); }});
@@ -3882,11 +3894,22 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
       normalizeManpowerEditable(li);
       updateManpowerSuggestion();
     }});
-    li.addEventListener('input', function() {{
+    li.addEventListener('focusin', function() {{
+      refreshSnMap();
       normalizeManpowerEditable(li);
       updateManpowerSuggestion();
     }});
-    li.addEventListener('keyup', updateManpowerSuggestion);
+    li.addEventListener('click', function() {{
+      refreshSnMap();
+      normalizeManpowerEditable(li);
+      updateManpowerSuggestion();
+    }});
+    li.addEventListener('input', function() {{
+      updateManpowerSuggestion();
+    }});
+    li.addEventListener('keyup', function() {{
+      updateManpowerSuggestion();
+    }});
     li.addEventListener('paste', function() {{ setTimeout(function() {{ normalizeManpowerEditable(li); updateManpowerSuggestion(); }}, 30); }});
 
     li.addEventListener('keydown', function(ev) {{
@@ -3933,6 +3956,7 @@ window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
   var MP_IDS = ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
                 'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'];
   function initManpower() {{
+    refreshSnMap();
     MP_IDS.forEach(function(id) {{
       var ul = document.getElementById(id);
       if(!ul) return;
