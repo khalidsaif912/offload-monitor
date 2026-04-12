@@ -1681,6 +1681,8 @@ window._ALL_STAFF          = {"81404": "Mohamed Al Amri", "990737": "Said Al Amr
 
     function updateManpowerSuggestion() {
       closeSnDropdown();
+      /* إذا منسق مسبقاً → لا تعيد التنسيق */
+      if(li.querySelector && li.querySelector('[data-sn][data-name]')) return;
       var typed = extractTypedSn(getManpowerText(li));
       if(!typed) return;
       var matches = collectSnMatches(typed);
@@ -1734,6 +1736,11 @@ window._ALL_STAFF          = {"81404": "Mohamed Al Amri", "990737": "Said Al Amr
     });
 
     li.addEventListener('blur', function() {
+      /* إذا منسق مسبقاً → لا تغير شيء */
+      if(li.querySelector && li.querySelector('[data-sn][data-name]')) {
+        setTimeout(closeSnDropdown, 200);
+        return;
+      }
       var typed = extractTypedSn(getManpowerText(li));
       var matches = collectSnMatches(typed);
       if(typed && matches.length === 1 && matches[0].sn === typed) {
@@ -1786,6 +1793,11 @@ window._ALL_STAFF          = {"81404": "Mohamed Al Amri", "990737": "Said Al Amr
   function handleManpowerInteractive(node) {
     var li = isManpowerLiTarget(node);
     if(!li) return;
+    /* إذا كان العنصر منسقاً مسبقاً (يحتوي span[data-sn]) → لا تعيد التنسيق */
+    if(li.querySelector && li.querySelector('[data-sn][data-name]')) {
+      closeSnDropdown();
+      return;
+    }
     refreshSnMap();
     var typed = extractTypedSn(getManpowerText(li));
     if(!typed) { closeSnDropdown(); return; }
@@ -1834,6 +1846,11 @@ window._ALL_STAFF          = {"81404": "Mohamed Al Amri", "990737": "Said Al Amr
   document.addEventListener('focusout', function(ev) {
     var li = isManpowerLiTarget(ev.target);
     if(!li) return;
+    /* إذا منسق مسبقاً → لا تغير شيء */
+    if(li.querySelector && li.querySelector('[data-sn][data-name]')) {
+      setTimeout(closeSnDropdown, 200);
+      return;
+    }
     var typed = extractTypedSn(getManpowerText(li));
     var matches = collectSnMatches(typed);
     if(typed && matches.length === 1 && matches[0].sn === typed) {
