@@ -220,6 +220,51 @@ ROSTER_JSON_RAW: str = "https://raw.githubusercontent.com/khalidsaif912/roster-s
 ROSTER_JSON_GH:  str = "https://github.com/khalidsaif912/roster-site/blob/main/docs/data/roster.json"
 
 
+def _load_manpower_suggestions() -> dict[str, str]:
+    """Load manpower.json as the primary autocomplete source for MANPOWER.
+
+    Accepts nested structures and extracts the numeric part from IDs like
+    82445MN06 -> 82445. Returns a flat {sn: name} map.
+    """
+    path = Path(os.getenv("MANPOWER_JSON_PATH", "manpower.json"))
+    if not path.exists():
+        return {}
+
+    try:
+        raw = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        print(f"  [manpower-json] Failed to load {path}: {exc}")
+        return {}
+
+    result: dict[str, str] = {}
+
+    def add_item(name, emp_id):
+        name = str(name or "").strip()
+        emp_id = str(emp_id or "").strip()
+        if not name or not emp_id:
+            return
+        m = re.search(r"(\d{3,10})", emp_id)
+        if not m:
+            return
+        sn = m.group(1)
+        if sn and sn not in result:
+            result[sn] = name
+
+    def walk(node):
+        if isinstance(node, dict):
+            if "name" in node and "id" in node:
+                add_item(node.get("name"), node.get("id"))
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for item in node:
+                walk(item)
+
+    walk(raw)
+    print(f"  [manpower-json] Loaded {len(result)} staff suggestions from {path}")
+    return result
+
+
 # ══════════════════════════════════════════════════════════════════
 #  الدوال المساعدة
 # ══════════════════════════════════════════════════════════════════
@@ -2023,7 +2068,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
     def _fmt_emp_row(name, sn):
         sn_display = f"SN{sn}" if sn else ""
         return (
-            f'<li contenteditable="true" style="outline:none;">'
+            f'<li contenteditable="true" style="outline:none;list-style:none;">'
             f'<span data-sn="{sn}" data-name="{name}" '
             f'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
             f'<span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">{sn_display}</span>'
@@ -2303,14 +2348,17 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     local_flights_js = json.dumps(_load_local_db(), ensure_ascii=False)
 
     # ── تجهيز JSON لكل الموظفين لاستخدامه في autocomplete ──
-    _staff_map: dict = {}
+    # المصدر الأساسي: manpower.json
+    _staff_map: dict[str, str] = _load_manpower_suggestions()
+
+    # fallback: roster الحالي إذا لم يكن manpower.json موجوداً أو كان ناقصاً
     for _emp in roster.get("on_duty", []) + roster.get("on_leave", []):
-        _sn = str(_emp.get("sn", "")).strip()
+        _sn = re.sub(r"[^0-9]", "", str(_emp.get("sn", "")).strip())
         _nm = str(_emp.get("name", "")).strip()
         if _sn and _nm and _sn not in _staff_map:
             _staff_map[_sn] = _nm
     for _emp in import_roster.get("fd_export", []) + import_roster.get("fd_import", []):
-        _sn = str(_emp.get("sn", "")).strip()
+        _sn = re.sub(r"[^0-9]", "", str(_emp.get("sn", "")).strip())
         _nm = str(_emp.get("name", "")).strip()
         if _sn and _nm and _sn not in _staff_map:
             _staff_map[_sn] = _nm
@@ -2732,6 +2780,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 window._AIRLABS_KEY        = '';          /* ضع مفتاح AirLabs هنا إذا توفّر */
 window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
 window._ALL_STAFF          = {all_staff_js};
+window._MANPOWER_SOURCE    = {all_staff_js};
 </script>
 
 <script>
@@ -3706,16 +3755,8 @@ window._ALL_STAFF          = {all_staff_js};
   /* ══════════════════════════════════════
      C) MANPOWER — SN Autocomplete
      ══════════════════════════════════════ */
-  function normalizeManpowerRawText(text) {{
-    return String(text || '')
-      .replace(/\u00a0/g,' ')
-      .replace(/^[\s\u2022\u25E6\u25AA\u25CF\-*–—]+/, '')
-      .replace(/\s+/g,' ')
-      .trim();
-  }}
-
   function extractSnNamePair(text) {{
-    var txt = normalizeManpowerRawText(text);
+    var txt = String(text || '').replace(/ /g,' ').replace(/\s+/g,' ').trim();
     if(!txt) return null;
     var m = txt.match(/^(?:SN\s*)?(\d{3,10})\s+(.+)$/i);
     if(!m) return null;
@@ -3733,7 +3774,7 @@ window._ALL_STAFF          = {all_staff_js};
     var map = {{}};
     /* 1) كل موظفي الروستر المحقونين من Python */
     try {{
-      var allStaff = window._ALL_STAFF || {{}};
+      var allStaff = window._MANPOWER_SOURCE || window._ALL_STAFF || {{}};
       Object.keys(allStaff).forEach(function(sn) {{
         var snClean = String(sn).replace(/[^0-9]/g,'');
         var name    = String(allStaff[sn] || '').replace(/\s+/g,' ').trim();
@@ -3807,7 +3848,7 @@ window._ALL_STAFF          = {all_staff_js};
   }}
 
   function extractTypedSn(text) {{
-    var txt = String(text || '').replace(/\u00a0/g,' ').trim();
+    var txt = String(text || '').replace(/\u00a0/g,' ').replace(/^[\s\u2022\u25CF\u25E6\-–—*]+/, '').trim();
     if(!txt) return '';
     var m = txt.match(/^(?:SN\s*)?(\d{1,10})/i);
     return m ? m[1] : '';
@@ -4028,7 +4069,13 @@ window._ALL_STAFF          = {all_staff_js};
         return;
       }}
       if(ev.key === 'Enter') {{
-        return;
+        var typed = extractTypedSn(getManpowerText(li));
+        if(!typed) return;
+        var matches = collectSnMatches(typed);
+        if(matches.length) {{
+          ev.preventDefault();
+          applySnSelection(li, matches[0]);
+        }}
       }}
     }});
 
@@ -4077,12 +4124,26 @@ window._ALL_STAFF          = {all_staff_js};
   }}
 
   function isManpowerLiTarget(node) {{
-    var li = node && node.closest ? node.closest('li[contenteditable]') : null;
-    if(!li || !li.parentElement || !li.parentElement.id) return null;
-    var ul = li.parentElement;
-    var id = ul.id || '';
-    if(id.indexOf('ul-dept-') === 0) return li;
-    if(MP_IDS.indexOf(id) !== -1) return li;
+    function resolveLi(candidate) {{
+      if(!candidate) return null;
+      if(candidate.nodeType === 3) candidate = candidate.parentElement;
+      var li = candidate && candidate.closest ? candidate.closest('li[contenteditable]') : null;
+      if(!li || !li.parentElement || !li.parentElement.id) return null;
+      var ul = li.parentElement;
+      var id = ul.id || '';
+      if(id.indexOf('ul-dept-') === 0) return li;
+      if(MP_IDS.indexOf(id) !== -1) return li;
+      return null;
+    }}
+    var li = resolveLi(node);
+    if(li) return li;
+    try {{
+      var sel = window.getSelection && window.getSelection();
+      if(sel && sel.anchorNode) {{
+        li = resolveLi(sel.anchorNode);
+        if(li) return li;
+      }}
+    }} catch(ex) {{{{}}}}
     return null;
   }}
 
