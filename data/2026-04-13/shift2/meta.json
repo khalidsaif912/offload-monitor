@@ -1,1 +1,14 @@
-{}
+{
+  "flights": {
+    "EY695_13-Apr_AUH.json": {
+      "flight": "EY695",
+      "date": "13-Apr",
+      "dest": "AUH",
+      "created_at": "2026-04-13T17:26:00+04:00",
+      "updated_at": "2026-04-13T17:26:00+04:00",
+      "updates": 0,
+      "storage_date_dir": "2026-04-13",
+      "storage_shift": "shift2"
+    }
+  }
+}

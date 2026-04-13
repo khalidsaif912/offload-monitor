@@ -1,0 +1,33 @@
+{
+  "flight": "EY695",
+  "date": "13-Apr",
+  "std_etd": "17:10",
+  "destination": "AUH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "607-52413992",
+      "pcs": "7",
+      "kgs": "596",
+      "description": "CONSOL",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "604-20187123",
+      "pcs": "74",
+      "kgs": "663",
+      "description": "CONSOL",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "17:26",
+  "saved_at": "2026-04-13T17:26:00+04:00",
+  "storage_date_dir": "2026-04-13",
+  "storage_shift": "shift2"
+}
