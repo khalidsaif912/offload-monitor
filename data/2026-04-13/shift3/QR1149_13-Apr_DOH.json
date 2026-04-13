@@ -1,0 +1,23 @@
+{
+  "flight": "QR1149",
+  "date": "13-Apr",
+  "std_etd": "05:55",
+  "destination": "DOH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "157 54312661",
+      "pcs": "12",
+      "kgs": "300",
+      "description": "CONSOLIDATION",
+      "reason": "DUE SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": "QKE-54648QR"
+    }
+  ],
+  "email_time": "05:21",
+  "saved_at": "2026-04-13T05:21:00+04:00",
+  "storage_date_dir": "2026-04-13",
+  "storage_shift": "shift3"
+}
