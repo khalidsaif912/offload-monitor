@@ -22,10 +22,6 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import requests
-import time
-import random
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
 from bs4 import BeautifulSoup
 
 
@@ -37,158 +33,12 @@ from bs4 import BeautifulSoup
 SOURCE_CONFIDENCE = {
     "airlabs_schedules": 95,
     "airlabs_flights": 85,
-    "local_db": 75,          # ← mct_flights.json: أعلى من Flightradar وأقل من AirLabs
     "flightradar24": 60,
     "muscat_airport": 20,
     "manual_override": 100,
 }
 
-
-
-# ══════════════════════════════════════════════════════════════════
-#  HTTP Session مع headers واقعية وRetry تلقائي
-# ══════════════════════════════════════════════════════════════════
-
-_REALISTIC_HEADERS = {
-    "User-Agent": (
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-        "AppleWebKit/537.36 (KHTML, like Gecko) "
-        "Chrome/124.0.0.0 Safari/537.36"
-    ),
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    "Accept-Language": "en-US,en;q=0.9,ar;q=0.8",
-    "Accept-Encoding": "gzip, deflate, br",
-    "DNT": "1",
-    "Connection": "keep-alive",
-    "Upgrade-Insecure-Requests": "1",
-    "Sec-Fetch-Dest": "document",
-    "Sec-Fetch-Mode": "navigate",
-    "Sec-Fetch-Site": "none",
-    "Sec-Fetch-User": "?1",
-    "Cache-Control": "max-age=0",
-}
-
-# ── Rate-limit tracker ──
-_last_request_time: dict[str, float] = {}
-_MIN_DELAY_SECONDS = 3.0  # الحد الأدنى بين طلبين لنفس الموقع
-
-def _rate_limited_get(url: str, **kwargs) -> requests.Response:
-    """GET مع rate limiting تلقائي حسب الدومين — يستخدم الـ Session المشتركة."""
-    from urllib.parse import urlparse
-    domain = urlparse(url).netloc
-    now_ts = time.time()
-    last = _last_request_time.get(domain, 0)
-    wait = _MIN_DELAY_SECONDS - (now_ts - last) + random.uniform(0.5, 1.5)
-    if wait > 0:
-        time.sleep(wait)
-
-    # دمج الheaders
-    headers = dict(_REALISTIC_HEADERS)
-    headers.update(kwargs.pop("headers", {}))
-    kwargs["headers"] = headers
-
-    resp = _SESSION.get(url, **kwargs)
-    _last_request_time[domain] = time.time()
-    return resp
-
-# ══════════════════════════════════════════════════════════════════
-#  Session مشتركة (تُنشأ مرة واحدة فقط طوال عمر السكربت)
-# ══════════════════════════════════════════════════════════════════
-
-_SESSION = requests.Session()
-_SESSION.headers.update(_REALISTIC_HEADERS)
-_SESSION.mount("https://", HTTPAdapter(max_retries=Retry(
-    total=3,
-    backoff_factor=2,
-    status_forcelist=[429, 500, 502, 503, 504],
-    allowed_methods=["GET"],
-)))
-_SESSION.mount("http://", HTTPAdapter(max_retries=Retry(
-    total=3,
-    backoff_factor=2,
-    status_forcelist=[429, 500, 502, 503, 504],
-    allowed_methods=["GET"],
-)))
-
-
-# ══════════════════════════════════════════════════════════════════
-#  Cache للرحلات المُجلَبة من الشبكة (يمنع الطلبات المكررة)
-# ══════════════════════════════════════════════════════════════════
-
-_flight_info_cache: dict[str, tuple[dict | None, str | None]] = {}
-
-
-# ══════════════════════════════════════════════════════════════════
-#  قاعدة البيانات المحلية  mct_flights.json
-# ══════════════════════════════════════════════════════════════════
-
-LOCAL_DB_PATH: Path = Path(os.getenv("MCT_FLIGHTS_DB", "mct_flights.json"))
-_local_db: dict[str, dict] | None = None   # None = لم يُحمَّل بعد
-
-
-def _load_local_db() -> dict[str, dict]:
-    """تحميل mct_flights.json مرة واحدة وتخزينه في الذاكرة."""
-    global _local_db
-    if _local_db is not None:
-        return _local_db
-
-    if not LOCAL_DB_PATH.exists():
-        print(f"  [local_db] {LOCAL_DB_PATH} not found — skipping local lookup.")
-        _local_db = {}
-        return _local_db
-
-    try:
-        raw = json.loads(LOCAL_DB_PATH.read_text(encoding="utf-8"))
-        # نوحّد المفاتيح: إزالة المسافات + أحرف كبيرة
-        _local_db = {
-            normalize_flight_number(k): v
-            for k, v in raw.items()
-            if isinstance(v, dict)
-        }
-        print(f"  [local_db] Loaded {len(_local_db)} flights from {LOCAL_DB_PATH}")
-    except Exception as exc:
-        print(f"  [local_db] Failed to load {LOCAL_DB_PATH}: {exc}")
-        _local_db = {}
-
-    return _local_db
-
-
-def fetch_flight_info_local_db(
-    flight_iata: str,
-    *,
-    flight_date: str | None = None,
-    dep_iata: str | None = None,
-    arr_iata: str | None = None,
-) -> dict | None:
-    """البحث في mct_flights.json كمصدر محلي فوري (بدون شبكة).
-
-    يُعيد dict بنفس شكل باقي المصادر، أو None إذا لم تُوجَد الرحلة.
-    ملاحظة: الـ STD في الملف هو الجدول الثابت فقط — لا يوجد ETD/ATD.
-    """
-    db = _load_local_db()
-    entry = db.get(normalize_flight_number(flight_iata))
-    if not entry:
-        return None
-
-    std  = (entry.get("std")  or "").strip()
-    etd  = (entry.get("etd")  or "").strip()   # اختياري في الملف
-    dest = (entry.get("dest") or "").strip().upper()
-
-    if not any([std, etd, dest]):
-        return None
-
-    print(f"  [local_db] {flight_iata} → dest={dest!r}, std={std!r}, etd={etd!r}")
-    return {
-        "std":        std,
-        "etd":        etd,
-        "atd":        "",
-        "dest":       dest,
-        "source":     "local_db",
-        "confidence": SOURCE_CONFIDENCE["local_db"],
-    }
-
-
-ONEDRIVE_URL: str = os.getenv("ONEDRIVE_FILE_URL", "")
+ONEDRIVE_URL: str = os.environ["ONEDRIVE_FILE_URL"]
 TIMEZONE: str     = "Asia/Muscat"
 
 # إذا كنت تريد إجبار بناء التقرير حتى لو الـ hash لم يتغير (مفيد للتجارب/التشخيص)
@@ -215,11 +65,8 @@ def ensure_email_recipients_file() -> None:
 
 # روابط الروستر (بدون نسخ أي ملف داخل صفحة الروستر)
 ROSTER_PAGE_URL: str = "https://khalidsaif912.github.io/roster-site/"
-ROSTER_IMPORT_RAW_BASE: str = "https://raw.githubusercontent.com/khalidsaif912/roster-site/main/docs/import"
 ROSTER_JSON_RAW: str = "https://raw.githubusercontent.com/khalidsaif912/roster-site/main/docs/data/roster.json"
 ROSTER_JSON_GH:  str = "https://github.com/khalidsaif912/roster-site/blob/main/docs/data/roster.json"
-
-MANPOWER_JSON_PATH: Path = Path(os.getenv("MANPOWER_JSON_PATH", "manpower.json"))
 
 
 # ══════════════════════════════════════════════════════════════════
@@ -589,15 +436,16 @@ def fetch_flight_info_flightradar(
 
     url = f"https://www.flightradar24.com/data/flights/{flight_iata.lower()}"
     try:
-        resp = _rate_limited_get(url, timeout=30)
+        resp = requests.get(
+            url,
+            timeout=30,
+            headers={
+                "User-Agent": "Mozilla/5.0",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Cache-Control": "no-cache",
+            },
+        )
         resp.raise_for_status()
-    except requests.exceptions.HTTPError as exc:
-        if exc.response is not None and exc.response.status_code == 403:
-            print(f"  [Flightradar] 403 Forbidden for {flight_iata} — waiting 10s before next request")
-            time.sleep(10)
-        else:
-            print(f"  [Flightradar] request error for {flight_iata}: {exc}")
-        return None
     except Exception as exc:
         print(f"  [Flightradar] request error for {flight_iata}: {exc}")
         return None
@@ -676,15 +524,16 @@ def fetch_flight_info_muscatairport(
 
     url = "https://www.muscatairport.co.om/flight-status?date_type=0&type=2"
     try:
-        resp = _rate_limited_get(url, timeout=30)
+        resp = requests.get(
+            url,
+            timeout=30,
+            headers={
+                "User-Agent": "Mozilla/5.0",
+                "Accept-Language": "en-US,en;q=0.9",
+                "Cache-Control": "no-cache",
+            },
+        )
         resp.raise_for_status()
-    except requests.exceptions.HTTPError as exc:
-        if exc.response is not None and exc.response.status_code == 403:
-            print(f"  [MuscatAirport] 403 Forbidden for {flight_iata} — waiting 10s before next request")
-            time.sleep(10)
-        else:
-            print(f"  [MuscatAirport] request error for {flight_iata}: {exc}")
-        return None
     except Exception as exc:
         print(f"  [MuscatAirport] request error for {flight_iata}: {exc}")
         return None
@@ -734,33 +583,21 @@ def fetch_flight_info_with_fallbacks(
     dep_iata: str | None = None,
     arr_iata: str | None = None,
 ) -> tuple[dict | None, str | None]:
-    """Try: LocalDB → AirLabs → Flightradar24.
+    """Try AirLabs, then Flightradar24, then Muscat Airport.
 
-    الترتيب الجديد:
-      1. local_db   (mct_flights.json) — فوري، بدون شبكة، conf=75
-      2. AirLabs    — شبكة، conf=85/95
-      3. Flightradar — شبكة، conf=60، فقط إذا بقيت حقول فارغة
-      ✗ MuscatAirport — مُعطَّل (يُعيد 403 دائمًا)
-
-    التوقف المبكر: إذا اكتملت (std + dest) من مصدر واحد → لا نكمل.
-    Cache: نتيجة كل رحلة تُخزَّن ولا تُعاد جلبها مرة ثانية.
+    IMPORTANT: يدمج النتائج من جميع المصادر حتى تمتلئ الحقول الثلاثة (std, etd, dest).
+    لا يتوقف عند أول مصدر بل يكمل البحث إذا بقيت حقول فارغة.
     """
     flight_iata = normalize_flight_number(flight_iata)
-
-    # ── Cache check ──
-    cache_key = f"{flight_iata}:{flight_date or ''}"
-    if cache_key in _flight_info_cache:
-        print(f"  [cache] {flight_iata} → served from cache")
-        return _flight_info_cache[cache_key]
-
     sources = [
-        ("local_db",   fetch_flight_info_local_db),
-        ("AirLabs",    fetch_flight_info_airlabs),
+        ("AirLabs", fetch_flight_info_airlabs),
         ("Flightradar", fetch_flight_info_flightradar),
-        # MuscatAirport مُعطَّل — يُعيد 403 دائمًا ويُضيف 10 ثوانٍ تأخير
+        ("MuscatAirport", fetch_flight_info_muscatairport),
     ]
 
-    # ═══ Per-field confidence tracking ═══
+    # ═══ FIX: Per-field confidence tracking ═══
+    # Higher-confidence sources OVERWRITE lower-confidence values.
+    # A null from a high-confidence source does NOT erase existing data.
     final: dict[str, dict] = {
         "std":  {"val": "", "conf": 0},
         "etd":  {"val": "", "conf": 0},
@@ -770,11 +607,6 @@ def fetch_flight_info_with_fallbacks(
     used_sources: list[str] = []
 
     for source_name, fn in sources:
-        # ── توقف مبكر: إذا عندنا STD + DEST لا نحتاج المزيد ──
-        if final["std"]["val"] and final["dest"]["val"]:
-            print(f"  [fallback] {flight_iata}: STD+DEST complete after {used_sources} — skipping remaining sources")
-            break
-
         try:
             info = fn(
                 flight_iata,
@@ -784,7 +616,8 @@ def fetch_flight_info_with_fallbacks(
             )
         except Exception as exc:
             print(f"  [fallback] {source_name} failed for {flight_iata}: {exc}")
-            time.sleep(3)
+            import time
+            time.sleep(2)
             try:
                 info = fn(flight_iata, flight_date=flight_date, dep_iata=dep_iata, arr_iata=arr_iata)
             except Exception as exc2:
@@ -818,14 +651,10 @@ def fetch_flight_info_with_fallbacks(
         print(f"  [⚠ fallback] {flight_iata}: still missing after all sources: {', '.join(missing)}")
 
     if not any(merged[k].strip() for k in ("std", "etd", "dest")):
-        result = (None, None)
-    else:
-        combined_source = "+".join(used_sources) if used_sources else None
-        result = (merged, combined_source)
+        return None, None
 
-    # ── تخزين في الـ cache ──
-    _flight_info_cache[cache_key] = result
-    return result
+    combined_source = "+".join(used_sources) if used_sources else None
+    return merged, combined_source
 
 
 def get_shift(now: datetime) -> str:
@@ -1237,74 +1066,42 @@ def _parse_type_c(soup: BeautifulSoup) -> list[dict]:
 #  التخزين
 # ══════════════════════════════════════════════════════════════════
 
-def save_flights(flights: list[dict], now: datetime) -> tuple[str, str, dict, list[str]]:
-    """
-    Save flights under the folder of the actual flight date, not merely the email/runtime date.
+def save_flights(flights: list[dict], now: datetime) -> tuple[str, str, dict]:
+    shift    = get_shift(now)
+    date_dir = get_shift_date(now, shift)
+    folder   = DATA_DIR / date_dir / shift
+    folder.mkdir(parents=True, exist_ok=True)
 
-    Returns:
-        operational_date_dir: shift date derived from runtime (kept for compatibility/logging)
-        shift: current shift key
-        operational_meta: meta.json for the runtime-derived folder (or empty fallback)
-        affected_date_dirs: sorted list of date folders that were actually written
-    """
-    shift = get_shift(now)
-    operational_date_dir = get_shift_date(now, shift)
-
-    metas_by_folder: dict[Path, dict] = {}
-    affected_date_dirs: set[str] = set()
+    meta_path = folder / "meta.json"
+    meta      = load_json(meta_path, {"flights": {}})
+    if not isinstance(meta, dict) or "flights" not in meta:
+        meta = {"flights": {}}
 
     for flight in flights:
-        flight_date_dir = normalize_flight_date(flight.get("date", ""), now) or operational_date_dir
-        affected_date_dirs.add(flight_date_dir)
-
-        folder = DATA_DIR / flight_date_dir / shift
-        folder.mkdir(parents=True, exist_ok=True)
-
-        meta_path = folder / "meta.json"
-        meta = metas_by_folder.get(meta_path)
-        if meta is None:
-            meta = load_json(meta_path, {"flights": {}})
-            if not isinstance(meta, dict) or "flights" not in meta:
-                meta = {"flights": {}}
-            metas_by_folder[meta_path] = meta
-
-        filename = slugify(
+        filename  = slugify(
             f"{flight['flight']}_{flight.get('date','')}_{flight.get('destination','')}"
         ) + ".json"
         file_path = folder / filename
-        existed = file_path.exists()
+        existed   = file_path.exists()
 
-        payload = {
-            **flight,
-            "saved_at": now.isoformat(),
-            "storage_date_dir": flight_date_dir,
-            "storage_shift": shift,
-        }
+        payload = {**flight, "saved_at": now.isoformat()}
         file_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
 
         entry = meta["flights"].get(filename, {
-            "flight": flight["flight"],
-            "date": flight.get("date", ""),
-            "dest": flight.get("destination", ""),
+            "flight":     flight["flight"],
+            "date":       flight.get("date", ""),
+            "dest":       flight.get("destination", ""),
             "created_at": now.isoformat(),
             "updated_at": now.isoformat(),
-            "updates": 0,
+            "updates":    0,
         })
         if existed:
             entry["updates"] = int(entry.get("updates", 0)) + 1
-        entry["updated_at"] = now.isoformat()
-        entry["storage_date_dir"] = flight_date_dir
-        entry["storage_shift"] = shift
+        entry["updated_at"]       = now.isoformat()
         meta["flights"][filename] = entry
 
-    for meta_path, meta in metas_by_folder.items():
-        write_json(meta_path, meta)
-
-    operational_meta = metas_by_folder.get(
-        DATA_DIR / operational_date_dir / shift / "meta.json",
-        {"flights": {}},
-    )
-    return operational_date_dir, shift, operational_meta, sorted(affected_date_dirs)
+    write_json(meta_path, meta)
+    return date_dir, shift, meta
 
 
 
@@ -1370,177 +1167,32 @@ _SHIFT_TO_ROSTER_LABEL = {
 # Leave/off labels to separate from on-duty
 _LEAVE_LABELS = {"annual leave", "sick leave", "emergency leave", "off day", "training"}
 _ROSTER_EXCLUDED_DEPTS = {"officers"}
-_ROSTER_EXCLUDED_SNS = set()  # no global SN exclusions — handled per-section
+_ROSTER_EXCLUDED_SNS = {"990737"}
 
 
 def _normalize_shift_label(value: str) -> str:
     return (value or "").strip().lower()
 
 
-def _roster_request_headers() -> dict[str, str]:
-    return {
-        "Cache-Control": "no-cache, no-store, must-revalidate",
-        "Pragma": "no-cache",
-        "Expires": "0",
-        "User-Agent": "Mozilla/5.0",
-    }
-
-
 def _fetch_daily_roster_html(date_dir: str) -> str:
-    """Fetch the Export daily roster HTML page for a specific date."""
+    """Fetch the daily roster HTML page for a specific date."""
     day_url = f"{ROSTER_PAGE_URL.rstrip('/')}/date/{date_dir}/"
     response = requests.get(
         day_url,
         timeout=20,
-        headers=_roster_request_headers(),
+        headers={
+            "Cache-Control": "no-cache, no-store, must-revalidate",
+            "Pragma": "no-cache",
+            "Expires": "0",
+            "User-Agent": "Mozilla/5.0",
+        },
     )
     response.raise_for_status()
     return response.text
 
 
-def _fetch_import_roster_html(date_dir: str) -> str:
-    """Fetch the Import daily roster HTML page for a specific date.
-
-    Tries the published page first, then falls back to raw GitHub HTML.
-    """
-    candidates = [
-        f"{ROSTER_PAGE_URL.rstrip('/')}/import/{date_dir}/",
-        f"{ROSTER_IMPORT_RAW_BASE.rstrip('/')}/{date_dir}/index.html",
-    ]
-    last_exc: Exception | None = None
-    for url in candidates:
-        try:
-            response = requests.get(
-                url,
-                timeout=20,
-                headers=_roster_request_headers(),
-            )
-            response.raise_for_status()
-            return response.text
-        except Exception as exc:
-            last_exc = exc
-    raise last_exc or RuntimeError(f"Import roster fetch failed for {date_dir}")
-
-
-def _normalize_import_roster_lines(html: str) -> list[str]:
-    text = BeautifulSoup(html, "html.parser").get_text("\n")
-    lines: list[str] = []
-    for raw_line in text.splitlines():
-        line = re.sub(r"\s+", " ", (raw_line or "")).strip()
-        if line:
-            lines.append(line)
-    return lines
-
-
-def _extract_roster_shift_from_line(line: str) -> str:
-    low = _normalize_shift_label(line)
-    if "morning" in low:
-        return "morning"
-    if "afternoon" in low:
-        return "afternoon"
-    if "night" in low:
-        return "night"
-    if "off day" in low:
-        return "off day"
-    if "annual leave" in low:
-        return "annual leave"
-    if "sick leave" in low:
-        return "sick leave"
-    if "emergency leave" in low:
-        return "emergency leave"
-    if "training" in low:
-        return "training"
-    return ""
-
-
-_IMPORT_DEPT_HEADERS: dict[str, str] = {
-    "documentation": "Documentation",
-    "flight dispatch (export)": "Flight Dispatch (Export)",
-    "flight dispatch (import)": "Flight Dispatch (Import)",
-    "import checkers": "Import Checkers",
-    "import operators": "Import Operators",
-    "release control": "Release Control",
-    "supervisors": "Supervisors",
-}
-_IMPORT_FLIGHT_DISPATCH_KEYS: dict[str, str] = {
-    "flight dispatch (export)": "fd_export",
-    "flight dispatch (import)": "fd_import",
-}
-
-
-def _parse_import_employee_line(line: str, dept: str) -> dict | None:
-    m = re.match(r"^(.+?)\s*[·•\-–]\s*(\d{3,6})\b.*$", line)
-    if not m:
-        return None
-    return {
-        "name": m.group(1).strip(),
-        "sn": m.group(2).strip(),
-        "dept": dept,
-    }
-
-
-def fetch_import_flight_dispatch_staff(date_dir: str, shift: str) -> dict:
-    """Fetch Flight Dispatch staff from Import roster for the given date/shift."""
-    target_shift = _normalize_shift_label(_SHIFT_TO_ROSTER_LABEL.get(shift, shift))
-    result = {"fd_export": [], "fd_import": []}
-    if not target_shift:
-        return result
-
-    try:
-        html = _fetch_import_roster_html(date_dir)
-        lines = _normalize_import_roster_lines(html)
-    except Exception as exc:
-        print(f"  [roster-import] Failed to fetch/parse {date_dir}: {exc}")
-        return result
-
-    current_dept_key = ""
-    current_shift = ""
-
-    for line in lines:
-        low = _normalize_shift_label(line)
-
-        if low in _IMPORT_DEPT_HEADERS:
-            current_dept_key = low
-            current_shift = ""
-            continue
-
-        if not current_dept_key:
-            continue
-
-        shift_label = _extract_roster_shift_from_line(line)
-        if shift_label:
-            current_shift = shift_label
-            continue
-
-        if low.startswith("total "):
-            continue
-        if low.startswith("view full roster") or low.startswith("last updated:"):
-            break
-
-        # Once we leave the Flight Dispatch sections, ignore the rest.
-        if low in _IMPORT_DEPT_HEADERS and low not in _IMPORT_FLIGHT_DISPATCH_KEYS:
-            current_dept_key = ""
-            current_shift = ""
-            continue
-
-        if current_dept_key not in _IMPORT_FLIGHT_DISPATCH_KEYS:
-            continue
-        if current_shift != target_shift:
-            continue
-
-        item = _parse_import_employee_line(line, _IMPORT_DEPT_HEADERS[current_dept_key])
-        if item:
-            result[_IMPORT_FLIGHT_DISPATCH_KEYS[current_dept_key]].append(item)
-
-    print(
-        f"  [roster-import] {date_dir}/{shift}: "
-        f"{len(result['fd_export'])} fd-export, {len(result['fd_import'])} fd-import"
-    )
-    return result
-
-
 def fetch_roster_staff(date_dir: str, shift: str) -> dict:
-    """Fetch staff on duty from the Export daily roster HTML page for the given date/shift.
+    """Fetch staff on duty from the daily roster HTML page for the given date/shift.
 
     Returns:
         {
@@ -1599,13 +1251,16 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
 
                 if dept_norm in _ROSTER_EXCLUDED_DEPTS:
                     continue
+                if sn in _ROSTER_EXCLUDED_SNS:
+                    continue
+                if "support" in f"{name} {dept}".lower():
+                    continue
 
                 on_duty.append(item)
 
     print(f"  [roster-html] {date_dir}/{shift}: {len(on_duty)} on duty, {len(on_leave)} on leave")
-    all_depts = sorted({e.get("dept", "?") for e in on_duty + on_leave})
-    print(f"  [roster-debug] all depts seen: {all_depts}")
     return {"on_duty": on_duty, "on_leave": on_leave}
+
 
 
 
@@ -1624,9 +1279,9 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         flights = []
 
     # ── Styles ──
-    hdr_bg      = "#dce6f4"
-    hdr_color   = "#1b1f2a"
-    hdr_border  = "#a8bcd8"
+    hdr_bg      = "#0b3a78"
+    hdr_color   = "#ffffff"
+    hdr_border  = "#093068"
     row_even    = "#ffffff"
     row_odd     = "#f4f7fc"
     cell_border = "#d0d9ee"
@@ -1844,11 +1499,11 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         data_rows += f"""
       <tr>
         <td {td_s}><strong>{item_num}</strong></td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="date">{date}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="flight">{flt}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="std">{std_etd_display}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="dest">{dest}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="email">{email}</td>
+        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{date}</td>
+        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{flt}</td>
+        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{std_etd_display}</td>
+        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{dest}</td>
+        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{email}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{physical}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{uld_display}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{cms}</td>
@@ -1866,11 +1521,11 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         data_rows += f"""
       <tr>
         <td {_empty_td}><strong>{item_num}</strong></td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="date">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="flight">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="std">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="dest">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="email">&nbsp;</td>
+        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
@@ -1882,13 +1537,11 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     # ── NIL case ──
     if not flights:
         data_rows = f"""
-      <tr id="nil-row">
-        <td colspan="12" style="padding:10px 10px; border:1px solid {cell_border};
+      <tr>
+        <td colspan="12" style="padding:12px 10px; border:1px solid {cell_border};
             color:{nil_color}; text-align:center; font-style:italic; font-size:12px;
             font-family:Calibri,Arial,sans-serif; background:{row_even};">
-          <span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL \u2014 No offload data recorded for this shift.</span>
-          &nbsp;<button onclick="var r=document.getElementById('nil-row');if(r)r.remove();triggerAutosave();"
-            style="font-size:10px;padding:1px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;vertical-align:middle;">\u2715 Remove</button>
+          NIL — No offload data recorded for this shift.
         </td>
       </tr>"""
         # Add 3 empty rows even for NIL
@@ -1896,11 +1549,11 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             data_rows += f"""
       <tr>
         <td {_empty_td}><strong>{i}</strong></td>
-        <td {_empty_td} contenteditable="true" data-col="date">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="flight">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="std">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="dest">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="email">&nbsp;</td>
+        <td {_empty_td} contenteditable="true">&nbsp;</td>
+        <td {_empty_td} contenteditable="true">&nbsp;</td>
+        <td {_empty_td} contenteditable="true">&nbsp;</td>
+        <td {_empty_td} contenteditable="true">&nbsp;</td>
+        <td {_empty_td} contenteditable="true">&nbsp;</td>
         <td {_empty_td} contenteditable="true">&nbsp;</td>
         <td {_empty_td} contenteditable="true">&nbsp;</td>
         <td {_empty_td} contenteditable="true">&nbsp;</td>
@@ -1913,32 +1566,30 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     <table width="100%" cellpadding="0" cellspacing="0" border="0"
            style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; margin-top:12px; margin-bottom:14px;">
       {col_headers}
-      <tbody id="offload-tbody">
       {data_rows}
-      </tbody>
     </table>"""
 
-    return f'<div class="offload-scroll" style="margin-top:12px;">{table_html}</div>'
+    return f'<div style="margin-top:12px;">{table_html}</div>'
 
 
-def _render_manpower_section(roster: dict, supervisor_display: str = "", import_roster: dict | None = None) -> str:
-    """Render Section 6 MANPOWER — grouped by dept, sections B-G."""
-    # re is already imported at module level
+def _render_manpower_section(roster: dict, supervisor_display: str = "") -> str:
+    """Render Section 6 MANPOWER — grouped by dept, sections B-G (improved formatting)."""
     on_duty = roster.get("on_duty", [])
-    import_roster = import_roster or {"fd_export": [], "fd_import": []}
 
-    td_style  = "font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.8;"
-    hdr_style = "color:#0b3a78;font-weight:700;font-size:13px;"
-    dept_hdr  = "color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;"
-    ul_style  = "margin:2px 0 10px 20px;padding:0;"
-    ul_class  = "mp-list"
-    nil_item  = '<li style="color:#64748b;">NIL</li>'
+    td_style  = "font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.6;"
+    hdr_style = "color:#0b3a78;font-weight:700;font-size:13px;margin:0;"
+    dept_hdr_style = ("background-color:#eef3fc;color:#0b3a78;font-weight:700;font-size:12px;"
+                      "padding:5px 10px;border-left:3px solid #0b3a78;margin:10px 0 4px 0;")
+    ul_style  = "margin:4px 0 8px 18px;padding:0;list-style-type:disc;"
+    li_style  = "padding:2px 0;font-size:13px;color:#1b1f2a;line-height:1.5;"
+    nil_item  = '<li style="color:#94a3b8;font-style:italic;padding:2px 0;">NIL</li>'
+    _btn_style = ("font-size:11px;padding:2px 10px;margin:2px 0 8px;cursor:pointer;"
+                  "background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;"
+                  "border-radius:3px;font-family:Calibri,Arial,sans-serif;")
+    _li_edit   = f'<li contenteditable="true" style="outline:none;{li_style}">&nbsp;</li>'
 
-    EXCLUDED_DEPTS   = {"officers"}
-    # هؤلاء يُعرضون في أقسامهم الخاصة (Inventory / Support Team) — لا في القسم العام
-    INVENTORY_SNS    = {"82592", "990737"}
-    SUPPORT_SNS      = {"82653", "82565"}
-    ALL_SPECIAL_SNS  = INVENTORY_SNS | SUPPORT_SNS
+    EXCLUDED_DEPTS = {"officers"}
+    EXCLUDED_SNS   = {"990737"}
 
     def _is_support(e):
         return "support" in (e.get("name","") + e.get("dept","")).lower()
@@ -1946,234 +1597,118 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
     def _is_excluded(e):
         dept = e.get("dept","").strip().lower()
         sn   = str(e.get("sn","")).strip()
-        return dept in EXCLUDED_DEPTS or sn in ALL_SPECIAL_SNS or _is_support(e)
+        return dept in EXCLUDED_DEPTS or _is_support(e) or sn in EXCLUDED_SNS
 
     def _fmt_name(emp):
         raw  = emp.get("name","").strip()
         sn   = str(emp.get("sn") or "").strip()
-        # استخراج SN والاسم إذا كانا مدمجَين في raw
         m = re.match(r"^(.+?)\s*-\s*(\d{4,})\s*(?:\((.+?)\))?$", raw)
         if m:
             name_part = m.group(1).strip()
             sn_part   = m.group(2).strip()
-        else:
-            name_part = raw
-            sn_part   = sn
-        note_html = ""
-        # تنسيق: SN بخط عريض أزرق + اسم في عمود محدد
-        sn_display   = f"SN{sn_part}" if sn_part else ""
-        return (
-            f'<span data-sn="{sn_part}" data-name="{name_part}" '
-            f'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
-            f'<span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">{sn_display}</span>'
-            f'<span style="color:#1b1f2a;">{name_part}</span>'
-            f'</span>'
-            f'{note_html}'
-        )
+            note      = m.group(3).strip() if m.group(3) else ""
+            note_html = f' <em style="color:#94a3b8;font-size:11px;font-style:italic;">({note})</em>' if note else ""
+            return (f'<span style="color:#64748b;font-size:11px;font-weight:600;">SN {sn_part}</span>'
+                    f' <span style="color:#334155;font-weight:600;">— {name_part}</span>{note_html}')
+        sn_html = f'<span style="color:#64748b;font-size:11px;font-weight:600;">SN {sn}</span> <span style="color:#334155;font-weight:600;">—</span> ' if sn else ""
+        return f'{sn_html}<span style="color:#334155;font-weight:600;">{raw}</span>'
 
-    # الموظفون الرئيسيون مجمّعون بالقسم
-    # OrderedDict is already imported at module level
+    def _dept_section(title, ul_id, employees, show_count=True):
+        count_badge = ""
+        if show_count and employees:
+            count_badge = (f' <span style="background:#0b3a78;color:#fff;font-size:10px;'
+                          f'font-weight:700;padding:1px 6px;border-radius:10px;'
+                          f'margin-left:6px;vertical-align:middle;">{len(employees)}</span>')
+        items_li = "".join(
+            f'<li contenteditable="true" style="outline:none;{li_style}">{_fmt_name(e)}</li>\n'
+            for e in employees
+        ) if employees else _li_edit
+        return f"""
+      <div style="{dept_hdr_style}">{title}{count_badge}</div>
+      <ul id="{ul_id}" style="{ul_style}">{items_li}</ul>
+      <button onclick="addListItem('{ul_id}')" style="{_btn_style}">+ Add</button>"""
+
     main_emps = [e for e in on_duty if not _is_excluded(e)]
     by_dept = OrderedDict()
     for emp in main_emps:
         by_dept.setdefault(emp.get("dept","Other"), []).append(emp)
 
-    # الأقسام التي تُعالج يدوياً — لا تُكرَّر في الـ loop أدناه
     MANUAL_DEPTS = {"supervisors"}
-
     grouped_html = ""
-    # أولاً: قسم Supervisors — يُعرض دائماً في الأعلى (مع استثناء EXCLUDED_SNS)
+
+    # Supervisors section
     sup_in_roster = [
         e for e in on_duty
         if e.get("dept","").strip().lower() == "supervisors"
-        and str(e.get("sn","")).strip() not in ALL_SPECIAL_SNS
+        and str(e.get("sn","")).strip() not in EXCLUDED_SNS
     ]
     if sup_in_roster:
-        sup_li_roster = "".join(f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>\n' for e in sup_in_roster)
-        grouped_html += f"""
-      <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}">{sup_li_roster}</ul>
-      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+        grouped_html += _dept_section("Supervisors", "ul-supervisors", sup_in_roster)
     elif supervisor_display:
         grouped_html += f"""
-      <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;"><strong>{supervisor_display}</strong></li></ul>
-      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+      <div style="{dept_hdr_style}">Supervisors</div>
+      <ul id="ul-supervisors" style="{ul_style}"><li contenteditable="true" style="outline:none;{li_style}"><strong style="color:#0b3a78;">{supervisor_display}</strong></li></ul>
+      <button onclick="addListItem('ul-supervisors')" style="{_btn_style}">+ Add</button>"""
     else:
         grouped_html += f"""
-      <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>
-      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+      <div style="{dept_hdr_style}">Supervisors</div>
+      <ul id="ul-supervisors" style="{ul_style}">{_li_edit}</ul>
+      <button onclick="addListItem('ul-supervisors')" style="{_btn_style}">+ Add</button>"""
 
-    # ثانياً: باقي الأقسام من roster (تخطّى supervisors — مُعالَج أعلاه)
+    # Other departments
     for dept, emps in by_dept.items():
         if dept.strip().lower() in MANUAL_DEPTS:
             continue
         dept_id = "ul-dept-" + re.sub(r'[^a-z0-9]', '', dept.lower())
-        items_li = "".join(f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>\n' for e in emps)
-        grouped_html += f"""
-      <div style="{dept_hdr}">{dept}:</div>
-      <ul id="{dept_id}" class="{ul_class}" style="{ul_style}">{items_li}</ul>
-      <button onclick="addListItem('{dept_id}')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+        grouped_html += _dept_section(dept, dept_id, emps)
 
     if not grouped_html:
-        grouped_html = f'<ul class="{ul_class}" style="{ul_style}"><li style="color:#64748b;">No roster data available.</li></ul>'
+        grouped_html = f'<div style="padding:8px;color:#94a3b8;font-style:italic;">No roster data available.</div>'
 
-    # ── Inventory: من الروستر بـ SN ──
-    _inventory_from_roster = [e for e in on_duty if str(e.get("sn","")).strip() in INVENTORY_SNS]
+    # Support Team
+    support_emps = [e for e in on_duty if _is_support(e)]
 
-    def _fmt_emp_row(name, sn):
-        sn_display = f"SN{sn}" if sn else ""
-        return (
-            f'<li contenteditable="true" style="outline:none;">'
-            f'<span data-sn="{sn}" data-name="{name}" '
-            f'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
-            f'<span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">{sn_display}</span>'
-            f'<span style="color:#1b1f2a;">{name}</span>'
-            f'</span></li>'
-        )
+    section_b = _dept_section("B) CTU Staff On Duty", "ul-ctu", [])
+    section_c = _dept_section("C) Support Team", "ul-support", support_emps)
+    section_d = f"""
+      <div style="{dept_hdr_style}">D) Sick Leave / No Show / Others</div>
+      <ul id="ul-sickleave" style="{ul_style}">{_li_edit}</ul>
+      <button onclick="addListItem('ul-sickleave')" style="{_btn_style}">+ Add</button>"""
+    section_e = f"""
+      <div style="{dept_hdr_style}">E) Annual Leave / Course / Off in Lieu</div>
+      <ul id="ul-annualleave" style="{ul_style}">{_li_edit}</ul>
+      <button onclick="addListItem('ul-annualleave')" style="{_btn_style}">+ Add</button>"""
+    section_f = f"""
+      <div style="{dept_hdr_style}">F) Trainee</div>
+      <ul id="ul-trainee" style="{ul_style}">{_li_edit}</ul>
+      <button onclick="addListItem('ul-trainee')" style="{_btn_style}">+ Add</button>"""
+    section_g = f"""
+      <div style="{dept_hdr_style}">G) Overtime Justification</div>
+      <ul id="ul-overtime" style="{ul_style}">{_li_edit}</ul>
+      <button onclick="addListItem('ul-overtime')" style="{_btn_style}">+ Add</button>"""
 
-    if _inventory_from_roster:
-        _inventory_staff_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in _inventory_from_roster)
-    else:
-        _inventory_staff_items = '<li style="color:#64748b;">—</li>'
-
-    # ── C) Support Team: من الروستر بـ SN أو dept/name يحتوي support ──
-    _support_by_sn   = [e for e in on_duty if str(e.get("sn","")).strip() in SUPPORT_SNS]
-    _support_by_name = [e for e in on_duty if _is_support(e) and str(e.get("sn","")).strip() not in SUPPORT_SNS]
-    _seen_sup = set()
-    _combined_support = []
-    for e in _support_by_sn + _support_by_name:
-        k = str(e.get("sn","")).strip() or e.get("name","")
-        if k not in _seen_sup:
-            _seen_sup.add(k)
-            _combined_support.append(e)
-
-    if _combined_support:
-        _c_items = "\n".join(
-            f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>'
-            for e in _combined_support
-        )
-    else:
-        _c_items = '<li contenteditable="true" style="outline:none;">&nbsp;</li>'
-
-    _btn_style = "font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;"
-    _li_edit   = '<li contenteditable="true" style="outline:none;">&nbsp;</li>'
-
-    # section_b
-    section_b = (
-        f'<div style="{hdr_style}">B) CTU Staff On Duty:</div>'
-        f'<ul id="ul-ctu" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-ctu\')" style="{_btn_style}">+ Add</button>'
-    )
-
-    # Inventory section
-    section_inventory = (
-        f'<div style="{hdr_style}">Inventory:</div>'
-        f'<ul id="ul-inventory" class="{ul_class}" style="{ul_style}">{_inventory_staff_items}</ul>'
-        f'<button onclick="addListItem(\'ul-inventory\')" style="{_btn_style}">+ Add</button>'
-    )
-
-    # section_c
-    section_c = (
-        f'<div style="{hdr_style}">C) Support Team:</div>'
-        f'<ul id="ul-support" class="{ul_class}" style="{ul_style}">{_c_items}</ul>'
-        f'<button onclick="addListItem(\'ul-support\')" style="{_btn_style}">+ Add</button>'
-    )
-
-    fd_export_staff = import_roster.get("fd_export", [])
-    fd_import_staff = import_roster.get("fd_import", [])
-
-    if fd_export_staff:
-        _fd_export_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in fd_export_staff)
-    else:
-        _fd_export_items = '<li style="color:#64748b;">NIL</li>'
-
-    if fd_import_staff:
-        _fd_import_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in fd_import_staff)
-    else:
-        _fd_import_items = '<li style="color:#64748b;">NIL</li>'
-
-    section_fd_export = (
-        f'<div style="{hdr_style}">Flight Dispatch (Export):</div>'
-        f'<ul id="ul-fd-export" class="{ul_class}" style="{ul_style}">{_fd_export_items}</ul>'
-        f'<button onclick="addListItem(\'ul-fd-export\')" style="{_btn_style}">+ Add</button>'
-    )
-
-    section_fd_import = (
-        f'<div style="{hdr_style}">Flight Dispatch (Import):</div>'
-        f'<ul id="ul-fd-import" class="{ul_class}" style="{ul_style}">{_fd_import_items}</ul>'
-        f'<button onclick="addListItem(\'ul-fd-import\')" style="{_btn_style}">+ Add</button>'
-    )
-
-    section_d = (
-        f'<div style="{hdr_style}">D) Sick Leave / No Show / Others:</div>'
-        f'<ul id="ul-sickleave" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-sickleave\')" style="{_btn_style}">+ Add</button>'
-    )
-    section_e = (
-        f'<div style="{hdr_style}">E) Annual Leave / Course / Off in Lieu:</div>'
-        f'<ul id="ul-annualleave" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-annualleave\')" style="{_btn_style}">+ Add</button>'
-    )
-    section_f = (
-        f'<div style="{hdr_style}">F) Trainee:</div>'
-        f'<ul id="ul-trainee" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-trainee\')" style="{_btn_style}">+ Add</button>'
-    )
-    section_g = (
-        f'<div style="{hdr_style}">G) Overtime Justification:</div>'
-        f'<ul id="ul-overtime" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-overtime\')" style="{_btn_style}">+ Add</button>'
-    )
+    # Total on duty count
+    total_on_duty = len(on_duty)
+    total_badge = ""
+    if total_on_duty:
+        total_badge = (f'<div style="margin:4px 0 10px;font-size:12px;color:#64748b;">'
+                      f'Total Staff on Duty: <strong style="color:#0b3a78;">{total_on_duty}</strong></div>')
 
     return f"""
         <td colspan="2" valign="top" style="{td_style}">
+          <div style="font-size:14px;font-weight:800;color:#0b3a78;margin-bottom:2px;">A) Export Staff On Duty:</div>
+          {total_badge}
           {grouped_html}
+          <div style="border-top:1px dashed #d0d8ea;margin:12px 0;"></div>
           {section_b}
-          {section_inventory}
+          <div style="border-top:1px dashed #d0d8ea;margin:12px 0;"></div>
           {section_c}
-          {section_fd_export}
-          {section_fd_import}
+          <div style="border-top:1px dashed #d0d8ea;margin:12px 0;"></div>
           {section_d}
           {section_e}
           {section_f}
           {section_g}
         </td>"""
-
-
-
-def _load_manpower_json_staff_map() -> dict[str, str]:
-    """Load manpower.json and flatten all IDs to numeric SN -> NAME map."""
-    path = MANPOWER_JSON_PATH
-    if not path.exists():
-        return {}
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except Exception as exc:
-        print(f"  [manpower.json] Failed to load {path}: {exc}")
-        return {}
-
-    out: dict[str, str] = {}
-
-    def walk(node):
-        if isinstance(node, dict):
-            name = str(node.get("name", "")).strip()
-            emp_id = str(node.get("id", "")).strip()
-            if name and emp_id:
-                m = re.search(r"(\d{3,10})", emp_id)
-                if m:
-                    sn = m.group(1)
-                    out.setdefault(sn, name)
-            for v in node.values():
-                walk(v)
-        elif isinstance(node, list):
-            for item in node:
-                walk(item)
-
-    walk(data)
-    print(f"  [manpower.json] Loaded {len(out)} staff IDs from {path}")
-    return out
 
 def _update_flight_json(folder: Path, flight: dict) -> None:
     """Update a saved flight JSON file with new data (e.g. enriched STD/ETD)."""
@@ -2204,13 +1739,28 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     # ── Filter offload: only keep flights whose date matches the report date ──
     # datetime is already imported at module level
     def _flight_date_matches(flt_date_str: str, report_date: str) -> bool:
-        """Strictly keep only flights whose parsed date equals report_date."""
+        """Check if flight date (e.g. '27FEB', '27FEB25', '2025-02-27') matches report_date (YYYY-MM-DD)."""
         if not flt_date_str or not flt_date_str.strip():
-            return False
-        parsed = normalize_flight_date(flt_date_str, datetime.now(ZoneInfo(TIMEZONE)))
-        if not parsed:
-            return False
-        return parsed == report_date
+            return True  # no date = don't filter out
+        fd = flt_date_str.strip().upper()
+        try:
+            rd = datetime.strptime(report_date, "%Y-%m-%d")
+        except Exception:
+            return True
+        # Try various formats
+        for fmt in ("%d%b%y", "%d%b%Y", "%d%b", "%Y-%m-%d", "%d-%b-%y", "%d-%b-%Y"):
+            try:
+                parsed = datetime.strptime(fd, fmt)
+                # For formats without year, assume report year
+                if fmt == "%d%b":
+                    parsed = parsed.replace(year=rd.year)
+                if parsed.day == rd.day and parsed.month == rd.month and parsed.year == rd.year:
+                    return True
+                else:
+                    return False
+            except ValueError:
+                continue
+        return True  # unknown format = don't filter out
 
     flights = [f for f in flights if _flight_date_matches(f.get("date", ""), date_dir)]
 
@@ -2224,7 +1774,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         try:
             info, source_name = fetch_flight_info_with_fallbacks(
                 flt,
-                flight_date=normalize_flight_date(f.get("date", ""), datetime.now(ZoneInfo(TIMEZONE))) or date_dir,
+                flight_date=date_dir,
                 dep_iata="MCT",
                 arr_iata=(f.get("destination") or "").strip() or None,
             )
@@ -2280,9 +1830,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         "shift3": {"ar": "ليل",      "en": "Night",      "time": "21:00 – 06:00"},
     }
     sl            = shift_labels.get(shift, {"ar": shift, "en": shift, "time": ""})
-    sl_en         = sl["en"]
-    sl_time       = sl["time"]
-    shift_label   = f"{sl_en} Shift — {sl_time}"
+    shift_label   = f"{sl['en']} Shift — {sl['time']}"
     total_flights = len(flights)
     total_items   = sum(len(f.get("items", [])) for f in flights)
 
@@ -2298,7 +1846,6 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 
     # Fetch roster
     roster = fetch_roster_staff(date_dir, shift)
-    import_roster = fetch_import_flight_dispatch_staff(date_dir, shift)
 
     # ── Supervisor name resolution (on-duty only) ──
     # Only use actual supervisors from roster — no acting/deputy logic.
@@ -2321,7 +1868,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     supervisor_display = supervisor_name if supervisor_name else ""
     signature_display = supervisor_display
 
-    manpower_cols = _render_manpower_section(roster, supervisor_display, import_roster)
+    manpower_cols = _render_manpower_section(roster, supervisor_display)
 
     # Format date for display
     # Night Shift تمتد عبر يومين (مثلاً 22/23 MAR)، لذلك نعرض كلا اليومين في الرأس
@@ -2335,23 +1882,6 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     except Exception:
         date_display = date_dir
 
-    # ── تجهيز JSON للرحلات المحلية كمتغير خارج الـ f-string ──
-    local_flights_js = json.dumps(_load_local_db(), ensure_ascii=False)
-
-    # ── تجهيز JSON لكل الموظفين لاستخدامه في autocomplete ──
-    _staff_map: dict[str, str] = _load_manpower_json_staff_map()
-    for _emp in roster.get("on_duty", []) + roster.get("on_leave", []):
-        _sn = str(_emp.get("sn", "")).strip()
-        _nm = str(_emp.get("name", "")).strip()
-        if _sn and _nm and _sn not in _staff_map:
-            _staff_map[_sn] = _nm
-    for _emp in import_roster.get("fd_export", []) + import_roster.get("fd_import", []):
-        _sn = str(_emp.get("sn", "")).strip()
-        _nm = str(_emp.get("name", "")).strip()
-        if _sn and _nm and _sn not in _staff_map:
-            _staff_map[_sn] = _nm
-    all_staff_js = json.dumps(_staff_map, ensure_ascii=False)
-
     html = f"""<!DOCTYPE html>
 <html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
@@ -2359,66 +1889,14 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>Export Warehouse Activity Report — {date_display}</title>
-  <style>
-    *,*::before,*::after{{box-sizing:border-box;}}
-    body{{margin:0;padding:0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;}}
-    .page-wrap{{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;}}
-    #report-content{{width:100%;max-width:1100px;background:#fff;border:1px solid #d0d5e8;margin:0 auto;}}
-    .btn-bar{{max-width:1100px;margin:10px auto 20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:0 4px;}}
-    .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
-    /* جدول الأوفلود — يسمح بالتمرير الأفقي على الجوال */
-    .offload-scroll{{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}}
-    .offload-scroll table{{min-width:900px;width:100%;}}
-
-    /* ══════════════ MOBILE ══════════════ */
-    @media(max-width:700px){{
-      /* عام */
-      .page-wrap{{padding:4px 0 24px;}}
-      #report-content{{border-radius:0;border-left:0;border-right:0;}}
-
-      /* الهيدر */
-      .hdr-inner{{display:block!important;}}
-      .hdr-right{{display:none!important;}}  /* إخفاء "Transom Cargo" على الجوال */
-      .hdr-title{{font-size:15px!important;line-height:1.3!important;}}
-      .hdr-meta{{font-size:11px!important;margin-top:5px!important;line-height:1.6!important;}}
-
-      /* padding الأقسام */
-      .sec-pad{{padding-left:12px!important;padding-right:12px!important;}}
-
-      /* أزرار الأسفل */
-      .btn-bar{{justify-content:stretch;margin:8px 6px 16px;gap:6px;}}
-      .btn-bar button{{flex:1 1 45%;font-size:12px;padding:10px 4px;border-radius:6px;}}
-
-      /* التوقيع */
-      .sig-wrap td{{display:block!important;width:100%!important;padding-bottom:12px!important;border-right:none!important;}}
-
-      /* خط الأسماء في MANPOWER */
-      .mp-list li{{font-size:12px!important;line-height:1.7!important;}}
-      .mp-list span[style*="width:200px"]{{width:150px!important;}}
-
-      /* footer */
-      .report-footer-td{{padding:14px 12px!important;font-size:11px!important;}}
-
-      /* section headers — أصغر */
-      .sec-label{{font-size:11px!important;}}
-
-      /* النصوص العامة */
-      .sec-body{{font-size:12.5px!important;}}
-      ul li{{font-size:12.5px!important;}}
-    }}
-
-    @media(max-width:400px){{
-      .btn-bar button{{flex:1 1 100%;}}
-      .hdr-title{{font-size:13px!important;}}
-    }}
-  </style>
 </head>
-<body>
-<div class="page-wrap">
-<div style="max-width:1100px;margin:0 auto;">
+<body style="margin:0; padding:0; background-color:#eef1f7; font-family:Calibri, Arial, sans-serif;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" id="report-content"
-       style="background-color:#ffffff; border:1px solid #d0d5e8;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#eef1f7; padding:20px 0;">
+<tr><td align="left" style="padding:0 10px;">
+
+<table width="1100" cellpadding="0" cellspacing="0" border="0" id="report-content"
+       style="width:1100px; max-width:1100px; background-color:#ffffff; border:1px solid #d0d5e8;">
 
   <!-- ═══ HEADER ═══ -->
   <tr>
@@ -2427,19 +1905,19 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         <tr>
           <td width="8" data-email-keep="1" style="background-color:#f59e0b; font-size:1px; line-height:1px;">&nbsp;</td>
           <td data-email-keep="1" style="padding:20px 22px 18px 16px; background-color:#1e5799;">
-            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" class="hdr-inner" style="display:table;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
               <tr>
-                <td data-email-keep="1" class="hdr-left" style="background-color:#1e5799;">
-                  <div class="hdr-title" data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:21px; font-weight:800; color:#ffffff; letter-spacing:0.5px; line-height:1.25;">
+                <td data-email-keep="1" style="background-color:#1e5799;">
+                  <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:21px; font-weight:800; color:#ffffff; letter-spacing:0.5px; line-height:1.25;">
                     <span style="color:#ffffff;">&#9992;&nbsp; Export Warehouse Activity Report</span>
                   </div>
-                  <div class="hdr-meta" data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#ffffff; margin-top:7px; letter-spacing:0.2px;">
+                  <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#ffffff; margin-top:7px; letter-spacing:0.2px;">
                     <span style="color:#ffffff;">Shift Date:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{date_display}</strong>
-                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;Time:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl_time} LT</strong>
-                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl_en} Shift</strong>
+                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;Time:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl['time']} LT</strong>
+                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><strong style="color:#fde68a; font-weight:700;">{sl['en']} Shift</strong>
                   </div>
                 </td>
-                <td align="right" valign="middle" data-email-keep="1" class="hdr-right" style="padding-right:6px; background-color:#1e5799;">
+                <td align="right" valign="middle" data-email-keep="1" style="padding-right:6px; background-color:#1e5799;">
                   <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#93c5fd; line-height:1.5; text-align:right;">
                     <span style="color:#93c5fd;">Transom Cargo LLC.</span><br>
                     <strong style="color:#ffffff; font-weight:700;">Export Operations</strong>
@@ -2463,23 +1941,69 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     </td>
   </tr>
 
+    <!-- ═══ SHIFT SUMMARY ═══ -->
+  <tr>
+    <td style="padding:16px 24px 0 24px;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+          <td style="padding:6px 10px; background-color:#eef3fc;">
+            <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px; text-transform:uppercase;">Shift Summary</span>
+          </td>
+        </tr>
+      </table>
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px; border:1px solid #e0e7f5;">
+        <tr>
+          <td width="50%" style="padding:10px 12px; border-right:1px solid #e0e7f5; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
+            <strong style="color:#0b3a78;">✅ Flight Performance:</strong><br>
+            All flights departed on time (no cargo-related delay).
+          </td>
+          <td width="50%" style="padding:10px 12px; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
+            <strong style="color:#0b3a78;">🚫 Cargo Delay:</strong><br>
+            NIL
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 12px; border-right:1px solid #e0e7f5; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top;">
+            <strong style="color:#0b3a78;">⚠️ DG Irregularities:</strong><br>
+            DG Embargo station check done.
+          </td>
+          <td style="padding:10px 12px; border-bottom:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top;">
+            <strong style="color:#0b3a78;">🦺 Safety Incidents:</strong><br>
+            Safety briefing done; PPE compliance confirmed.
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:10px 12px; border-right:1px solid #e0e7f5; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
+            <strong style="color:#0b3a78;">📦 Offloaded / Missing AWB:</strong><br>
+            {offload_summary}
+          </td>
+          <td style="padding:10px 12px; font-family:Calibri,Arial,sans-serif; font-size:13px; color:#1b1f2a; vertical-align:top; background-color:#f5f8ff;">
+            <strong style="color:#0b3a78;">📋 UTL Report:</strong><br>
+            NIL
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
   <!-- ═══ SECTION 1: OPERATIONAL ACTIVITIES ═══ -->
-  <tr><td class="sec-pad" style="padding:18px 24px 0 24px;">
+  <tr><td style="padding:18px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">1.&nbsp; OPERATIONAL ACTIVITIES</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">1.&nbsp; OPERATIONAL ACTIVITIES</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <strong style="color:#0b3a78;">Load Plan:</strong>
-      <ul id="ul-loadplan" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <ul id="ul-loadplan" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li></ul>
       <button onclick="addListItem('ul-loadplan')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <br>
       <strong style="color:#0b3a78;">Advance Loading:</strong>
-      <ul id="ul-advloading" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <ul id="ul-advloading" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li></ul>
       <button onclick="addListItem('ul-advloading')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <br>
       <strong style="color:#0b3a78;">CSD Rescreening:</strong>
@@ -2490,45 +2014,44 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </td></tr>
 
   <!-- ═══ SECTION 2: BRIEFINGS ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">2.&nbsp; BRIEFINGS CONDUCTED</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">2.&nbsp; BRIEFINGS CONDUCTED</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-briefings" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
-        <li contenteditable="true" tabindex="60" style="outline:none;">Safety toolbox conducted.</li>
-        <li contenteditable="true" tabindex="61" style="outline:none;">ULD and net serviceability checked.</li>
-        <li contenteditable="true" tabindex="62" style="outline:none;">Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
-        <li contenteditable="true" tabindex="63" style="outline:none;">Briefing on <strong>EY CCS 25-011</strong> (correct pallet stack build-up) – read &amp; sign completed.</li>
-        <li contenteditable="true" tabindex="64" style="outline:none;">Briefing on <strong>QR CGO CSA 09-25</strong> (weight scale discrepancies) – read &amp; sign completed.</li>
-        <li contenteditable="true" tabindex="65" style="outline:none;">Process briefing for shipments UWS discrepancies.</li>
-        <li contenteditable="true" tabindex="66" style="outline:none;"><strong>WY instruction:</strong> No shipment to CAI with handwritten labels – read &amp; sign completed.</li>
-        <li contenteditable="true" tabindex="67" style="outline:none;">EY safety notification related to cargo handling discussed.</li>
-        <li contenteditable="true" tabindex="68" style="outline:none;">Staff reminded to complete LMS training and informed about new roster.</li>
-        <li contenteditable="true" tabindex="69" style="outline:none;">Instructions on attaching printed ULD tags on trolleys.</li>
-        <li contenteditable="true" tabindex="70" style="outline:none;">Stationery logbook kept at supervisor desk.</li>
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+        <li>Safety toolbox conducted.</li>
+        <li>ULD and net serviceability checked.</li>
+        <li>Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
+        <li>Briefing on <strong>EY CCS 25-011</strong> (correct pallet stack build-up) – read &amp; sign completed.</li>
+        <li>Briefing on <strong>QR CGO CSA 09-25</strong> (weight scale discrepancies) – read &amp; sign completed.</li>
+        <li>Process briefing for shipments UWS discrepancies.</li>
+        <li><strong>WY instruction:</strong> No shipment to CAI with handwritten labels – read &amp; sign completed.</li>
+        <li>EY safety notification related to cargo handling discussed.</li>
+        <li>Staff reminded to complete LMS training and informed about new roster.</li>
+        <li>Instructions on attaching printed ULD tags on trolleys.</li>
+        <li>Stationery logbook kept at supervisor desk.</li>
       </ul>
-      <button onclick="addListItem('ul-briefings')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
   <!-- ═══ SECTION 3: FLIGHT PERFORMANCE ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">3.&nbsp; FLIGHT PERFORMANCE</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">3.&nbsp; FLIGHT PERFORMANCE</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       ✅&nbsp; All flights departed on time; no delay related to Cargo.
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
@@ -2540,32 +2063,31 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       <tr>
         <td width="4" style="background-color:#5b6a8a;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#f4f5f9;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#3d4a63; letter-spacing:1px;">OPERATIONAL NOTES</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#3d4a63; letter-spacing:1px;">OPERATIONAL NOTES</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-opnotes" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
-        <li contenteditable="true" tabindex="80" style="outline:none;">All flights departed on time as per RDM Mr. Saleh.</li>
-        <li contenteditable="true" tabindex="81" style="outline:none;">DG embargo station check completed.</li>
-        <li contenteditable="true" tabindex="82" style="outline:none;">Pigeonhole check done for any pending documents.</li>
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+        <li>All flights departed on time as per RDM Mr. Saleh.</li>
+        <li>DG embargo station check completed.</li>
+        <li>Pigeonhole check done for any pending documents.</li>
       </ul>
-      <button onclick="addListItem('ul-opnotes')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#f4f5f9;border:1px solid #5b6a8a;color:#3d4a63;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
   <!-- ═══ SECTION 4: CHECKS & COMPLIANCE + OFFLOAD ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">4.&nbsp; CHECKS &amp; COMPLIANCE</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">4.&nbsp; CHECKS &amp; COMPLIANCE</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <strong style="color:#0b3a78;">DG Check:</strong> DG Embargo station check done. AWB left behind: NIL.
     </div>
     <!-- عنوان جدول الأوفلود -->
@@ -2573,7 +2095,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       <tr>
         <td width="4" style="background-color:#c2410c;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#fff7ed;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#c2410c; letter-spacing:1px;">OFFLOADING CARGO #</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#c2410c; letter-spacing:1px;">OFFLOADING CARGO #</span>
         </td>
       </tr>
     </table>
@@ -2582,16 +2104,16 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </td></tr>
 
   <!-- ═══ SECTION 5: SAFETY ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#1a7a3c;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#edf7f1;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">5.&nbsp; SAFETY</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">5.&nbsp; SAFETY</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       Safety briefing conducted to all staff, drivers and porters. All checkers reminded to verify net expiration &amp; ULD serviceability.
       <br><br>
       <strong style="color:#1a7a3c;">✅ Note:</strong> All staff and drivers are wearing proper PPEs.
@@ -2600,12 +2122,12 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </td></tr>
 
   <!-- ═══ SECTION 6: MANPOWER ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">6.&nbsp; MANPOWER</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">6.&nbsp; MANPOWER</span>
         </td>
       </tr>
     </table>
@@ -2618,32 +2140,32 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </td></tr>
 
   <!-- ═══ SECTION 7: EQUIPMENT STATUS ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#1a7a3c;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#edf7f1;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">7.&nbsp; EQUIPMENT STATUS</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">7.&nbsp; EQUIPMENT STATUS</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       ✅&nbsp; <strong>ALL EQUIPMENT ARE OK.</strong>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
   <!-- ═══ SECTION 8: HANDOVER ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">8.&nbsp; HANDOVER DETAILS</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">8.&nbsp; HANDOVER DETAILS</span>
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <ul style="margin:0 0 10px 22px; padding:0;">
         <li>READ AND SIGN.</li>
         <li>Shell &amp; Al-Maha Card Fuel.</li>
@@ -2657,7 +2179,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </td></tr>
 
   <!-- ═══ SECTION 9: OTHER ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+  <tr><td style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#7a5200;">&nbsp;</td>
@@ -2666,7 +2188,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         </td>
       </tr>
     </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+    <div style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       &nbsp;
     </div>
   </td></tr>
@@ -2752,23 +2274,31 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   </tr>
 
 </table>
+</td></tr>
+</table>
 
-<!-- ═══ BUTTONS BAR ═══ -->
-<div class="btn-bar">
-  <button id="btn-copy" type="button" style="background:#0b3a78;box-shadow:0 2px 8px rgba(11,58,120,.25);">📋 Copy Report</button>
-  <button id="btn-manage-emails" type="button" style="background:#475569;box-shadow:0 2px 8px rgba(71,85,105,.25);">📝 Edit Email List</button>
-  <button id="btn-email" type="button" style="background:#c2410c;box-shadow:0 2px 8px rgba(194,65,12,.25);">✉️ Send Email Now</button>
+<!-- ═══ BUTTONS BAR (خارج التقرير) ═══ -->
+<div style="max-width:760px; margin:12px 10px 30px; display:flex; gap:10px; justify-content:flex-end; flex-wrap:wrap;">
+
+  <button id="btn-copy"
+    type="button"
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#0b3a78; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(11,58,120,.25);">
+    📋 Copy Report
+  </button>
+
+  <button id="btn-manage-emails"
+    type="button"
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#475569; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(71,85,105,.25);">
+    📝 Edit Email List
+  </button>
+
+  <button id="btn-email"
+    type="button"
+    style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700; color:#fff; background:#c2410c; border:none; border-radius:8px; padding:10px 20px; cursor:pointer; box-shadow:0 2px 8px rgba(194,65,12,.25);">
+    ✉️ Send Email Now
+  </button>
+
 </div>
-
-</div><!-- /max-width wrapper -->
-</div><!-- /page-wrap -->
-
-<script>
-/* ── Config injected by Python build ── */
-window._AIRLABS_KEY        = '';          /* ضع مفتاح AirLabs هنا إذا توفّر */
-window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
-window._ALL_STAFF          = {all_staff_js};
-</script>
 
 <script>
 (function(){{
@@ -2804,34 +2334,70 @@ window._ALL_STAFF          = {all_staff_js};
   function addListItem(ulId){{
     var ul = document.getElementById(ulId);
     if(!ul) return;
-    var li = createEditableListItem(ul);
+    var li = document.createElement('li');
+    li.contentEditable = 'true';
+    li.style.outline = 'none';
+    li.style.minWidth = '40px';
+    li.innerHTML = '&nbsp;';
+    li.addEventListener('keydown', function(e){{
+      /* Enter → أضف عنصراً جديداً */
+      if(e.key === 'Enter'){{
+        e.preventDefault();
+        var newLi = document.createElement('li');
+        newLi.contentEditable = 'true';
+        newLi.style.outline = 'none';
+        newLi.innerHTML = '&nbsp;';
+        _attachLiEvents(newLi);
+        ul.insertBefore(newLi, li.nextSibling);
+        newLi.focus();
+        /* ضع cursor في النهاية */
+        var r = document.createRange();
+        r.selectNodeContents(newLi);
+        r.collapse(false);
+        var sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(r);
+      }}
+      /* Delete/Backspace على عنصر فارغ → احذفه */
+      if((e.key === 'Backspace' || e.key === 'Delete') && (li.innerText.trim()===''||li.innerText.trim()==='\u00a0')){{
+        if(ul.children.length > 1){{
+          e.preventDefault();
+          var prev = li.previousElementSibling || li.nextElementSibling;
+          ul.removeChild(li);
+          if(prev) prev.focus();
+        }}
+      }}
+    }});
     ul.appendChild(li);
+    li.focus();
+    var r = document.createRange();
+    r.selectNodeContents(li);
+    r.collapse(false);
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(r);
     _attachLiEvents(li);
-    focusEditableListItem(li, isManpowerListUl(ul));
-    if(typeof triggerAutosave === 'function') triggerAutosave();
   }}
 
   function _attachLiEvents(li){{
-    if(!li || li._baseLiSetup) return;
-    li._baseLiSetup = true;
     var ul = li.parentElement;
-    if(!ul) return;
-
-    if(isManpowerListUl(ul)){{
-      if(typeof window.setupManpowerLi === 'function') window.setupManpowerLi(li);
-      return;
-    }}
-
     li.addEventListener('keydown', function(e){{
       if(e.key === 'Enter'){{
         e.preventDefault();
-        var newLi = createEditableListItem(li.parentElement);
-        li.parentElement.insertBefore(newLi, li.nextSibling);
+        var newLi = document.createElement('li');
+        newLi.contentEditable = 'true';
+        newLi.style.outline = 'none';
+        newLi.innerHTML = '&nbsp;';
         _attachLiEvents(newLi);
-        focusEditableListItem(newLi, false);
-        return;
+        li.parentElement.insertBefore(newLi, li.nextSibling);
+        newLi.focus();
+        var r = document.createRange();
+        r.selectNodeContents(newLi);
+        r.collapse(false);
+        window.getSelection().removeAllRanges();
+        window.getSelection().addRange(r);
       }}
-      if((e.key === 'Backspace'||e.key==='Delete') && (li.innerText.trim()===''||li.innerText.trim()===' ')){{
+      if((e.key === 'Backspace'||e.key==='Delete') && (li.innerText.trim()===''||li.innerText.trim()==='\u00a0')){{
         if(li.parentElement && li.parentElement.children.length > 1){{
           e.preventDefault();
           var prev = li.previousElementSibling || li.nextElementSibling;
@@ -2840,18 +2406,13 @@ window._ALL_STAFF          = {all_staff_js};
         }}
       }}
     }});
-
-    if(ul && (ul.dataset.flightList || ul.getAttribute('data-flight-list'))){{
-      var isLP = !!(ul && ul.id === 'ul-loadplan');
-      if(typeof window.setupFlightListItem === 'function') window.setupFlightListItem(li, isLP);
-    }}
   }}
 
   /* ربط الـ li الموجودة مسبقاً بالأحداث عند تحميل الصفحة */
   document.addEventListener('DOMContentLoaded', function(){{
     var editableLists = [
       'ul-loadplan','ul-advloading','ul-csdrescreening',
-      'ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
+      'ul-supervisors','ul-ctu','ul-support',
       'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'
     ];
     editableLists.forEach(function(id){{
@@ -2990,6 +2551,38 @@ window._ALL_STAFF          = {all_staff_js};
       if(!c.style.verticalAlign) c.style.verticalAlign='top';
     }});
 
+    /* خطوة 4b: تحسين التوافق مع Outlook */
+    /* إضافة mso styles لجميع العناصر */
+    clone.querySelectorAll('td,th,div,p,span,li,ul,ol').forEach(function(e){{
+      if(!e.style.fontFamily) e.style.fontFamily='Calibri,Arial,sans-serif';
+      /* Outlook يحتاج mso-line-height-rule لتطبيق line-height بشكل صحيح */
+      e.style.setProperty('mso-line-height-rule','exactly');
+    }});
+    /* تحويل ul/li إلى جدول مع رموز bullet لتوافق Outlook */
+    clone.querySelectorAll('ul').forEach(function(ul){{
+      var items = Array.from(ul.querySelectorAll(':scope > li'));
+      if(!items.length) return;
+      var tbl = document.createElement('table');
+      tbl.setAttribute('cellpadding','0');
+      tbl.setAttribute('cellspacing','0');
+      tbl.setAttribute('border','0');
+      tbl.setAttribute('role','presentation');
+      tbl.style.cssText='border-collapse:collapse;margin:2px 0 8px 4px;';
+      items.forEach(function(li){{
+        var tr = document.createElement('tr');
+        var tdBullet = document.createElement('td');
+        tdBullet.style.cssText='vertical-align:top;padding:0 6px 2px 0;font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.6;mso-line-height-rule:exactly;';
+        tdBullet.innerHTML='•';
+        var tdContent = document.createElement('td');
+        tdContent.style.cssText='vertical-align:top;padding:0 0 2px 0;font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.6;mso-line-height-rule:exactly;';
+        tdContent.innerHTML=li.innerHTML;
+        tr.appendChild(tdBullet);
+        tr.appendChild(tdContent);
+        tbl.appendChild(tr);
+      }});
+      ul.parentNode.replaceChild(tbl, ul);
+    }});
+
     /* خطوة 5: تنظيف */
     clone.querySelectorAll('[contenteditable]').forEach(function(e){{
       e.removeAttribute('contenteditable');
@@ -3006,7 +2599,19 @@ window._ALL_STAFF          = {all_staff_js};
     var br=clone.querySelector('#back-link-row');
     if(br) br.style.display='none';
 
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}}table{{border-collapse:collapse;}}img{{max-width:100%;height:auto;display:block;}}</style></head><body>'+clone.outerHTML+'</body></html>';
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}}table{{border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;}}td{{mso-line-height-rule:exactly;}}img{{border:0;display:block;max-width:100%;height:auto;-ms-interpolation-mode:bicubic;}}</style><!--[if mso]><style>body,table,td,div,p,span,a,li{{font-family:Calibri,Arial,sans-serif !important;}}ul,ol{{margin:0 0 0 20px !important;}}li{{mso-special-format:bullet;}}</style><![endif]--></head><body>'+clone.outerHTML+'</body></html>';
+  }}
+
+  /* ══════════════════════════════════════════════════════════
+     buildFullPageForSave — الصفحة الكاملة مع تعديلات المستخدم
+     تحتفظ بالأزرار والسكربتات — تُستخدم فقط لحفظ الصفحة على GitHub
+     ══════════════════════════════════════════════════════════ */
+  function buildFullPageForSave(){{
+    var docClone = document.documentElement.cloneNode(true);
+    /* حذف contenteditable من العناصر التي عدّلها المستخدم لتنظيف HTML */
+    /* لا نحذف الأزرار ولا السكربتات */
+    return '<!DOCTYPE html><html ' + (docClone.getAttribute('xmlns:v')||'') + '>' 
+           + docClone.innerHTML + '</html>';
   }}
 
   function onCopyReport(){{
@@ -3197,6 +2802,7 @@ window._ALL_STAFF          = {all_staff_js};
   }}
 
   function sendEmailNow(){{
+    if(!askSendSecret()) return;
     openRecipientsManager('send').then(function(result){{
       if(!result || !result.selected || !result.selected.length) return;
       var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\\n\\nShift: {shift}\\nDate: {date_dir}\\nRecipients: ' + result.selected.join(', '));
@@ -3220,9 +2826,12 @@ window._ALL_STAFF          = {all_staff_js};
         localStorage.setItem('gh_pat', pat);
       }}
 
-      /* ── Step 1: Capture DOM edits (inline styles, clean email-safe HTML) ── */
-      var editedHtml = buildReportHtml();
-      if(!editedHtml){{
+      /* ── Step 1: Capture two versions of the report ── */
+      /* النسخة الكاملة (مع الأزرار) للحفظ على GitHub */
+      var fullPageHtml = buildFullPageForSave();
+      /* النسخة النظيفة (بدون أزرار) للإيميل — تُمرر في dispatch فقط */
+      var emailHtml = buildReportHtml();
+      if(!fullPageHtml || !emailHtml){{
         btn.innerText = '❌ No report found';
         btn.style.background = '#dc2626';
         resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
@@ -3248,8 +2857,8 @@ window._ALL_STAFF          = {all_staff_js};
       }})
       .then(function(fileInfo){{
         var sha = fileInfo ? fileInfo.sha : undefined;
-        /* Use editedHtml — includes user edits + inline styles + email-safe colors */
-        var encoded = btoa(unescape(encodeURIComponent(editedHtml)));
+        /* الصفحة الكاملة (مع الأزرار والسكربتات) تُحفظ على GitHub */
+        var encoded = btoa(unescape(encodeURIComponent(fullPageHtml)));
         var putBody = {{
           message: 'Update report with manual edits ({date_dir}/{shift})',
           content: encoded,
@@ -3309,1076 +2918,6 @@ window._ALL_STAFF          = {all_staff_js};
   if(copyBtn) copyBtn.addEventListener('click', onCopyReport);
   if(manageBtn) manageBtn.addEventListener('click', openRecipientsFile);
   if(emailBtn) emailBtn.addEventListener('click', sendEmailNow);
-}})();
-
-/* ══════════════════════════════════════════════════════
-   SMART AUTOCOMPLETE — Load Plan / Advance Loading / Offload Table / MANPOWER
-   ══════════════════════════════════════════════════════ */
-(function(){{
-
-  /* ── 0) Config & Helpers ── */
-  var AIRLABS_KEY = (typeof window._AIRLABS_KEY !== 'undefined') ? window._AIRLABS_KEY : '';
-  var FLT_RE = /^([A-Z]{{2,3}})(\d{{1,5}})$/i;
-
-  var LOCAL_FLIGHTS = {{}};
-  try {{ var lf = window._LOCAL_MCT_FLIGHTS; if(lf) LOCAL_FLIGHTS = lf; }} catch(ex) {{}}
-
-  function todayFull() {{
-    var now = new Date(Date.now() + 4*3600*1000);
-    var d   = now.getUTCDate();
-    var mon = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][now.getUTCMonth()];
-    var yr  = now.getUTCFullYear();
-    return (d<10?'0'+d:d)+mon+yr;
-  }}
-  function todayISO() {{
-    return new Date(Date.now() + 4*3600*1000).toISOString().slice(0,10);
-  }}
-
-  function forceUpper(el) {{
-    var old = cleanEditableText(el);
-    var up  = old.toUpperCase();
-    if(old !== up) {{
-      el.textContent = up;
-      setCursorEnd(el);
-    }}
-    return up;
-  }}
-
-  function cleanEditableText(el) {{
-    return String((el && el.innerText) || '')
-      .replace(/[•·▪◦●]/g,' ')
-      .replace(/\u00a0/g,' ')
-      .replace(/^[\s\-–—]+/, '')
-      .replace(/\s+/g,' ')
-      .trim();
-  }}
-
-  function isEffectivelyEmptyManpowerLi(li) {{
-    if(!li) return true;
-    var txt = getManpowerText ? getManpowerText(li) : cleanEditableText(li);
-    txt = String(txt || '').replace(/\u200b/g, '').replace(/\u00a0/g, ' ').trim();
-    return !txt;
-  }}
-
-  function removeManpowerLiIfEmpty(li) {{
-    if(!li || !li.parentElement) return false;
-    if(!isEffectivelyEmptyManpowerLi(li)) return false;
-    var ul = li.parentElement;
-    if(ul.children.length <= 1) return false;
-    var prev = li.previousElementSibling;
-    var next = li.nextElementSibling;
-    ul.removeChild(li);
-    var target = prev || next;
-    if(target) focusEditableListItem(target, true);
-    if(typeof triggerAutosave === 'function') triggerAutosave();
-    return true;
-  }}
-
-  function normalizeFlightTyped(text) {{
-    var raw = String(text || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
-    if(!raw) return '';
-    if(/^\d{1,5}$/.test(raw)) return raw;
-    return raw;
-  }}
-
-  function flightCandidatesFromTyped(typed) {{
-    var out = [];
-    var seen = {{}};
-    var digitsOnly = /^\d{{1,5}}$/.test(typed || '');
-
-    Object.keys(LOCAL_FLIGHTS || {{}}).forEach(function(code) {{
-      var key = String(code || '').toUpperCase().replace(/\s+/g,'');
-      if(!key || seen[key]) return;
-      var m = key.match(/^([A-Z]{{2,3}})(\d{{1,5}})$/);
-      if(!m) return;
-      var num = m[2];
-      if((digitsOnly && num.indexOf(typed) === 0) || (!digitsOnly && key.indexOf(typed) === 0)) {{
-        seen[key] = true;
-        out.push(key);
-      }}
-    }});
-
-    out.sort(function(a,b) {{
-      var ad = a.replace(/^[A-Z]+/, '');
-      var bd = b.replace(/^[A-Z]+/, '');
-      if(ad === typed && bd !== typed) return -1;
-      if(bd === typed && ad !== typed) return 1;
-      if(a === typed && b !== typed) return -1;
-      if(b === typed && a !== typed) return 1;
-      return a.localeCompare(b);
-    }});
-    return out.slice(0, 8);
-  }}
-
-  function showGhost(el, txt) {{
-    var g = el.parentElement && el.parentElement.querySelector(':scope > .ghost-tip');
-    if(!g && el.tagName === 'TD') g = el.querySelector('.ghost-tip');
-    if(!g) {{
-      g = document.createElement('span');
-      g.className = 'ghost-tip';
-      g.style.cssText = 'color:#94a3b8;font-style:italic;font-size:11px;display:block;pointer-events:none;user-select:none;white-space:nowrap;';
-      if(el.tagName === 'TD') {{ el.appendChild(g); }}
-      else if(el.parentElement) {{ el.parentElement.insertBefore(g, el.nextSibling); }}
-    }}
-    g.textContent = '\u2192 '+txt+' (Tab)';
-  }}
-  function removeGhost(el) {{
-    [el, el.parentElement].forEach(function(p) {{
-      if(!p) return;
-      p.querySelectorAll('.ghost-tip').forEach(function(g) {{ g.remove(); }});
-    }});
-  }}
-
-  /* ── Flight info fetch (local DB first, then AirLabs) ── */
-  function parseTime(val) {{
-    if(!val) return '';
-    val = String(val).trim();
-    var iso = val.match(/T(\d{{2}}:\d{{2}})/);
-    if(iso) return iso[1];
-    var hm = val.match(/^(\d{{1,2}}:\d{{2}})$/);
-    if(hm) return hm[1];
-    var d4 = val.match(/^(\d{{4}})$/);
-    if(d4) return d4[1].slice(0,2)+':'+d4[1].slice(2);
-    return '';
-  }}
-
-  function fetchFlightInfo(flt, isoDate, cb) {{
-    var local = LOCAL_FLIGHTS[flt.toUpperCase()];
-    if(local && (local.dest || local.std)) {{
-      cb({{
-        std:  parseTime(local.std  || ''),
-        etd:  parseTime(local.etd  || ''),
-        dest: (local.dest || '').toUpperCase()
-      }});
-      return;
-    }}
-    if(!AIRLABS_KEY) {{ cb(null); return; }}
-    var url = 'https://airlabs.co/api/v9/schedules?api_key='+AIRLABS_KEY
-            + '&flight_iata='+flt.toUpperCase()+'&dep_iata=MCT';
-    if(isoDate) url += '&flight_date='+isoDate;
-    fetch(url, {{cache:'no-cache'}})
-      .then(function(r) {{ return r.json(); }})
-      .then(function(j) {{
-        var rows = j.response || j.data || [];
-        if(!rows.length) {{
-          return fetch('https://airlabs.co/api/v9/flights?api_key='+AIRLABS_KEY
-                      +'&flight_iata='+flt.toUpperCase()+'&dep_iata=MCT', {{cache:'no-cache'}})
-            .then(function(r2) {{ return r2.json(); }})
-            .then(function(j2) {{
-              var r2rows = j2.response || j2.data || [];
-              if(!r2rows.length) {{ cb(null); return; }}
-              doRow(r2rows[0]);
-            }});
-        }}
-        doRow(rows[0]);
-      }})
-      .catch(function() {{ cb(null); }});
-    function doRow(row) {{
-      cb({{
-        std:  parseTime(row.dep_scheduled || ''),
-        etd:  parseTime(row.dep_estimated || ''),
-        dest: (row.arr_iata||'').toUpperCase()
-      }});
-    }}
-  }}
-
-  /* ══════════════════════════════════════
-     A) Load Plan & Advance Loading
-        • كتابة رقم رحلة → ghost suggestion
-        • Tab → تعبئة النص كاملاً
-        • Enter → سطر جديد بنفس الإعداد
-     ══════════════════════════════════════ */
-  function setupFlightListItem(li, isLoadPlan) {{
-    if(li._flightSetup) return;   /* منع التكرار */
-    li._flightSetup = true;
-
-    var _ghost = '';
-    var _reqId = 0;
-
-    function applyFlightGhost(flt, info) {{
-      var dest = (info && info.dest) ? info.dest : '???';
-      _ghost = isLoadPlan
-        ? (flt + '/' + dest + '/' + todayFull() + '.')
-        : (flt + '/' + dest + '/' + todayFull() + ' \u2014 Completed as per plan');
-      li.dataset.ghostVal = _ghost;
-      showGhost(li, _ghost);
-    }}
-
-    function updateFlightSuggestion() {{
-      var typed = normalizeFlightTyped(cleanEditableText(li));
-      if(!typed) {{ removeGhost(li); li.dataset.ghostVal=''; return; }}
-
-      var candidates = flightCandidatesFromTyped(typed);
-      var flt = '';
-      if(FLT_RE.test(typed)) flt = typed;
-      else if(candidates.length === 1) flt = candidates[0];
-      else if(candidates.length > 1) {{
-        li.dataset.ghostVal = candidates[0];
-        showGhost(li, candidates.slice(0, 4).join('   '));
-        return;
-      }} else {{
-        removeGhost(li); li.dataset.ghostVal=''; return;
-      }}
-
-      var reqId = ++_reqId;
-      showGhost(li, flt + '/???/' + todayFull() + '\u2026');
-      fetchFlightInfo(flt, todayISO(), function(info) {{
-        if(reqId !== _reqId) return;
-        applyFlightGhost(flt, info);
-      }});
-    }}
-
-    li.addEventListener('focus', updateFlightSuggestion);
-    li.addEventListener('input', updateFlightSuggestion);
-    li.addEventListener('keyup', updateFlightSuggestion);
-    li.addEventListener('paste', function() {{ setTimeout(updateFlightSuggestion, 30); }});
-
-    /* keydown: Tab → قبول Ghost | Enter → سطر جديد */
-    li.addEventListener('keydown', function(e) {{
-      if(e.key === 'Tab' && li.dataset.ghostVal) {{
-        e.preventDefault();
-        var acceptVal = li.dataset.ghostVal;
-        var candidates = flightCandidatesFromTyped(normalizeFlightTyped(cleanEditableText(li)));
-        if(!/\//.test(acceptVal) && candidates.length) {{
-          acceptVal = candidates[0];
-          li.innerText = acceptVal;
-          setCursorEnd(li);
-          li.dataset.ghostVal = '';
-          updateFlightSuggestion();
-          return;
-        }}
-        li.innerText = acceptVal;
-        li.dataset.ghostVal = '';
-        removeGhost(li);
-        setCursorEnd(li);
-        if(typeof triggerAutosave==='function') triggerAutosave();
-
-      }} else if(e.key === 'Enter') {{
-        e.preventDefault();
-        removeGhost(li);
-        li.dataset.ghostVal = '';
-        var ul = li.parentElement;
-        if(!ul) return;
-        var newLi = document.createElement('li');
-        newLi.contentEditable = 'true';
-        newLi.style.outline = 'none';
-        newLi.innerHTML = '&nbsp;';
-        ul.insertBefore(newLi, li.nextSibling);
-        setupFlightListItem(newLi, isLoadPlan);   /* ← يربط على الـ li الجديدة مباشرة */
-        newLi.focus();
-        setCursorEnd(newLi);
-      }}
-    }});
-
-    li.addEventListener('blur', function() {{ setTimeout(function() {{ if(document.activeElement !== li) removeGhost(li); }}, 120); }});
-  }}
-
-  function setCursorEnd(el) {{
-    try {{
-      var r = document.createRange();
-      r.selectNodeContents(el);
-      r.collapse(false);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(r);
-    }} catch(ex) {{}}
-  }}
-
-  function setCursorStart(el) {{
-    try {{
-      var r = document.createRange();
-      r.selectNodeContents(el);
-      r.collapse(true);
-      window.getSelection().removeAllRanges();
-      window.getSelection().addRange(r);
-    }} catch(ex) {{}}
-  }}
-
-  function isManpowerListUl(ul) {{
-    if(!ul || !ul.id) return false;
-    return ul.id.indexOf('ul-dept-') === 0 || MP_IDS.indexOf(ul.id) !== -1;
-  }}
-
-  function createEditableListItem(ul) {{
-    var li = document.createElement('li');
-    li.contentEditable = 'true';
-    li.style.outline = 'none';
-    li.style.minWidth = '40px';
-    if(isManpowerListUl(ul)) {{
-      li.textContent = '​';
-    }} else {{
-      li.innerHTML = '&nbsp;';
-    }}
-    return li;
-  }}
-
-  function focusEditableListItem(li, atStart) {{
-    if(!li) return;
-    li.focus();
-    if(atStart) setCursorStart(li); else setCursorEnd(li);
-  }}
-
-  /* ربط القوائم الموجودة عند تحميل الصفحة */
-  function initFlightLists() {{
-    var ulLP  = document.getElementById('ul-loadplan');
-    var ulADV = document.getElementById('ul-advloading');
-    if(ulLP)  ulLP.querySelectorAll('li').forEach(function(li)  {{ setupFlightListItem(li, true);  }});
-    if(ulADV) ulADV.querySelectorAll('li').forEach(function(li) {{ setupFlightListItem(li, false); }});
-  }}
-  window.setupFlightListItem = setupFlightListItem;
-  window.initFlightLists = initFlightLists;
-  if(document.readyState === 'loading') {{
-    document.addEventListener('DOMContentLoaded', initFlightLists);
-  }} else {{
-    initFlightLists();
-  }}
-
-  /* "+ Add" button — نُعيد تعريف addListItem ليُضيف autocomplete */
-  var _orig = window.addListItem;
-  window.addListItem = function(ulId) {{
-    _orig(ulId);
-    var ul = document.getElementById(ulId);
-    if(!ul) return;
-    var last = ul.lastElementChild;
-    if(!last) return;
-    var isLP = (ulId === 'ul-loadplan');
-    var isADV= (ulId === 'ul-advloading');
-    if(isLP || isADV) {{
-      setupFlightListItem(last, isLP);
-    }} else if(typeof setupManpowerLi === 'function') {{
-      setupManpowerLi(last);
-    }}
-  }};
-
-  /* ══════════════════════════════════════
-     B) جدول الأوفلود
-        • click/focus على date → يكمل التاريخ
-        • input على flight → يجلب STD+DEST
-     ══════════════════════════════════════ */
-  function setupTableCell(td) {{
-    if(td._cellSetup) return;   /* منع التكرار */
-    td._cellSetup = true;
-    var col = td.dataset.col;
-    if(!col) return;
-
-    if(col === 'date') {{
-      function autoDate() {{
-        var txt = td.innerText.replace(/\u00a0/g,'').trim();
-        if(!txt) {{
-          td.innerText = todayFull();
-          if(typeof triggerAutosave==='function') triggerAutosave();
-        }}
-      }}
-      td.addEventListener('click',  autoDate);
-      td.addEventListener('focus',  autoDate);
-      td.addEventListener('input',  function() {{ forceUpper(td); }});
-    }}
-
-    if(col === 'flight') {{
-      var _lastFlt = '';
-      function normalizeFlightCell() {{
-        var raw = cleanEditableText(td).toUpperCase().replace(/[^A-Z0-9]/g,'');
-        if((td.textContent || '') !== raw) {{
-          td.textContent = raw;
-          setCursorEnd(td);
-        }}
-        return raw;
-      }}
-      function onFlightInput() {{
-        var flt = normalizeFlightCell();
-        if(flt === _lastFlt) return;   /* لا تغيير حقيقي */
-        _lastFlt = flt;
-        if(!FLT_RE.test(flt)) {{ removeGhost(td); return; }}
-        var row      = td.closest('tr');
-        var dateCell = row && row.querySelector('[data-col="date"]');
-        var stdCell  = row && row.querySelector('[data-col="std"]');
-        var destCell = row && row.querySelector('[data-col="dest"]');
-        var emailCell= row && row.querySelector('[data-col="email"]');
-        /* تعبئة التاريخ تلقائياً إذا كان فارغاً */
-        if(dateCell) {{
-          var dv = dateCell.innerText.replace(/\u00a0/g,'').trim();
-          if(!dv) {{ dateCell.innerText = todayFull(); dv = todayFull(); }}
-        }}
-        var isoDate = todayISO();
-        if(dateCell) {{
-          var dv2 = (dateCell.innerText||'').replace(/\u00a0/g,'').trim().toUpperCase();
-          var mons = {{JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12}};
-          var dm = dv2.match(/^(\d{{1,2}})([A-Z]{{3}})(\d{{2,4}})?$/);
-          if(dm) {{
-            var yr = dm[3] ? (dm[3].length===2 ? 2000+parseInt(dm[3]) : parseInt(dm[3])) : new Date().getFullYear();
-            isoDate = yr+'-'+(mons[dm[2]]||1).toString().padStart(2,'0')+'-'+dm[1].padStart(2,'0');
-          }}
-        }}
-        showGhost(td, 'fetching '+flt+'\u2026');
-        fetchFlightInfo(flt, isoDate, function(info) {{
-          removeGhost(td);
-          if(!info) return;
-          if(stdCell) {{
-            var cur = stdCell.innerText.replace(/\u00a0/g,'').trim();
-            if(!cur || cur === '\u00a0') {{
-              var std = info.std||'', etd = info.etd||'';
-              stdCell.innerText = (std && etd && std!==etd) ? std+'\u202f|\u202f'+etd : (std||etd||'');
-            }}
-          }}
-          if(destCell) {{
-            var dc = destCell.innerText.replace(/\u00a0/g,'').trim();
-            if((!dc) && info.dest) destCell.innerText = info.dest;
-          }}
-          if(typeof triggerAutosave==='function') triggerAutosave();
-        }});
-      }}
-      td.addEventListener('focus',  normalizeFlightCell);
-      td.addEventListener('input',  onFlightInput);
-      td.addEventListener('keyup',  onFlightInput);  /* يشتغل عند paste أيضاً */
-      td.addEventListener('paste', function() {{ setTimeout(onFlightInput, 50); }});
-    }}
-  }}
-
-  function initTableCells() {{
-    document.querySelectorAll('[data-col]').forEach(setupTableCell);
-    /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
-    var tbody = document.getElementById('offload-tbody');
-    if(tbody) {{
-      new MutationObserver(function(muts) {{
-        muts.forEach(function(m) {{
-          m.addedNodes.forEach(function(n) {{
-            if(n.nodeType===1) {{
-              n.querySelectorAll('[data-col]').forEach(setupTableCell);
-            }}
-          }});
-        }});
-      }}).observe(tbody, {{childList:true}});
-    }}
-  }}
-  if(document.readyState === 'loading') {{
-    document.addEventListener('DOMContentLoaded', initTableCells);
-  }} else {{
-    initTableCells();
-  }}
-
-  /* ══════════════════════════════════════
-     C) MANPOWER — SN Autocomplete
-     ══════════════════════════════════════ */
-  function extractSnNamePair(text) {{
-    var txt = String(text || '').replace(/ /g,' ').replace(/\s+/g,' ').trim();
-    if(!txt) return null;
-    var m = txt.match(/^(?:SN\s*)?(\d{3,10})\s+(.+)$/i);
-    if(!m) return null;
-    var sn = String(m[1] || '').replace(/[^0-9]/g,'');
-    var name = String(m[2] || '').replace(/\s+/g,' ').trim();
-    if(!sn || !name) return null;
-    return {{ sn: sn, name: name }};
-  }}
-
-  function manpowerListSelector() {{
-    return MP_IDS.map(function(id) {{ return '#' + id; }}).concat(['ul[id^="ul-dept-"]']).join(',');
-  }}
-
-  function buildSnMap() {{
-    var map = {{}};
-    /* 1) كل موظفي الروستر المحقونين من Python */
-    try {{
-      var allStaff = window._ALL_STAFF || {{}};
-      Object.keys(allStaff).forEach(function(sn) {{
-        var snClean = String(sn).replace(/[^0-9]/g,'');
-        var name    = String(allStaff[sn] || '').replace(/\s+/g,' ').trim();
-        if(snClean && name && !map[snClean]) map[snClean] = name;
-      }});
-    }} catch(ex) {{}}
-    /* 2) الموظفون الظاهرون في DOM */
-    document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {{
-      var sn   = String(el.dataset.sn || '').replace(/[^0-9]/g,'');
-      var name = String(el.dataset.name || '').replace(/\s+/g,' ').trim();
-      if(sn && name && !map[sn]) map[sn] = name;
-    }});
-    /* 3) نص مكتوب يدوياً */
-    document.querySelectorAll(manpowerListSelector() + ' li').forEach(function(li) {{
-      var pair = extractSnNamePair(cleanEditableText(li));
-      if(pair && !map[pair.sn]) map[pair.sn] = pair.name;
-    }});
-    return map;
-  }}
-
-  var snMap = {{}};
-  var snDropdownHost = null;
-  var snDropdownTarget = null;
-
-  function refreshSnMap() {{
-    snMap = buildSnMap();
-    return snMap;
-  }}
-
-  function closeSnDropdown() {{
-    if(snDropdownHost && snDropdownHost.parentNode) snDropdownHost.parentNode.removeChild(snDropdownHost);
-    snDropdownHost = null;
-    snDropdownTarget = null;
-  }}
-
-  function escapeHtml(text) {{
-    return String(text || '').replace(/[&<>\"]/g, function(ch) {{
-      return ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : '&quot;';
-    }});
-  }}
-
-  function normalizeManpowerEditable(li) {{
-    /* لا نُبدّل شيئاً — التنسيق (span data-sn) يجب أن يبقى كما هو.
-       نُنظّف فقط إذا كان محتوى الـ li نصاً خاماً بدون span منسق. */
-    if(!li) return;
-    var hasFormatted = li.querySelector && li.querySelector('[data-sn][data-name]');
-    if(hasFormatted) return;   /* ← منسق → لا تلمسه */
-    /* نص خام فقط — لا نحتاج تنسيقاً هنا */
-  }}
-
-  function getManpowerText(li) {{
-    if(!li) return '';
-    var selected = li.querySelector && li.querySelector('[data-sn][data-name]');
-    if(selected) {{
-      var snSel = String(selected.dataset.sn || '').replace(/[^0-9]/g,'');
-      var nameSel = String(selected.dataset.name || '').replace(/\s+/g,' ').trim();
-      if(snSel && nameSel) return 'SN' + snSel + ' ' + nameSel;
-    }}
-    return cleanEditableText(li);
-  }}
-
-  function isFormattedManpowerEntry(li) {{
-    return !!(li && li.querySelector && li.querySelector('[data-sn][data-name]'));
-  }}
-
-  function replaceManpowerText(li, text) {{
-    if(!li) return;
-    li.textContent = (text || '').replace(/​/g, '');
-    setCursorEnd(li);
-    if(typeof triggerAutosave === 'function') triggerAutosave();
-  }}
-
-  function extractTypedSn(text) {{
-    var txt = String(text || '')
-      .replace(/[•·▪◦●]/g,' ')
-      .replace(/\u00a0/g,' ')
-      .replace(/^[\s\-–—]+/, '')
-      .trim();
-    if(!txt) return '';
-    var m = txt.match(/(?:SN\s*)?(\d{{1,10}})/i);
-    return m ? m[1] : '';
-  }}
-
-  function collectSnMatches(typed) {{
-    typed = String(typed || '').replace(/[^0-9]/g,'');
-    if(!typed) return [];
-    if(!Object.keys(snMap).length) refreshSnMap();
-
-    var seen = {{}};
-    var entries = [];
-
-    function pushEntry(snVal, nameVal) {{
-      var sn = String(snVal || '').replace(/[^0-9]/g,'');
-      var name = String(nameVal || '').replace(/\s+/g,' ').trim();
-      if(!sn || !name || seen[sn]) return;
-      seen[sn] = true;
-      entries.push({{ sn: sn, name: name }});
-    }}
-
-    Object.keys(snMap).forEach(function(snKey) {{
-      pushEntry(snKey, snMap[snKey]);
-    }});
-
-    document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {{
-      pushEntry(el.dataset.sn, el.dataset.name);
-    }});
-
-    return entries
-      .map(function(item) {{
-        var idx = item.sn.indexOf(typed);
-        var rank = -1;
-        if(item.sn === typed) rank = 0;
-        else if(idx === 0) rank = 1;
-        else if(typed.length >= 2 && idx > 0) rank = 2;
-        else return null;
-        return {{
-          sn: item.sn,
-          name: item.name,
-          _rank: rank,
-          _idx: idx < 0 ? 999 : idx,
-          _delta: Math.abs(item.sn.length - typed.length)
-        }};
-      }})
-      .filter(Boolean)
-      .sort(function(a, b) {{
-        if(a._rank !== b._rank) return a._rank - b._rank;
-        if(a._idx !== b._idx) return a._idx - b._idx;
-        if(a._delta !== b._delta) return a._delta - b._delta;
-        return a.sn.localeCompare(b.sn);
-      }})
-      .slice(0, 10)
-      .map(function(item) {{
-        return {{ sn: item.sn, name: item.name }};
-      }});
-  }}
-
-  function renderSnSelection(li, item) {{
-    if(!li || !item) return;
-    li.innerHTML = '<span data-sn="' + escapeHtml(item.sn) + '" data-name="' + escapeHtml(item.name) + '" '
-                 + 'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
-                 + '<span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN' + escapeHtml(item.sn) + '</span>'
-                 + '<span style="color:#1b1f2a;">' + escapeHtml(item.name) + '</span>'
-                 + '</span>';
-  }}
-
-  function applySnSelection(li, item) {{
-    if(!li || !item) return;
-    renderSnSelection(li, item);
-    refreshSnMap();
-    closeSnDropdown();
-    setCursorEnd(li);
-    if(typeof triggerAutosave === 'function') triggerAutosave();
-  }}
-
-  function positionSnDropdown(li, dd) {{
-    if(!li || !dd) return;
-    var rect = li.getBoundingClientRect();
-    dd.style.left = (window.scrollX + rect.left) + 'px';
-    dd.style.top = (window.scrollY + rect.bottom + 4) + 'px';
-    dd.style.minWidth = Math.max(rect.width, 240) + 'px';
-  }}
-
-  function showSnDropdown(li, matches) {{
-    closeSnDropdown();
-    if(!matches.length) return;
-
-    var dd = document.createElement('div');
-    dd.className = 'sn-drop';
-    dd.setAttribute('contenteditable', 'false');
-    dd.style.cssText = 'position:absolute;background:#fff;border:1px solid #0b3a78;'
-                     + 'border-radius:6px;box-shadow:0 4px 16px rgba(11,58,120,.18);z-index:99999;'
-                     + 'max-height:220px;overflow-y:auto;font-size:13px;';
-
-    matches.forEach(function(item) {{
-      var opt = document.createElement('div');
-      opt.setAttribute('contenteditable', 'false');
-      opt.style.cssText = 'padding:7px 12px;cursor:pointer;display:flex;gap:10px;align-items:center;';
-      opt.innerHTML = '<span style="font-weight:700;color:#0b3a78;min-width:70px;">SN' + escapeHtml(item.sn) + '</span>'
-                    + '<span style="color:#1b1f2a;">' + escapeHtml(item.name) + '</span>';
-      opt.onmouseenter = function() {{ opt.style.background = '#eef3fc'; }};
-      opt.onmouseleave = function() {{ opt.style.background = ''; }};
-      opt.onmousedown = function(ev) {{
-        ev.preventDefault();
-        applySnSelection(li, item);
-      }};
-      dd.appendChild(opt);
-    }});
-
-    document.body.appendChild(dd);
-    positionSnDropdown(li, dd);
-    snDropdownHost = dd;
-    snDropdownTarget = li;
-  }}
-
-  window.addEventListener('load', refreshSnMap);
-  document.addEventListener('DOMContentLoaded', refreshSnMap);
-  setTimeout(refreshSnMap, 300);
-  setTimeout(refreshSnMap, 1500);
-  window.addEventListener('resize', function() {{
-    if(snDropdownHost && snDropdownTarget) positionSnDropdown(snDropdownTarget, snDropdownHost);
-  }});
-  window.addEventListener('scroll', function() {{
-    if(snDropdownHost && snDropdownTarget) positionSnDropdown(snDropdownTarget, snDropdownHost);
-  }}, true);
-  document.addEventListener('click', function(ev) {{
-    if(!snDropdownHost) return;
-    if(snDropdownHost.contains(ev.target)) return;
-    if(snDropdownTarget && snDropdownTarget.contains(ev.target)) return;
-    closeSnDropdown();
-  }});
-
-  function setupManpowerLi(li) {{
-    if(!li || li._mpSetup) return;
-    li._mpSetup = true;
-
-    function updateManpowerSuggestion() {{
-      refreshSnMap();
-      closeSnDropdown();
-      if(isFormattedManpowerEntry(li)) return;
-      var typed = extractTypedSn(getManpowerText(li));
-      if(!typed) return;
-      var matches = collectSnMatches(typed);
-      if(matches.length === 1 && matches[0].sn === typed) {{
-        applySnSelection(li, matches[0]);
-        return;
-      }}
-      if(matches.length) showSnDropdown(li, matches);
-    }}
-
-    li.addEventListener('focus', function() {{
-      refreshSnMap();
-      if(isFormattedManpowerEntry(li)) closeSnDropdown();
-      else updateManpowerSuggestion();
-    }});
-    li.addEventListener('click', function() {{
-      refreshSnMap();
-      if(isFormattedManpowerEntry(li)) closeSnDropdown();
-      else updateManpowerSuggestion();
-    }});
-    li.addEventListener('input', function() {{
-      updateManpowerSuggestion();
-    }});
-    li.addEventListener('keyup', function(ev) {{
-      if(!['Enter','Tab','Escape'].includes(ev.key)) updateManpowerSuggestion();
-    }});
-    li.addEventListener('paste', function(ev) {{
-      if(isFormattedManpowerEntry(li)) {{
-        var pasted = ((ev.clipboardData || window.clipboardData) && (ev.clipboardData || window.clipboardData).getData('text')) || '';
-        pasted = String(pasted || '').replace(/\s+/g, ' ').trim();
-        if(pasted) {{
-          ev.preventDefault();
-          replaceManpowerText(li, pasted);
-          updateManpowerSuggestion();
-          return;
-        }}
-      }}
-      setTimeout(function() {{ updateManpowerSuggestion(); }}, 30);
-    }});
-
-    li.addEventListener('keydown', function(ev) {{
-      if(ev.key === 'Enter') {{
-        ev.preventDefault();
-        ev.stopPropagation();
-        closeSnDropdown();
-        var ul = li.parentElement;
-        if(!ul) return;
-        var newLi = createEditableListItem(ul);
-        ul.insertBefore(newLi, li.nextSibling);
-        _attachLiEvents(newLi);
-        focusEditableListItem(newLi, true);
-        if(typeof triggerAutosave === 'function') triggerAutosave();
-        return;
-      }}
-
-      if(ev.key === 'Escape') {{
-        closeSnDropdown();
-        return;
-      }}
-
-      if(ev.key === 'Tab') {{
-        if(isFormattedManpowerEntry(li)) return;
-        var typedTab = extractTypedSn(getManpowerText(li));
-        var matchesTab = collectSnMatches(typedTab);
-        if(matchesTab.length) {{
-          ev.preventDefault();
-          applySnSelection(li, matchesTab[0]);
-        }}
-        return;
-      }}
-
-      if((ev.key === 'Backspace' || ev.key === 'Delete')) {{
-        if(isFormattedManpowerEntry(li)) {{
-          ev.preventDefault();
-          replaceManpowerText(li, '');
-          closeSnDropdown();
-          return;
-        }}
-        if(isEffectivelyEmptyManpowerLi(li)) {{
-          ev.preventDefault();
-          removeManpowerLiIfEmpty(li);
-          return;
-        }}
-      }}
-    }});
-
-    li.addEventListener('blur', function() {{
-      if(isFormattedManpowerEntry(li)) {{
-        setTimeout(closeSnDropdown, 200);
-        return;
-      }}
-      var typed = extractTypedSn(getManpowerText(li));
-      var matches = collectSnMatches(typed);
-      if(typed && matches.length === 1 && matches[0].sn === typed) {{
-        applySnSelection(li, matches[0]);
-      }} else {{
-        var pair = extractSnNamePair(getManpowerText(li));
-        if(pair) {{
-          renderSnSelection(li, pair);
-          refreshSnMap();
-        }}
-      }}
-      setTimeout(closeSnDropdown, 200);
-    }});
-  }}
-
-  var MP_IDS = ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
-                'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'];
-  function initManpower() {{
-    refreshSnMap();
-    MP_IDS.forEach(function(id) {{
-      var ul = document.getElementById(id);
-      if(!ul) return;
-      ul.querySelectorAll('li').forEach(setupManpowerLi);
-      new MutationObserver(function(muts) {{
-        muts.forEach(function(m) {{
-          m.addedNodes.forEach(function(n) {{ if(n.tagName==='LI') setupManpowerLi(n); }});
-        }});
-      }}).observe(ul, {{childList:true}});
-    }});
-    document.querySelectorAll('[id^="ul-dept-"]').forEach(function(ul) {{
-      ul.querySelectorAll('li').forEach(setupManpowerLi);
-      new MutationObserver(function(muts) {{
-        muts.forEach(function(m) {{
-          m.addedNodes.forEach(function(n) {{ if(n.tagName==='LI') setupManpowerLi(n); }});
-        }});
-      }}).observe(ul, {{childList:true}});
-    }});
-  }}
-
-  function isManpowerLiTarget(node) {{
-    var el = node;
-    if(el && el.nodeType === 3) el = el.parentElement;
-    var li = el && el.closest ? el.closest('li[contenteditable]') : null;
-    if(!li) {{
-      try {{
-        var sel = window.getSelection && window.getSelection();
-        var anchor = sel && sel.anchorNode;
-        if(anchor && anchor.nodeType === 3) anchor = anchor.parentElement;
-        li = anchor && anchor.closest ? anchor.closest('li[contenteditable]') : null;
-      }} catch(ex) {{}}
-    }}
-    if(!li || !li.parentElement || !li.parentElement.id) return null;
-    var ul = li.parentElement;
-    var id = ul.id || '';
-    if(id.indexOf('ul-dept-') === 0) return li;
-    if(MP_IDS.indexOf(id) !== -1) return li;
-    return null;
-  }}
-
-  function handleManpowerInteractive(node, forceOpen) {{
-    var li = isManpowerLiTarget(node);
-    if(!li) return;
-    refreshSnMap();
-    if(isFormattedManpowerEntry(li) && !forceOpen) {{ closeSnDropdown(); return; }}
-    var typed = extractTypedSn(getManpowerText(li));
-    if(!typed) {{ closeSnDropdown(); return; }}
-    var matches = collectSnMatches(typed);
-    if(matches.length === 1 && matches[0].sn === typed) {{
-      applySnSelection(li, matches[0]);
-      return;
-    }}
-    if(matches.length) showSnDropdown(li, matches); else closeSnDropdown();
-  }}
-
-  document.addEventListener('focusin', function(ev) {{
-    var li = isManpowerLiTarget(ev.target);
-    if(li) handleManpowerInteractive(li, false);
-  }});
-  document.addEventListener('click', function(ev) {{
-    var li = isManpowerLiTarget(ev.target);
-    if(li) handleManpowerInteractive(li, false);
-  }});
-  document.addEventListener('input', function(ev) {{
-    var li = isManpowerLiTarget(ev.target);
-    if(li) handleManpowerInteractive(li, false);
-  }});
-  document.addEventListener('keyup', function(ev) {{
-    var li = isManpowerLiTarget(ev.target);
-    if(li && !['Enter','Tab','Escape'].includes(ev.key)) handleManpowerInteractive(li, false);
-  }});
-  document.addEventListener('paste', function(ev) {{
-    var li = isManpowerLiTarget(ev.target);
-    if(li) setTimeout(function(){{ handleManpowerInteractive(li, false); }}, 30);
-  }});
-  function insertManpowerLineAfter(li) {{
-    var ul = li && li.parentElement;
-    if(!ul) return null;
-    var newLi = createEditableListItem(ul);
-    ul.insertBefore(newLi, li.nextSibling);
-    _attachLiEvents(newLi);
-    focusEditableListItem(newLi, true);
-    if(typeof triggerAutosave === 'function') triggerAutosave();
-    return newLi;
-  }}
-
-  document.addEventListener('keydown', function(ev) {{
-    var li = isManpowerLiTarget(ev.target);
-    if(!li) return;
-
-    if(ev.key === 'Enter') {{
-      ev.preventDefault();
-      ev.stopPropagation();
-      if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
-      closeSnDropdown();
-      insertManpowerLineAfter(li);
-      return;
-    }}
-
-    if((ev.key === 'Backspace' || ev.key === 'Delete') && isEffectivelyEmptyManpowerLi(li)) {{
-      ev.preventDefault();
-      ev.stopPropagation();
-      if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
-      removeManpowerLiIfEmpty(li);
-      return;
-    }}
-
-    if(ev.key === 'Escape') {{ closeSnDropdown(); return; }}
-  }}, true);
-  document.addEventListener('focusout', function(ev) {{
-    var li = isManpowerLiTarget(ev.target);
-    if(!li) return;
-    if(isFormattedManpowerEntry(li)) {{
-      setTimeout(closeSnDropdown, 200);
-      return;
-    }}
-    var typed = extractTypedSn(getManpowerText(li));
-    var matches = collectSnMatches(typed);
-    if(typed && matches.length === 1 && matches[0].sn === typed) {{
-      applySnSelection(li, matches[0]);
-    }} else {{
-      var pair = extractSnNamePair(getManpowerText(li));
-      if(pair) {{
-        renderSnSelection(li, pair);
-        refreshSnMap();
-      }}
-    }}
-    setTimeout(closeSnDropdown, 200);
-  }});
-  window.setupManpowerLi = setupManpowerLi;
-  window.initManpower = initManpower;
-  window.rebindSmartAutocomplete = function() {{
-    try {{ if(typeof window.initFlightLists === 'function') window.initFlightLists(); }} catch(ex) {{}}
-    try {{ if(typeof initTableCells === 'function') initTableCells(); }} catch(ex) {{}}
-    try {{ if(typeof window.initManpower === 'function') window.initManpower(); }} catch(ex) {{}}
-    try {{ if(typeof refreshSnMap === 'function') refreshSnMap(); }} catch(ex) {{}}
-  }};
-  if(document.readyState === 'loading') {{
-    document.addEventListener('DOMContentLoaded', initManpower);
-  }} else {{
-    initManpower();
-  }}
-
-}})();
-
-
-
-
-
-/* ══════════════════════════════════════════════════════
-   AUTOSAVE — IndexedDB
-   يحفظ كل تعديل فوري (كل ضغطة حرف) ويستعيده عند التحميل
-   المفتاح: URL الصفحة (date_dir + shift فريد لكل تقرير)
-   ══════════════════════════════════════════════════════ */
-(function(){{
-  var DB_NAME = 'offload_autosave';
-  var STORE   = 'reports';
-  var PAGE_KEY = location.pathname;
-  var _db = null;
-  var _saveTimer = null;
-
-  function openDB(cb){{
-    if(_db){{ cb(_db); return; }}
-    var req = indexedDB.open(DB_NAME, 1);
-    req.onupgradeneeded = function(e){{
-      e.target.result.createObjectStore(STORE, {{keyPath:'key'}});
-    }};
-    req.onsuccess = function(e){{ _db = e.target.result; cb(_db); }};
-    req.onerror   = function(){{ console.warn('[autosave] IndexedDB open failed'); }};
-  }}
-
-  function saveNow(){{
-    /* جمع كل العناصر القابلة للتعديل وحفظ قيمها */
-    var data = {{}};
-
-    /* contenteditable cells في الجدول */
-    document.querySelectorAll('[contenteditable="true"]').forEach(function(el){{
-      var id = el.id || el.dataset.saveKey;
-      if(!id){{
-        /* أنشئ مفتاح فريد من موضع العنصر في الـ DOM */
-        var path = [];
-        var node = el;
-        while(node && node !== document.body){{
-          var idx = Array.prototype.indexOf.call((node.parentElement||{{}}).children||[], node);
-          path.unshift((node.tagName||'')+'['+idx+']');
-          node = node.parentElement;
-        }}
-        id = path.join('>');
-        el.dataset.saveKey = id;
-      }}
-      data[id] = el.innerHTML;
-    }});
-
-    /* قوائم ul كاملة (للحفاظ على العناصر المضافة/المحذوفة) */
-    document.querySelectorAll('ul[id]').forEach(function(ul){{
-      data['__ul__'+ul.id] = ul.innerHTML;
-    }});
-
-    /* هل صف NIL موجود؟ */
-    data['__nil_row_removed__'] = !document.getElementById('nil-row');
-
-    openDB(function(db){{
-      var tx = db.transaction(STORE,'readwrite');
-      tx.objectStore(STORE).put({{key: PAGE_KEY, data: data, ts: Date.now()}});
-    }});
-  }}
-
-  /* استدعاء خارجي من زر حذف NIL */
-  window.triggerAutosave = function(){{ saveNow(); }};
-
-  function restoreSaved(){{
-    openDB(function(db){{
-      var tx = db.transaction(STORE,'readonly');
-      var req = tx.objectStore(STORE).get(PAGE_KEY);
-      req.onsuccess = function(e){{
-        var rec = e.target && e.target.result;
-        if(!rec || !rec.data) return;
-        var data = rec.data;
-
-        /* استعادة قوائم ul أولاً (تضمن وجود العناصر) */
-        Object.keys(data).forEach(function(k){{
-          if(k.indexOf('__ul__') === 0){{
-            var ul = document.getElementById(k.replace('__ul__',''));
-            if(ul) ul.innerHTML = data[k];
-          }}
-        }});
-
-        /* استعادة contenteditable */
-        Object.keys(data).forEach(function(k){{
-          if(k.indexOf('__') === 0) return;
-          var el = document.getElementById(k) || document.querySelector('[data-save-key="'+k+'"]');
-          if(el && el.isContentEditable) el.innerHTML = data[k];
-        }});
-
-        /* إزالة صف NIL إذا كان محذوفاً */
-        if(data['__nil_row_removed__']){{
-          var nr = document.getElementById('nil-row');
-          if(nr) nr.remove();
-        }}
-
-        /* بعد استعادة innerHTML تُفقد listeners — أعد ربط autocomplete */
-        setTimeout(function(){{
-          try {{ if(typeof window.rebindSmartAutocomplete === 'function') window.rebindSmartAutocomplete(); }} catch(ex) {{}}
-        }}, 0);
-      }};
-    }});
-  }}
-
-  /* ── ربط الحفظ بكل حدث تعديل ── */
-  function _schedSave(){{
-    clearTimeout(_saveTimer);
-    _saveTimer = setTimeout(saveNow, 400);
-  }}
-
-  document.addEventListener('input',  _schedSave);
-  document.addEventListener('keyup',  _schedSave);
-
-  /* MutationObserver للقوائم (إضافة/حذف عناصر) */
-  var mo = new MutationObserver(function(muts){{
-    var changed = muts.some(function(m){{
-      return m.type==='childList' || m.type==='characterData';
-    }});
-    if(changed) _schedSave();
-  }});
-  mo.observe(document.body, {{childList:true, subtree:true, characterData:true}});
-
-  /* استعادة البيانات بعد تحميل الصفحة */
-  if(document.readyState === 'loading'){{
-    document.addEventListener('DOMContentLoaded', restoreSaved);
-  }} else {{
-    restoreSaved();
-  }}
 }})();
 </script>
 
@@ -4510,10 +3049,6 @@ def build_root_index(now: datetime) -> None:
         for shift in ("shift1", "shift2", "shift3"):
             shift_report = DOCS_DIR / day / shift / "index.html"
             meta_s = shift_meta.get(shift, {"label": shift, "ar": shift, "time": "", "icon": "✈"})
-            ms_icon  = meta_s["icon"]
-            ms_ar    = meta_s["ar"]
-            ms_label = meta_s["label"]
-            ms_time  = meta_s["time"]
             shift_flt_count = _count_matching_flights(DATA_DIR / day / shift, day)
             flt_txt = f"{shift_flt_count} flight{'s' if shift_flt_count != 1 else ''}" if shift_flt_count else ""
 
@@ -4521,10 +3056,10 @@ def build_root_index(now: datetime) -> None:
                 # مناوبة فيها تقرير — رابط
                 rows += f"""
             <a class="shift-card" href="{day}/{shift}/">
-                <div class="sc-icon">{ms_icon}</div>
+                <div class="sc-icon">{meta_s['icon']}</div>
                 <div class="sc-body">
-                    <div class="sc-title">{ms_ar} <span class="sc-en">/ {ms_label}</span></div>
-                    <div class="sc-time">{ms_time}</div>
+                    <div class="sc-title">{meta_s['ar']} <span class="sc-en">/ {meta_s['label']}</span></div>
+                    <div class="sc-time">{meta_s['time']}</div>
                 </div>
                 <div class="sc-right">
                     {f'<span class="sc-count">{flt_txt}</span>' if flt_txt else ''}
@@ -4535,10 +3070,10 @@ def build_root_index(now: datetime) -> None:
                 # مناوبة NIL — رابط قابل للضغط
                 rows += f"""
             <a class="shift-card" href="{day}/{shift}/">
-                <div class="sc-icon">{ms_icon}</div>
+                <div class="sc-icon">{meta_s['icon']}</div>
                 <div class="sc-body">
-                    <div class="sc-title">{ms_ar} <span class="sc-en">/ {ms_label}</span></div>
-                    <div class="sc-time">{ms_time}</div>
+                    <div class="sc-title">{meta_s['ar']} <span class="sc-en">/ {meta_s['label']}</span></div>
+                    <div class="sc-time">{meta_s['time']}</div>
                 </div>
                 <div class="sc-right">
                     <span style="font-size:11px;color:#94a3b8;font-weight:600;">NIL</span>
@@ -4563,8 +3098,6 @@ def build_root_index(now: datetime) -> None:
 
     if not days_html:
         days_html = "<div class='empty-day' style='text-align:center;padding:48px'>لا توجد تقارير بعد.</div>"
-
-    roster_base_url = ROSTER_PAGE_URL.rstrip('/') + "/date/"
 
     html = f"""<!doctype html>
 <html lang="ar" dir="rtl">
@@ -4795,9 +3328,9 @@ def build_root_index(now: datetime) -> None:
                 <p>اختر المناوبة لعرض تفاصيل الـ Offload · الأيام السابقة مطوية تلقائيًا</p>
             </div>
             <div class="hdr-badge" style="display:flex;flex-direction:column;align-items:center;line-height:1;">
-                <strong id="todayDay" style="font-size:18px;"></strong>
-                <span id="todayMonth" style="font-size:11px;opacity:.75;letter-spacing:.5px;"></span>
-            </div>
+    <strong id="todayDay" style="font-size:18px;"></strong>
+    <span id="todayMonth" style="font-size:11px;opacity:.75;letter-spacing:.5px;"></span>
+</div>
         </div>
     </div>
 
@@ -4829,13 +3362,11 @@ def build_root_index(now: datetime) -> None:
 
 <script>
 /* ── Manpower popup logic ── */
-var ROSTER_DAILY_BASE = "{roster_base_url}";
-var IMPORT_ROSTER_RAW_BASE = "https://raw.githubusercontent.com/khalidsaif912/roster-site/main/docs/import/";
+var ROSTER_DAILY_BASE = "{ROSTER_PAGE_URL.rstrip('/')}/date/";
 var LEAVE_LABELS = ["annual leave","sick leave","emergency leave","off day","training"];
 var SHIFT_MAP = {{"shift1":"Morning","shift2":"Afternoon","shift3":"Night"}};
 var EXCLUDED_DEPTS = ["officers"];
-var INVENTORY_SNS = ["82592","990737"];
-var SUPPORT_SNS   = ["82653","82565"];
+var EXCLUDED_SNS = ["990737"];
 var mpData = null;
 
 function getCurrentShift() {{
@@ -4875,7 +3406,7 @@ function parseRosterHtml(html, shiftKey) {{
                 var raw = ne.textContent.trim();
                 var name = raw;
                 var sn = "";
-                var mx = raw.match(/^(.+?)\s*[-\u2013]\s*(\d+)(?:\s*\(.*?\))?\s*$/);
+                var mx = raw.match(/^(.+?)\s*[-–]\s*(\d+)(?:\s*\(.*?\))?\s*$/);
                 if (mx) {{
                     name = mx[1].trim();
                     sn = mx[2].trim();
@@ -4884,6 +3415,8 @@ function parseRosterHtml(html, shiftKey) {{
                 if (LEAVE_LABELS.indexOf(label) !== -1) return;
                 if (label !== target) return;
                 if (EXCLUDED_DEPTS.indexOf(deptNorm) !== -1) return;
+                if (EXCLUDED_SNS.indexOf(sn) !== -1) return;
+                if ((name + " " + dept).toLowerCase().indexOf("support") !== -1) return;
 
                 onDuty.push({{name:name, sn:sn, dept:dept}});
             }});
@@ -4892,135 +3425,44 @@ function parseRosterHtml(html, shiftKey) {{
     return onDuty;
 }}
 
-function parseImportFlightDispatchText(html, shiftKey) {{
-    var target = normShift(SHIFT_MAP[shiftKey] || shiftKey || "Morning");
-    var knownDepts = {{
-        "documentation": "Documentation",
-        "flight dispatch (export)": "Flight Dispatch (Export)",
-        "flight dispatch (import)": "Flight Dispatch (Import)",
-        "import checkers": "Import Checkers",
-        "import operators": "Import Operators",
-        "release control": "Release Control",
-        "supervisors": "Supervisors"
-    }};
-    var result = {{
-        "Flight Dispatch (Export)": [],
-        "Flight Dispatch (Import)": []
-    }};
-    var currentDept = "";
-    var currentShift = "";
-
-    (html || "")
-        .split(/\r?\n/)
-        .map(function(line) {{ return (line || "").replace(/\s+/g, " ").trim(); }})
-        .filter(Boolean)
-        .forEach(function(line) {{
-            var low = normShift(line);
-
-            if (knownDepts[low]) {{
-                currentDept = low;
-                currentShift = "";
-                return;
-            }}
-
-            if (!currentDept) return;
-
-            if (low.indexOf("morning") !== -1) {{ currentShift = "morning"; return; }}
-            if (low.indexOf("afternoon") !== -1) {{ currentShift = "afternoon"; return; }}
-            if (low.indexOf("night") !== -1) {{ currentShift = "night"; return; }}
-            if (low.indexOf("off day") !== -1) {{ currentShift = "off day"; return; }}
-            if (low.indexOf("annual leave") !== -1) {{ currentShift = "annual leave"; return; }}
-            if (low.indexOf("sick leave") !== -1) {{ currentShift = "sick leave"; return; }}
-            if (low.indexOf("emergency leave") !== -1) {{ currentShift = "emergency leave"; return; }}
-            if (low.indexOf("training") !== -1) {{ currentShift = "training"; return; }}
-
-            if (low.indexOf("total ") === 0) return;
-            if (low.indexOf("view full roster") === 0 || low.indexOf("last updated:") === 0) return;
-            if (currentDept !== "flight dispatch (export)" && currentDept !== "flight dispatch (import)") return;
-            if (currentShift !== target) return;
-
-            var mx = line.match(/^(.+?)\s*[·•\-–]\s*(\d{3,6})\b.*$/);
-            if (!mx) return;
-
-            result[knownDepts[currentDept]].push({{
-                name: mx[1].trim(),
-                sn: mx[2].trim(),
-                dept: knownDepts[currentDept]
-            }});
-        }});
-
-    return result;
-}}
-
-function buildEmpRow(name, sn) {{
-    return '<div class="mp-emp"><span class="emp-sn">' + sn + '</span><span class="emp-name">' + name + '</span></div>';
-}}
-
 function loadManpower() {{
     var el = document.getElementById("mp-content");
-    el.innerHTML = '<div class="mp-loading">\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0645\u064a\u0644...</div>';
+    el.innerHTML = '<div class="mp-loading">جاري التحميل...</div>';
 
     var dateStr = getTodayDate();
-    var exportUrl = ROSTER_DAILY_BASE + dateStr + "/?t=" + Date.now();
-    var importUrl = IMPORT_ROSTER_RAW_BASE + dateStr + "/index.html?t=" + Date.now();
+    var url = ROSTER_DAILY_BASE + dateStr + "/?t=" + Date.now();
 
-    Promise.allSettled([
-        fetch(exportUrl).then(function(r) {{
-            if (!r.ok) throw new Error("Export HTTP " + r.status);
-            return r.text();
-        }}),
-        fetch(importUrl).then(function(r) {{
-            if (!r.ok) throw new Error("Import HTTP " + r.status);
+    fetch(url)
+        .then(function(r) {{
+            if (!r.ok) throw new Error("HTTP " + r.status);
             return r.text();
         }})
-    ])
-    .then(function(results) {{
-        var shift = getCurrentShift();
-        var exportHtml = results[0].status === "fulfilled" ? results[0].value : "";
-        var importHtml = results[1].status === "fulfilled" ? results[1].value : "";
-
-        var allEmps = exportHtml ? parseRosterHtml(exportHtml, shift) : [];
-        var inventoryEmps = allEmps.filter(function(e) {{ return INVENTORY_SNS.indexOf(e.sn) !== -1; }});
-        var supportEmps   = allEmps.filter(function(e) {{ return SUPPORT_SNS.indexOf(e.sn) !== -1 || (e.name + " " + e.dept).toLowerCase().indexOf("support") !== -1; }});
-        var specialSNs = INVENTORY_SNS.concat(SUPPORT_SNS);
-        var mainEmps = allEmps.filter(function(e) {{
-            return specialSNs.indexOf(e.sn) === -1 && (e.name + " " + e.dept).toLowerCase().indexOf("support") === -1;
-        }});
-
-        var grouped = {{}};
-        mainEmps.forEach(function(e) {{
-            if (!grouped[e.dept]) grouped[e.dept] = [];
-            grouped[e.dept].push(e);
-        }});
-
-        if (inventoryEmps.length) grouped["Inventory"] = inventoryEmps.slice();
-        if (supportEmps.length) grouped["C) Support Team"] = supportEmps.slice();
-
-        if (importHtml) {{
-            var fdGroups = parseImportFlightDispatchText(importHtml, shift);
-            if (fdGroups["Flight Dispatch (Export)"].length) {{
-                grouped["Flight Dispatch (Export)"] = fdGroups["Flight Dispatch (Export)"].slice();
+        .then(function(htmlText) {{
+            var shift = getCurrentShift();
+            var emps = parseRosterHtml(htmlText, shift);
+            if (!emps.length) {{
+                el.innerHTML = '<div class="mp-loading">لا توجد بيانات</div>';
+                return;
             }}
-            if (fdGroups["Flight Dispatch (Import)"].length) {{
-                grouped["Flight Dispatch (Import)"] = fdGroups["Flight Dispatch (Import)"].slice();
+            var grouped = {{}};
+            emps.forEach(function(e) {{
+                if (!grouped[e.dept]) grouped[e.dept] = [];
+                grouped[e.dept].push(e);
+            }});
+            var html = "";
+            for (var dept in grouped) {{
+                html += '<div class="mp-dept">' + dept + '</div>';
+                grouped[dept].forEach(function(e) {{
+                    html += '<div class="mp-emp"><span class="emp-sn">SN ' + e.sn + '</span><span class="emp-name">' + e.name + '</span></div>';
+                }});
             }}
-        }}
-
-        mpData = grouped;
-
-        var html = "";
-        for (var dept in grouped) {{
-            html += '<div class="mp-dept">' + dept + '</div>';
-            grouped[dept].forEach(function(e) {{ html += buildEmpRow(e.name, e.sn); }});
-        }}
-
-        el.innerHTML = html || '<div class="mp-loading">\u0644\u0627 \u062a\u0648\u062c\u062f \u0628\u064a\u0627\u0646\u0627\u062a \u0644\u0644\u0645\u0646\u0627\u0648\u0628\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629</div>';
-    }})
-    .catch(function(err) {{
-        el.innerHTML = '<div class="mp-loading">\u062e\u0637\u0623 \u0641\u064a \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0631\u0648\u0633\u062a\u0631: ' + err.message + '</div>';
-    }});
+            el.innerHTML = html;
+            mpData = grouped;
+        }})
+        .catch(function(err) {{
+            el.innerHTML = '<div class="mp-loading">خطأ: ' + err.message + '</div>';
+        }});
 }}
-
 
 function openManpower() {{
     document.getElementById("mp-overlay").classList.add("open");
@@ -5048,6 +3490,7 @@ function copyManpower() {{
         setTimeout(function() {{ btn.textContent = "📋 Copy"; btn.style.background = ""; }}, 2000);
     }});
 }}
+
 </script>
 
 <script>
@@ -5072,6 +3515,8 @@ function copyManpower() {{
     }}
 }})();
 </script>
+
+
 </body>
 </html>"""
 
@@ -5226,6 +3671,9 @@ def _extract_report_content_html(page_html: str) -> str:
     html = re.sub(r'\s+contenteditable="[^"]*"', '', html)
     html = re.sub(r'\s+tabindex="[^"]*"', '', html)
     html = re.sub(r'\s+class="[^"]*"', '', html)
+
+    # ── 4) Remove "+ Add" buttons from email version ──
+    html = re.sub(r'<button[^>]*>\s*\+\s*Add\s*</button>', '', html, flags=re.IGNORECASE)
 
     return html
 
@@ -5702,12 +4150,11 @@ def main() -> None:
         return
 
     print(f"Extracted {len(flights)} flight(s). Saving…")
-    operational_date_dir, shift, _, affected_date_dirs = save_flights(flights, email_dt)
+    date_dir, shift, _ = save_flights(flights, email_dt)
 
+    print(f"Building report: {date_dir}/{shift}…")
     ensure_email_recipients_file()
-    for report_date_dir in affected_date_dirs or [operational_date_dir]:
-        print(f"Building report: {report_date_dir}/{shift}…")
-        build_shift_report(report_date_dir, shift)
+    build_shift_report(date_dir, shift)
     build_root_index(now)
 
     STATE_FILE.write_text(new_hash, encoding="utf-8")
