@@ -1,7 +1,7 @@
 {
   "flight": "ET625",
   "date": "2 7 -Mar",
-  "std_etd": "04:15",
+  "std_etd": "04:25",
   "destination": "ADD",
   "format": "A",
   "items": [
@@ -28,5 +28,7 @@
   ],
   "email_time": "04:56",
   "saved_at": "2026-03-27T04:56:00+04:00",
-  "_tz_fixed": "2026-04-03T12:39:29Z"
+  "_tz_fixed": "2026-04-03T19:43:21Z",
+  "retro_enriched_at": "2026-04-11T18:29:55.254177+04:00",
+  "retro_enriched_source": "local_db"
 }

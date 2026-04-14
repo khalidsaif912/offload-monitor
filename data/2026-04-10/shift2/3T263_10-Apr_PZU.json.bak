@@ -21,8 +21,5 @@
   "storage_date_dir": "2026-04-10",
   "storage_shift": "shift2",
   "enrichment_source": "local_db",
-  "last_enriched": "2026-04-12T09:55:54.246375+04:00",
-  "_tz_fixed": "2026-04-14T13:34:55Z",
-  "retro_enriched_at": "2026-04-14T17:34:55.735580+04:00",
-  "retro_enriched_source": "local_db"
+  "last_enriched": "2026-04-12T09:55:54.246375+04:00"
 }

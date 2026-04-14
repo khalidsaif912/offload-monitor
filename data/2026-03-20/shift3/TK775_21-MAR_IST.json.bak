@@ -1,7 +1,7 @@
 {
   "flight": "TK775",
   "date": "21-MAR",
-  "std_etd": "02:00",
+  "std_etd": "01:55",
   "destination": "IST",
   "format": "A",
   "items": [
@@ -50,6 +50,7 @@
   "saved_at": "2026-03-21T02:53:00+04:00",
   "enrichment_source": "AirLabs+Flightradar",
   "last_enriched": "2026-04-03T23:04:49.185647+04:00",
-  "retro_enriched_at": "2026-04-03T23:43:22.174997+04:00",
-  "retro_enriched_source": "AirLabs"
+  "retro_enriched_at": "2026-04-11T18:29:55.254177+04:00",
+  "retro_enriched_source": "local_db",
+  "_tz_fixed": "2026-04-04T10:04:51Z"
 }
