@@ -2242,9 +2242,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/2026-04-01/shift3.json';
   function getGitHubPat(silent){
     var pat = (localStorage.getItem('gh_pat') || '').trim();
     if(pat || silent) return pat;
-    pat = prompt('Enter GitHub token once to enable automatic report sync between phone and computer.
-
-Press Cancel to keep local-only saving on this device for now.');
+    pat = prompt('Enter GitHub token once to enable automatic report sync between phone and computer.\n\nPress Cancel to keep local-only saving on this device for now.');
     if(pat){
       pat = pat.trim();
       localStorage.setItem('gh_pat', pat);
