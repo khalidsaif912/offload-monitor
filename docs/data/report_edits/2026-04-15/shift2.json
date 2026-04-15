@@ -1,7 +1,7 @@
 {
   "key": "/offload-monitor/2026-04-15/shift2/",
-  "ts": 1776273968671,
-  "updated_at": "2026-04-15T17:26:08.671Z",
+  "ts": 1776273970855,
+  "updated_at": "2026-04-15T17:26:10.855Z",
   "cloud_path": "docs/data/report_edits/2026-04-15/shift2.json",
   "data": {
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[2]>TD[0]>DIV[1]>UL[1]>LI[0]": "<br>",
@@ -91,7 +91,7 @@
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[10]>TD[0]>DIV[1]>UL[0]>LI[3]": "Supervisor mobile phone H/O in good condition.",
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[10]>TD[0]>DIV[1]>UL[0]>LI[4]": "DSE RADIO.",
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[10]>TD[0]>DIV[1]>UL[0]>LI[5]": "All trolleys arranged for early flight.<div><br></div>",
-    "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[11]>TD[0]>DIV[1]>UL[0]>LI[0]": "&nbsp;wy183/15apr&nbsp;",
+    "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[11]>TD[0]>DIV[1]>UL[0]>LI[0]": "&nbsp;wy183/15apr svo",
     "__ul__ul-loadplan": "<li contenteditable=\"true\" tabindex=\"50\" style=\"outline:none; min-width:40px;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[2]&gt;TD[0]&gt;DIV[1]&gt;UL[1]&gt;LI[0]\" data-ghost-val=\"\"><br></li>",
     "__ul__ul-advloading": "<li contenteditable=\"true\" tabindex=\"51\" style=\"outline:none; min-width:40px;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[2]&gt;TD[0]&gt;DIV[1]&gt;UL[5]&gt;LI[0]\">&nbsp;</li>",
     "__ul__ul-csdrescreening": "<li contenteditable=\"true\" tabindex=\"52\" style=\"outline:none; min-width:40px;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[2]&gt;TD[0]&gt;DIV[1]&gt;UL[9]&gt;LI[0]\">&nbsp;</li>",
@@ -111,7 +111,7 @@
     "__ul__ul-trainee": "<li contenteditable=\"true\" style=\"outline: none; min-width: 40px;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[8]&gt;TD[0]&gt;TABLE[1]&gt;TBODY[0]&gt;TR[0]&gt;TD[0]&gt;UL[23]&gt;LI[1]\">​</li>",
     "__ul__ul-overtime": "<li contenteditable=\"true\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[8]&gt;TD[0]&gt;TABLE[1]&gt;TBODY[0]&gt;TR[0]&gt;TD[0]&gt;UL[37]&gt;LI[0]\">&nbsp;</li><li contenteditable=\"true\" style=\"outline: none; min-width: 40px;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[8]&gt;TD[0]&gt;TABLE[1]&gt;TBODY[0]&gt;TR[0]&gt;TD[0]&gt;UL[25]&gt;LI[2]\">​</li>",
     "__ul__ul-handover": "\n        <li contenteditable=\"true\" tabindex=\"90\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[0]\">READ AND SIGN.</li>\n        <li contenteditable=\"true\" tabindex=\"91\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[1]\">Shell &amp; Al-Maha Card Fuel.</li>\n        <li contenteditable=\"true\" tabindex=\"92\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[2]\">DIP MAIL Cage Keys.</li>\n        <li contenteditable=\"true\" tabindex=\"93\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[3]\">Supervisor mobile phone H/O in good condition.</li>\n        <li contenteditable=\"true\" tabindex=\"94\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[4]\">DSE RADIO.</li>\n        <li contenteditable=\"true\" tabindex=\"95\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[5]\">All trolleys arranged for early flight.<div><br></div></li>\n      ",
-    "__ul__ul-special-handover": "\n        <li contenteditable=\"true\" tabindex=\"96\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[11]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[0]\">&nbsp;wy183/15apr&nbsp;</li>\n      ",
+    "__ul__ul-special-handover": "\n        <li contenteditable=\"true\" tabindex=\"96\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[11]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[0]\">&nbsp;wy183/15apr svo</li>\n      ",
     "__nil_row_removed__": false
   }
 }
