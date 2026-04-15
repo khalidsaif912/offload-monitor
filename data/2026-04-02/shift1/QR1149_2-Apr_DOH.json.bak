@@ -40,5 +40,7 @@
   "saved_at": "2026-04-02T05:42:00+04:00",
   "enrichment_source": "local_db",
   "last_enriched": "2026-04-12T09:55:49.355220+04:00",
-  "_tz_fixed": "2026-04-03T19:43:21Z"
+  "_tz_fixed": "2026-04-14T13:34:55Z",
+  "retro_enriched_at": "2026-04-14T17:34:55.735580+04:00",
+  "retro_enriched_source": "local_db"
 }
