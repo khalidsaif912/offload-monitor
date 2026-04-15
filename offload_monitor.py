@@ -1993,18 +1993,15 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
         sup_li_roster = "".join(f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>\n' for e in sup_in_roster)
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}">{sup_li_roster}</ul>
-      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}">{sup_li_roster}</ul>"""
     elif supervisor_display:
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;"><strong>{supervisor_display}</strong></li></ul>
-      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;"><strong>{supervisor_display}</strong></li></ul>"""
     else:
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>
-      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>"""
 
     # ثانياً: باقي الأقسام من roster (تخطّى supervisors — مُعالَج أعلاه)
     for dept, emps in by_dept.items():
@@ -2014,8 +2011,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
         items_li = "".join(f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>\n' for e in emps)
         grouped_html += f"""
       <div style="{dept_hdr}">{dept}:</div>
-      <ul id="{dept_id}" class="{ul_class}" style="{ul_style}">{items_li}</ul>
-      <button onclick="addListItem('{dept_id}')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+      <ul id="{dept_id}" class="{ul_class}" style="{ul_style}">{items_li}</ul>"""
 
     if not grouped_html:
         grouped_html = f'<ul class="{ul_class}" style="{ul_style}"><li style="color:#64748b;">No roster data available.</li></ul>'
@@ -2066,21 +2062,18 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
     section_b = (
         f'<div style="{hdr_style}">B) CTU Staff On Duty:</div>'
         f'<ul id="ul-ctu" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-ctu\')" style="{_btn_style}">+ Add</button>'
     )
 
     # Inventory section
     section_inventory = (
         f'<div style="{hdr_style}">Inventory:</div>'
         f'<ul id="ul-inventory" class="{ul_class}" style="{ul_style}">{_inventory_staff_items}</ul>'
-        f'<button onclick="addListItem(\'ul-inventory\')" style="{_btn_style}">+ Add</button>'
     )
 
     # section_c
     section_c = (
         f'<div style="{hdr_style}">C) Support Team:</div>'
         f'<ul id="ul-support" class="{ul_class}" style="{ul_style}">{_c_items}</ul>'
-        f'<button onclick="addListItem(\'ul-support\')" style="{_btn_style}">+ Add</button>'
     )
 
     fd_export_staff = import_roster.get("fd_export", [])
@@ -2099,34 +2092,28 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
     section_fd_export = (
         f'<div style="{hdr_style}">Flight Dispatch (Export):</div>'
         f'<ul id="ul-fd-export" class="{ul_class}" style="{ul_style}">{_fd_export_items}</ul>'
-        f'<button onclick="addListItem(\'ul-fd-export\')" style="{_btn_style}">+ Add</button>'
     )
 
     section_fd_import = (
         f'<div style="{hdr_style}">Flight Dispatch (Import):</div>'
         f'<ul id="ul-fd-import" class="{ul_class}" style="{ul_style}">{_fd_import_items}</ul>'
-        f'<button onclick="addListItem(\'ul-fd-import\')" style="{_btn_style}">+ Add</button>'
     )
 
     section_d = (
         f'<div style="{hdr_style}">D) Sick Leave / No Show / Others:</div>'
         f'<ul id="ul-sickleave" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-sickleave\')" style="{_btn_style}">+ Add</button>'
     )
     section_e = (
         f'<div style="{hdr_style}">E) Annual Leave / Course / Off in Lieu:</div>'
         f'<ul id="ul-annualleave" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-annualleave\')" style="{_btn_style}">+ Add</button>'
     )
     section_f = (
         f'<div style="{hdr_style}">F) Trainee:</div>'
         f'<ul id="ul-trainee" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-trainee\')" style="{_btn_style}">+ Add</button>'
     )
     section_g = (
         f'<div style="{hdr_style}">G) Overtime Justification:</div>'
         f'<ul id="ul-overtime" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-overtime\')" style="{_btn_style}">+ Add</button>'
     )
 
     return f"""
@@ -2478,15 +2465,12 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <strong style="color:#0b3a78;">Load Plan:</strong>
       <ul id="ul-loadplan" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li></ul>
-      <button onclick="addListItem('ul-loadplan')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <br>
       <strong style="color:#0b3a78;">Advance Loading:</strong>
       <ul id="ul-advloading" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li></ul>
-      <button onclick="addListItem('ul-advloading')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <br>
       <strong style="color:#0b3a78;">CSD Rescreening:</strong>
       <ul id="ul-csdrescreening" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="52" style="outline:none; min-width:40px;">&nbsp;</li></ul>
-      <button onclick="addListItem('ul-csdrescreening')" style="font-size:11px;padding:1px 8px;margin-bottom:4px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -2515,7 +2499,6 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         <li contenteditable="true" tabindex="69" style="outline:none;">Instructions on attaching printed ULD tags on trolleys.</li>
         <li contenteditable="true" tabindex="70" style="outline:none;">Stationery logbook kept at supervisor desk.</li>
       </ul>
-      <button onclick="addListItem('ul-briefings')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -2552,7 +2535,6 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         <li contenteditable="true" tabindex="81" style="outline:none;">DG embargo station check completed.</li>
         <li contenteditable="true" tabindex="82" style="outline:none;">Pigeonhole check done for any pending documents.</li>
       </ul>
-      <button onclick="addListItem('ul-opnotes')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#f4f5f9;border:1px solid #5b6a8a;color:#3d4a63;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -2654,18 +2636,35 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         <li contenteditable="true" tabindex="94" style="outline:none;">DSE RADIO.</li>
         <li contenteditable="true" tabindex="95" style="outline:none;">All trolleys arranged for early flight.</li>
       </ul>
-      <button onclick="addListItem('ul-handover')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
-  <!-- ═══ SECTION 9: OTHER ═══ -->
+  <!-- ═══ SECTION 9: SPECIAL H/O ═══ -->
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#eef3fc;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">9-&nbsp; Special H/O:</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul id="ul-special-handover" style="margin:0 0 10px 22px; padding:0;">
+        <li contenteditable="true" tabindex="96" style="outline:none;">&nbsp;</li>
+      </ul>
+    </div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 10: OTHER ═══ -->
   <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#7a5200;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#fdf6ec;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#7a5200; letter-spacing:1px;">9.&nbsp; OTHER</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#7a5200; letter-spacing:1px;">10.&nbsp; OTHER</span>
         </td>
       </tr>
     </table>
@@ -2855,7 +2854,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   /* ربط الـ li الموجودة مسبقاً بالأحداث عند تحميل الصفحة */
   document.addEventListener('DOMContentLoaded', function(){{
     var editableLists = [
-      'ul-loadplan','ul-advloading','ul-csdrescreening','ul-handover',
+      'ul-loadplan','ul-advloading','ul-csdrescreening','ul-handover','ul-special-handover',
       'ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
       'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'
     ];
@@ -3938,10 +3937,14 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     if(typeof triggerAutosave === 'function') triggerAutosave();
   }}
 
-  function convertFormattedManpowerToPlain(li, caretMode) {{
+  function convertFormattedManpowerToPlain(li, caretMode, deleteOneChar) {{
     if(!li || !isFormattedManpowerEntry(li)) return false;
-    var plain = getManpowerText(li);
-    li.textContent = plain.replace(/​/g, '');
+    var plain = getManpowerText(li).replace(/​/g, '');
+    if(deleteOneChar) {{
+      if(caretMode === 'start') plain = plain.slice(1);
+      else plain = plain.slice(0, -1);
+    }}
+    li.textContent = plain;
     if(caretMode === 'start') setCursorStart(li); else setCursorEnd(li);
     if(typeof triggerAutosave === 'function') triggerAutosave();
     return true;
@@ -4171,7 +4174,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
       if((ev.key === 'Backspace' || ev.key === 'Delete')) {{
         if(isFormattedManpowerEntry(li)) {{
           ev.preventDefault();
-          convertFormattedManpowerToPlain(li, ev.key === 'Delete' ? 'start' : 'end');
+          convertFormattedManpowerToPlain(li, ev.key === 'Delete' ? 'start' : 'end', true);
           closeSnDropdown();
           return;
         }}
