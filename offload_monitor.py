@@ -1964,8 +1964,9 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
         sn_display   = f"SN{sn_part}" if sn_part else ""
         return (
             f'<span data-sn="{sn_part}" data-name="{name_part}" '
-            f'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
-            f'<span style="min-width:80px;font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">{sn_display}</span>'
+            f'style="font-family:Calibri,Arial,sans-serif;">'
+            f'<strong style="color:#1b1f2a;">{sn_display}</strong>'
+            f'&nbsp;&nbsp;'
             f'<span style="color:#1b1f2a;">{name_part}</span>'
             f'</span>'
             f'{note_html}'
@@ -2027,8 +2028,9 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
         return (
             f'<li contenteditable="true" style="outline:none;">'
             f'<span data-sn="{sn}" data-name="{name}" '
-            f'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
-            f'<span style="min-width:80px;font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">{sn_display}</span>'
+            f'style="font-family:Calibri,Arial,sans-serif;">'
+            f'<strong style="color:#1b1f2a;">{sn_display}</strong>'
+            f'&nbsp;&nbsp;'
             f'<span style="color:#1b1f2a;">{name}</span>'
             f'</span></li>'
         )
@@ -3921,8 +3923,9 @@ window._ALL_STAFF          = {all_staff_js};
   function renderSnSelection(li, item) {{
     if(!li || !item) return;
     li.innerHTML = '<span data-sn="' + escapeHtml(item.sn) + '" data-name="' + escapeHtml(item.name) + '" '
-                 + 'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
-                 + '<span style="min-width:80px;font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN' + escapeHtml(item.sn) + '</span>'
+                 + 'style="font-family:Calibri,Arial,sans-serif;">'
+                 + '<strong style="color:#1b1f2a;">SN' + escapeHtml(item.sn) + '</strong>'
+                 + '&nbsp;&nbsp;'
                  + '<span style="color:#1b1f2a;">' + escapeHtml(item.name) + '</span>'
                  + '</span>';
   }}
