@@ -1965,7 +1965,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
         return (
             f'<span data-sn="{sn_part}" data-name="{name_part}" '
             f'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
-            f'<span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">{sn_display}</span>'
+            f'<span style="min-width:80px;font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">{sn_display}</span>'
             f'<span style="color:#1b1f2a;">{name_part}</span>'
             f'</span>'
             f'{note_html}'
@@ -2028,7 +2028,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
             f'<li contenteditable="true" style="outline:none;">'
             f'<span data-sn="{sn}" data-name="{name}" '
             f'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
-            f'<span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">{sn_display}</span>'
+            f'<span style="min-width:80px;font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">{sn_display}</span>'
             f'<span style="color:#1b1f2a;">{name}</span>'
             f'</span></li>'
         )
@@ -2364,7 +2364,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     body{{margin:0;padding:0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;}}
     .page-wrap{{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;}}
     #report-content{{width:100%;max-width:1100px;background:#fff;border:1px solid #d0d5e8;margin:0 auto;}}
-    .btn-bar{{max-width:1100px;margin:10px auto 20px;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:0 4px;}}
+    .btn-bar{{max-width:1100px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
     /* جدول الأوفلود — يسمح بالتمرير الأفقي على الجوال */
     .offload-scroll{{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}}
@@ -2386,7 +2386,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       .sec-pad{{padding-left:12px!important;padding-right:12px!important;}}
 
       /* أزرار الأسفل */
-      .btn-bar{{justify-content:stretch;margin:8px 6px 16px;gap:6px;}}
+      .btn-bar{{justify-content:stretch;margin:0;gap:6px;padding:8px 6px;}}
       .btn-bar button{{flex:1 1 45%;font-size:12px;padding:10px 4px;border-radius:6px;}}
 
       /* التوقيع */
@@ -2754,10 +2754,10 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 </table>
 
 <!-- ═══ BUTTONS BAR ═══ -->
-<div class="btn-bar">
-  <button id="btn-copy" type="button" style="background:#0b3a78;box-shadow:0 2px 8px rgba(11,58,120,.25);">📋 Copy Report</button>
-  <button id="btn-manage-emails" type="button" style="background:#475569;box-shadow:0 2px 8px rgba(71,85,105,.25);">📝 Edit Email List</button>
-  <button id="btn-email" type="button" style="background:#c2410c;box-shadow:0 2px 8px rgba(194,65,12,.25);">✉️ Send Email Now</button>
+<div class="btn-bar" data-no-copy="1">
+  <button id="btn-copy" type="button" data-no-copy="1" style="background:#0b3a78;box-shadow:0 2px 8px rgba(11,58,120,.25);">📋 Copy Report</button>
+  <button id="btn-manage-emails" type="button" data-no-copy="1" style="background:#475569;box-shadow:0 2px 8px rgba(71,85,105,.25);">📝 Edit Email List</button>
+  <button id="btn-email" type="button" data-no-copy="1" style="background:#c2410c;box-shadow:0 2px 8px rgba(194,65,12,.25);">✉️ Send Email Now</button>
 </div>
 
 </div><!-- /max-width wrapper -->
@@ -3002,6 +3002,10 @@ window._ALL_STAFF          = {all_staff_js};
     clone.querySelectorAll('button').forEach(function(e){{
       if(e.textContent.trim().indexOf('Add')!==-1 || e.textContent.trim().indexOf('+')!==-1)
         e.parentNode && e.parentNode.removeChild(e);
+    }});
+    /* إزالة عناصر data-no-copy (أزرار النسخ/الإرسال) من نسخة الإيميل */
+    clone.querySelectorAll('[data-no-copy]').forEach(function(e){{
+      e.parentNode && e.parentNode.removeChild(e);
     }});
     var br=clone.querySelector('#back-link-row');
     if(br) br.style.display='none';
@@ -3918,7 +3922,7 @@ window._ALL_STAFF          = {all_staff_js};
     if(!li || !item) return;
     li.innerHTML = '<span data-sn="' + escapeHtml(item.sn) + '" data-name="' + escapeHtml(item.name) + '" '
                  + 'style="display:inline-flex;gap:0;align-items:baseline;font-family:Calibri,Arial,sans-serif;">'
-                 + '<span style="min-width:80px;font-weight:700;color:#0b3a78;letter-spacing:0.3px;">SN' + escapeHtml(item.sn) + '</span>'
+                 + '<span style="min-width:80px;font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN' + escapeHtml(item.sn) + '</span>'
                  + '<span style="color:#1b1f2a;">' + escapeHtml(item.name) + '</span>'
                  + '</span>';
   }}
