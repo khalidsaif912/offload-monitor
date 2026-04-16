@@ -3601,6 +3601,49 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     }} catch(ex) {{}}
   }}
 
+  function getTextSelectionOffsets(el) {{
+    try {{
+      var sel = window.getSelection && window.getSelection();
+      if(!sel || !sel.rangeCount) return {{start:null, end:null}};
+      var range = sel.getRangeAt(0);
+      if(!el || !el.contains(range.startContainer) || !el.contains(range.endContainer)) return {{start:null, end:null}};
+      var preStart = range.cloneRange();
+      preStart.selectNodeContents(el);
+      preStart.setEnd(range.startContainer, range.startOffset);
+      var preEnd = range.cloneRange();
+      preEnd.selectNodeContents(el);
+      preEnd.setEnd(range.endContainer, range.endOffset);
+      return {{start: preStart.toString().length, end: preEnd.toString().length}};
+    }} catch(ex) {{
+      return {{start:null, end:null}};
+    }}
+  }}
+
+  function setCursorByTextOffset(el, offset) {{
+    try {{
+      if(!el) return;
+      var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+      var remaining = Math.max(0, Number(offset || 0));
+      var node = null;
+      while((node = walker.nextNode())) {{
+        var len = (node.nodeValue || '').length;
+        if(remaining <= len) {{
+          var r = document.createRange();
+          r.setStart(node, remaining);
+          r.collapse(true);
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(r);
+          return;
+        }}
+        remaining -= len;
+      }}
+      setCursorEnd(el);
+    }} catch(ex) {{
+      setCursorEnd(el);
+    }}
+  }}
+
   function isManpowerListUl(ul) {{
     if(!ul || !ul.id) return false;
     return ul.id.indexOf('ul-dept-') === 0 || MP_IDS.indexOf(ul.id) !== -1;
@@ -3665,12 +3708,37 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   function setupTableCell(td) {{
     if(td._cellSetup) return;   /* منع التكرار */
     td._cellSetup = true;
+
+    td.addEventListener('keydown', function(e) {{
+      if(e.key !== 'Tab' || e.shiftKey) return;
+      var row = td.closest('tr');
+      var tbody = row && row.parentElement;
+      if(!row || !tbody || tbody.id !== 'offload-tbody') return;
+      var editable = Array.from(row.querySelectorAll('td[contenteditable="true"]'));
+      if(!editable.length || editable[editable.length - 1] !== td) return;
+      var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {{
+        return !!r.querySelector('td[contenteditable="true"]');
+      }});
+      if(!rows.length || rows[rows.length - 1] !== row) return;
+      e.preventDefault();
+      var tr = appendOffloadRow(false);
+      if(tr) {{
+        setTimeout(function() {{
+          var firstCell = tr.querySelector('td[contenteditable="true"]');
+          if(firstCell) {{
+            firstCell.focus();
+            setCursorEnd(firstCell);
+          }}
+        }}, 0);
+      }}
+    }});
+
     var col = td.dataset.col;
     if(!col) return;
 
     if(col === 'date') {{
       function autoDate() {{
-        var txt = td.innerText.replace(/\u00a0/g,'').trim();
+        var txt = td.innerText.replace(/ /g,'').trim();
         if(!txt) {{
           td.innerText = todayFull();
           if(typeof triggerAutosave==='function') triggerAutosave();
@@ -3703,12 +3771,12 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
         var emailCell= row && row.querySelector('[data-col="email"]');
         /* تعبئة التاريخ تلقائياً إذا كان فارغاً */
         if(dateCell) {{
-          var dv = dateCell.innerText.replace(/\u00a0/g,'').trim();
+          var dv = dateCell.innerText.replace(/ /g,'').trim();
           if(!dv) {{ dateCell.innerText = todayFull(); dv = todayFull(); }}
         }}
         var isoDate = todayISO();
         if(dateCell) {{
-          var dv2 = (dateCell.innerText||'').replace(/\u00a0/g,'').trim().toUpperCase();
+          var dv2 = (dateCell.innerText||'').replace(/ /g,'').trim().toUpperCase();
           var mons = {{JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12}};
           var dm = dv2.match(/^(\d{{1,2}})([A-Z]{{3}})(\d{{2,4}})?$/);
           if(dm) {{
@@ -3716,19 +3784,19 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
             isoDate = yr+'-'+(mons[dm[2]]||1).toString().padStart(2,'0')+'-'+dm[1].padStart(2,'0');
           }}
         }}
-        showGhost(td, 'fetching '+flt+'\u2026');
+        showGhost(td, 'fetching '+flt+'…');
         fetchFlightInfo(flt, isoDate, function(info) {{
           removeGhost(td);
           if(!info) return;
           if(stdCell) {{
-            var cur = stdCell.innerText.replace(/\u00a0/g,'').trim();
-            if(!cur || cur === '\u00a0') {{
+            var cur = stdCell.innerText.replace(/ /g,'').trim();
+            if(!cur || cur === ' ') {{
               var std = info.std||'', etd = info.etd||'';
-              stdCell.innerText = (std && etd && std!==etd) ? std+'\u202f|\u202f'+etd : (std||etd||'');
+              stdCell.innerText = (std && etd && std!==etd) ? std+' | '+etd : (std||etd||'');
             }}
           }}
           if(destCell) {{
-            var dc = destCell.innerText.replace(/\u00a0/g,'').trim();
+            var dc = destCell.innerText.replace(/ /g,'').trim();
             if((!dc) && info.dest) destCell.innerText = info.dest;
           }}
           if(typeof triggerAutosave==='function') triggerAutosave();
@@ -3739,21 +3807,6 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
       td.addEventListener('keyup',  onFlightInput);  /* يشتغل عند paste أيضاً */
       td.addEventListener('paste', function() {{ setTimeout(onFlightInput, 50); }});
     }}
-
-    td.addEventListener('keydown', function(e) {{
-      if(e.key !== 'Tab' || e.shiftKey) return;
-      var row = td.closest('tr');
-      var tbody = row && row.parentElement;
-      if(!row || !tbody || tbody.id !== 'offload-tbody') return;
-      var editable = Array.from(row.querySelectorAll('td[contenteditable="true"]'));
-      if(!editable.length || editable[editable.length - 1] !== td) return;
-      var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {{
-        return !!r.querySelector('td[contenteditable="true"]');
-      }});
-      if(!rows.length || rows[rows.length - 1] !== row) return;
-      e.preventDefault();
-      appendOffloadRow(true);
-    }});
   }}
 
 
@@ -3806,7 +3859,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     if(!tbody) return null;
     var tr = createOffloadRow();
     tbody.appendChild(tr);
-    tr.querySelectorAll('[data-col]').forEach(setupTableCell);
+    tr.querySelectorAll('td[contenteditable="true"]').forEach(setupTableCell);
     reindexOffloadRows();
     if(focusFirst) {{
       var firstCell = tr.querySelector('td[contenteditable="true"]');
@@ -3820,7 +3873,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   }}
 
   function initTableCells() {{
-    document.querySelectorAll('[data-col]').forEach(setupTableCell);
+    document.querySelectorAll('#offload-tbody td[contenteditable="true"]').forEach(setupTableCell);
     reindexOffloadRows();
     /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
     var tbody = document.getElementById('offload-tbody');
@@ -3829,7 +3882,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
         muts.forEach(function(m) {{
           m.addedNodes.forEach(function(n) {{
             if(n.nodeType===1) {{
-              n.querySelectorAll('[data-col]').forEach(setupTableCell);
+              n.querySelectorAll('td[contenteditable="true"]').forEach(setupTableCell);
             }}
           }});
         }});
@@ -3937,15 +3990,41 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     if(typeof triggerAutosave === 'function') triggerAutosave();
   }}
 
-  function convertFormattedManpowerToPlain(li, caretMode, deleteOneChar) {{
+  function convertFormattedManpowerToPlain(li, action) {{
     if(!li || !isFormattedManpowerEntry(li)) return false;
     var plain = getManpowerText(li).replace(/​/g, '');
-    if(deleteOneChar) {{
-      if(caretMode === 'start') plain = plain.slice(1);
-      else plain = plain.slice(0, -1);
+    var sel = getTextSelectionOffsets(li);
+    var start = sel.start;
+    var end = sel.end;
+    if(start == null || end == null) {{
+      start = plain.length;
+      end = plain.length;
     }}
-    li.textContent = plain;
-    if(caretMode === 'start') setCursorStart(li); else setCursorEnd(li);
+
+    if(action === 'backspace') {{
+      if(start !== end) {{
+        plain = plain.slice(0, start) + plain.slice(end);
+      }} else if(start > 0) {{
+        plain = plain.slice(0, start - 1) + plain.slice(end);
+        start -= 1;
+      }}
+      end = start;
+    }} else if(action === 'delete') {{
+      if(start !== end) {{
+        plain = plain.slice(0, start) + plain.slice(end);
+      }} else if(end < plain.length) {{
+        plain = plain.slice(0, start) + plain.slice(end + 1);
+      }}
+      end = start;
+    }} else if(action && action.type === 'insertText') {{
+      var insertText = String(action.text || '');
+      plain = plain.slice(0, start) + insertText + plain.slice(end);
+      start = start + insertText.length;
+      end = start;
+    }}
+
+    li.textContent = plain || '​';
+    setCursorByTextOffset(li, start);
     if(typeof triggerAutosave === 'function') triggerAutosave();
     return true;
   }}
@@ -4115,10 +4194,8 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     }});
     li.addEventListener('click', function() {{
       refreshSnMap();
-      if(isFormattedManpowerEntry(li)) {{
-        convertFormattedManpowerToPlain(li, 'end');
-        closeSnDropdown();
-      }} else updateManpowerSuggestion();
+      if(isFormattedManpowerEntry(li)) closeSnDropdown();
+      else updateManpowerSuggestion();
     }});
     li.addEventListener('input', function() {{
       updateManpowerSuggestion();
@@ -4132,7 +4209,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
         pasted = String(pasted || '').replace(/\s+/g, ' ').trim();
         if(pasted) {{
           ev.preventDefault();
-          replaceManpowerText(li, pasted);
+          convertFormattedManpowerToPlain(li, {{type:'insertText', text:pasted}});
           updateManpowerSuggestion();
           return;
         }}
@@ -4174,7 +4251,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
       if((ev.key === 'Backspace' || ev.key === 'Delete')) {{
         if(isFormattedManpowerEntry(li)) {{
           ev.preventDefault();
-          convertFormattedManpowerToPlain(li, ev.key === 'Delete' ? 'start' : 'end', true);
+          convertFormattedManpowerToPlain(li, ev.key === 'Delete' ? 'delete' : 'backspace');
           closeSnDropdown();
           return;
         }}
@@ -4183,6 +4260,13 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
           removeManpowerLiIfEmpty(li);
           return;
         }}
+      }}
+
+      if(isFormattedManpowerEntry(li) && ev.key && ev.key.length === 1 && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {{
+        ev.preventDefault();
+        convertFormattedManpowerToPlain(li, {{type:'insertText', text:ev.key}});
+        updateManpowerSuggestion();
+        return;
       }}
     }});
 
@@ -4206,7 +4290,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     }});
   }}
 
-  var MP_IDS = ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
+    var MP_IDS = ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
                 'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'];
   function initManpower() {{
     refreshSnMap();
@@ -4375,6 +4459,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   var CLOUD_RAW_URL = CLOUD_PATH ? ('https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main/' + CLOUD_PATH) : '';
   var CLOUD_API_URL = CLOUD_PATH ? ('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + CLOUD_PATH) : '';
   var _db = null;
+  var LS_KEY = 'offload_autosave_cache::' + PAGE_KEY;
   var _saveTimer = null;
   var _cloudTimer = null;
   var _cloudBusy = false;
@@ -4622,10 +4707,10 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     }}, 1400);
   }}
 
-  function saveNow(){{
+  function saveNow(forceCloudNow){{
     var record = collectData();
     writeLocal(record);
-    scheduleCloudPush(record);
+    if(forceCloudNow) pushCloud(record, false); else scheduleCloudPush(record);
     return record;
   }}
 
@@ -4674,6 +4759,13 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
 
   document.addEventListener('input',  _schedSave);
   document.addEventListener('keyup',  _schedSave);
+  document.addEventListener('change', _schedSave, true);
+  document.addEventListener('blur',   _schedSave, true);
+  document.addEventListener('visibilitychange', function(){{
+    if(document.visibilityState === 'hidden') saveNow(true);
+  }});
+  window.addEventListener('pagehide', function(){{ saveNow(true); }});
+  window.addEventListener('beforeunload', function(){{ saveNow(false); }});
 
   var mo = new MutationObserver(function(muts){{
     var changed = muts.some(function(m){{
