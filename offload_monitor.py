@@ -1960,14 +1960,16 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
             name_part = raw
             sn_part   = sn
         note_html = ""
-        # تنسيق: SN بخط عريض أزرق + اسم في عمود محدد
-        sn_display   = f"SN{sn_part}" if sn_part else ""
+        # عرض الرقم فقط بدون حروف قبله
+        parts = []
+        if sn_part:
+            parts.append(f'<strong style="color:#1b1f2a;">{sn_part}</strong>')
+        parts.append(f'<span style="color:#1b1f2a;">{name_part}</span>')
+        inner_html = '&nbsp;&nbsp;'.join(parts)
         return (
             f'<span data-sn="{sn_part}" data-name="{name_part}" '
             f'style="font-family:Calibri,Arial,sans-serif;">'
-            f'<strong style="color:#1b1f2a;">{sn_display}</strong>'
-            f'&nbsp;&nbsp;'
-            f'<span style="color:#1b1f2a;">{name_part}</span>'
+            f'{inner_html}'
             f'</span>'
             f'{note_html}'
         )
@@ -2020,23 +2022,26 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
     _inventory_from_roster = [e for e in on_duty if str(e.get("sn","")).strip() in INVENTORY_SNS]
 
     def _fmt_emp_row(name, sn):
-        sn_display = f"SN{sn}" if sn else ""
-        return (
+        sn_display = sn if sn else ""
+        row_html = (
             f'<li contenteditable="true" style="outline:none;">'
             f'<span data-sn="{sn}" data-name="{name}" '
             f'style="font-family:Calibri,Arial,sans-serif;">'
-            f'<strong style="color:#1b1f2a;">{sn_display}</strong>'
-            f'&nbsp;&nbsp;'
+        )
+        if sn_display:
+            row_html += f'<strong style="color:#1b1f2a;">{sn_display}</strong>&nbsp;&nbsp;'
+        row_html += (
             f'<span style="color:#1b1f2a;">{name}</span>'
             f'</span></li>'
         )
+        return row_html
 
     if _inventory_from_roster:
         _inventory_staff_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in _inventory_from_roster)
     else:
         _inventory_staff_items = '<li style="color:#64748b;">—</li>'
 
-    # ── C) Support Team: من الروستر بـ SN أو dept/name يحتوي support ──
+    # ── Support Team: من الروستر بـ SN أو dept/name يحتوي support ──
     _support_by_sn   = [e for e in on_duty if str(e.get("sn","")).strip() in SUPPORT_SNS]
     _support_by_name = [e for e in on_duty if _is_support(e) and str(e.get("sn","")).strip() not in SUPPORT_SNS]
     _seen_sup = set()
@@ -2060,7 +2065,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
 
     # section_b
     section_b = (
-        f'<div style="{hdr_style}">B) CTU Staff On Duty:</div>'
+        f'<div style="{hdr_style}">CTU Staff On Duty:</div>'
         f'<ul id="ul-ctu" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
     )
 
@@ -2072,47 +2077,45 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
 
     # section_c
     section_c = (
-        f'<div style="{hdr_style}">C) Support Team:</div>'
+        f'<div style="{hdr_style}">Support Team:</div>'
         f'<ul id="ul-support" class="{ul_class}" style="{ul_style}">{_c_items}</ul>'
     )
 
     fd_export_staff = import_roster.get("fd_export", [])
     fd_import_staff = import_roster.get("fd_import", [])
+    fd_combined_staff = []
+    fd_seen = set()
+    for e in fd_export_staff + fd_import_staff:
+        key = (str(e.get("sn", "")).strip(), str(e.get("name", "")).strip().lower())
+        if key in fd_seen:
+            continue
+        fd_seen.add(key)
+        fd_combined_staff.append(e)
 
-    if fd_export_staff:
-        _fd_export_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in fd_export_staff)
+    if fd_combined_staff:
+        _fd_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in fd_combined_staff)
     else:
-        _fd_export_items = '<li style="color:#64748b;">NIL</li>'
+        _fd_items = '<li style="color:#64748b;">NIL</li>'
 
-    if fd_import_staff:
-        _fd_import_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in fd_import_staff)
-    else:
-        _fd_import_items = '<li style="color:#64748b;">NIL</li>'
-
-    section_fd_export = (
-        f'<div style="{hdr_style}">Flight Dispatch (Export):</div>'
-        f'<ul id="ul-fd-export" class="{ul_class}" style="{ul_style}">{_fd_export_items}</ul>'
-    )
-
-    section_fd_import = (
-        f'<div style="{hdr_style}">Flight Dispatch (Import):</div>'
-        f'<ul id="ul-fd-import" class="{ul_class}" style="{ul_style}">{_fd_import_items}</ul>'
+    section_flight_dispatch = (
+        f'<div style="{hdr_style}">Flight Dispatch:</div>'
+        f'<ul id="ul-flight-dispatch" class="{ul_class}" style="{ul_style}">{_fd_items}</ul>'
     )
 
     section_d = (
-        f'<div style="{hdr_style}">D) Sick Leave / No Show / Others:</div>'
+        f'<div style="{hdr_style}">Sick Leave / No Show / Others:</div>'
         f'<ul id="ul-sickleave" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
     )
     section_e = (
-        f'<div style="{hdr_style}">E) Annual Leave / Course / Off in Lieu:</div>'
+        f'<div style="{hdr_style}">Annual Leave / Course / Off in Lieu:</div>'
         f'<ul id="ul-annualleave" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
     )
     section_f = (
-        f'<div style="{hdr_style}">F) Trainee:</div>'
+        f'<div style="{hdr_style}">Trainee:</div>'
         f'<ul id="ul-trainee" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
     )
     section_g = (
-        f'<div style="{hdr_style}">G) Overtime Justification:</div>'
+        f'<div style="{hdr_style}">Overtime Justification:</div>'
         f'<ul id="ul-overtime" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
     )
 
@@ -2122,8 +2125,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
           {section_b}
           {section_inventory}
           {section_c}
-          {section_fd_export}
-          {section_fd_import}
+          {section_flight_dispatch}
           {section_d}
           {section_e}
           {section_f}
@@ -2439,16 +2441,6 @@ def build_shift_report(date_dir: str, shift: str) -> None:
           </td>
         </tr>
       </table>
-    </td>
-  </tr>
-
-  <!-- ═══ BACK LINK ═══ -->
-  <tr class="back-link-row" id="back-link-row">
-    <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
-      <a href="../../index.html"
-         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none; display:inline-block;">
-        &#8592; Back to Index
-      </a>
     </td>
   </tr>
 
@@ -3012,7 +3004,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
       e.parentNode && e.parentNode.removeChild(e);
     }});
     var br=clone.querySelector('#back-link-row');
-    if(br) br.style.display='none';
+    if(br && br.parentNode) br.parentNode.removeChild(br);
 
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}}table{{border-collapse:collapse;}}img{{max-width:100%;height:auto;display:block;}}</style></head><body>'+clone.outerHTML+'</body></html>';
   }}
@@ -5306,17 +5298,15 @@ function parseImportFlightDispatchText(html, shiftKey) {{
     var target = normShift(SHIFT_MAP[shiftKey] || shiftKey || "Morning");
     var knownDepts = {{
         "documentation": "Documentation",
-        "flight dispatch (export)": "Flight Dispatch (Export)",
-        "flight dispatch (import)": "Flight Dispatch (Import)",
+        "flight dispatch (export)": "Flight Dispatch",
+        "flight dispatch (import)": "Flight Dispatch",
         "import checkers": "Import Checkers",
         "import operators": "Import Operators",
         "release control": "Release Control",
         "supervisors": "Supervisors"
     }};
-    var result = {{
-        "Flight Dispatch (Export)": [],
-        "Flight Dispatch (Import)": []
-    }};
+    var result = [];
+    var seen = {{}};
     var currentDept = "";
     var currentShift = "";
 
@@ -5352,10 +5342,16 @@ function parseImportFlightDispatchText(html, shiftKey) {{
             var mx = line.match(/^(.+?)\s*[·•\-–]\s*(\d{3,6})\b.*$/);
             if (!mx) return;
 
-            result[knownDepts[currentDept]].push({{
-                name: mx[1].trim(),
-                sn: mx[2].trim(),
-                dept: knownDepts[currentDept]
+            var sn = mx[2].trim();
+            var name = mx[1].trim();
+            var key = sn + "|" + name.toLowerCase();
+            if (seen[key]) return;
+            seen[key] = true;
+
+            result.push({{
+                name: name,
+                sn: sn,
+                dept: "Flight Dispatch"
             }});
         }});
 
@@ -5363,7 +5359,8 @@ function parseImportFlightDispatchText(html, shiftKey) {{
 }}
 
 function buildEmpRow(name, sn) {{
-    return '<div class="mp-emp"><span class="emp-sn">' + sn + '</span><span class="emp-name">' + name + '</span></div>';
+    var snHtml = sn ? '<span class="emp-sn">' + sn + '</span>' : '';
+    return '<div class="mp-emp">' + snHtml + '<span class="emp-name">' + name + '</span></div>';
 }}
 
 function loadManpower() {{
@@ -5407,12 +5404,9 @@ function loadManpower() {{
         if (supportEmps.length) grouped["C) Support Team"] = supportEmps.slice();
 
         if (importHtml) {{
-            var fdGroups = parseImportFlightDispatchText(importHtml, shift);
-            if (fdGroups["Flight Dispatch (Export)"].length) {{
-                grouped["Flight Dispatch (Export)"] = fdGroups["Flight Dispatch (Export)"].slice();
-            }}
-            if (fdGroups["Flight Dispatch (Import)"].length) {{
-                grouped["Flight Dispatch (Import)"] = fdGroups["Flight Dispatch (Import)"].slice();
+            var fdStaff = parseImportFlightDispatchText(importHtml, shift);
+            if (fdStaff.length) {{
+                grouped["Flight Dispatch"] = fdStaff.slice();
             }}
         }}
 
@@ -5447,7 +5441,7 @@ function copyManpower() {{
     for (var dept in mpData) {{
         text += dept + ":\\n";
         mpData[dept].forEach(function(e) {{
-            text += "  SN " + e.sn + " — " + e.name + "\\n";
+            text += "  " + (e.sn ? e.sn + " — " : "") + e.name + "\\n";
         }});
         text += "\\n";
     }}
