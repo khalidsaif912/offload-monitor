@@ -1,7 +1,7 @@
 {
   "key": "/offload-monitor/2026-04-16/shift2/",
-  "ts": 1776357970182,
-  "updated_at": "2026-04-16T16:46:10.182Z",
+  "ts": 1776357978387,
+  "updated_at": "2026-04-16T16:46:18.387Z",
   "cloud_path": "docs/data/report_edits/2026-04-16/shift2.json",
   "data": {
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[2]>TD[0]>DIV[1]>UL[1]>LI[0]": "WY101/17APR&nbsp;— Cargo retrieved from LOCs",
@@ -25,11 +25,10 @@
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[1]>UL[0]>LI[0]": "All flights departed on time as per RDM Mr. Saleh.",
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[1]>UL[0]>LI[1]": "DG embargo station check completed.",
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[1]>UL[0]>LI[2]": "Pigeonhole check done for any pending documents.",
-    "nil-text": "NIL — No offload data recorded for this shift.",
-    "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[1]": "&nbsp;",
-    "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[2]": "&nbsp;",
-    "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[3]": "&nbsp;",
-    "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[4]": "&nbsp;",
+    "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[1]": "16APR2026",
+    "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[2]": "WY101",
+    "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[3]": "14:15",
+    "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[4]": "LHR",
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[5]": "&nbsp;",
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[6]": "&nbsp;",
     "DIV[0]>DIV[0]>TABLE[0]>TBODY[0]>TR[5]>TD[0]>DIV[3]>TABLE[0]>TBODY[1]>TR[1]>TD[7]": "&nbsp;",
@@ -108,6 +107,6 @@
     "__ul__ul-overtime": "<li contenteditable=\"true\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[8]&gt;TD[0]&gt;TABLE[1]&gt;TBODY[0]&gt;TR[0]&gt;TD[0]&gt;UL[25]&gt;LI[0]\">&nbsp;</li>",
     "__ul__ul-handover": "\n        <li contenteditable=\"true\" tabindex=\"90\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[0]\">READ AND SIGN.</li>\n        <li contenteditable=\"true\" tabindex=\"91\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[1]\">Shell &amp; Al-Maha Card Fuel.</li>\n        <li contenteditable=\"true\" tabindex=\"92\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[2]\">DIP MAIL Cage Keys.</li>\n        <li contenteditable=\"true\" tabindex=\"93\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[3]\">Supervisor mobile phone H/O in good condition.</li>\n        <li contenteditable=\"true\" tabindex=\"94\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[4]\">DSE RADIO.</li>\n        <li contenteditable=\"true\" tabindex=\"95\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[10]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[5]\">All trolleys arranged for early flight.</li>\n      ",
     "__ul__ul-special-handover": "\n        <li contenteditable=\"true\" tabindex=\"96\" style=\"outline:none;\" data-save-key=\"DIV[0]&gt;DIV[0]&gt;TABLE[0]&gt;TBODY[0]&gt;TR[11]&gt;TD[0]&gt;DIV[1]&gt;UL[0]&gt;LI[0]\">&nbsp;</li>\n      ",
-    "__nil_row_removed__": false
+    "__nil_row_removed__": true
   }
 }
