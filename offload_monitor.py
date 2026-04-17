@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import re
 import json
+import base64
 import hashlib
 import calendar as _cal
 from collections import OrderedDict
@@ -1633,18 +1634,18 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     header_blue = "#0b3a78"
 
     columns = [
-        ("ITEM", "5%", "ITEM"),
-        ("DATE", "7%", "DATE"),
-        ("FLIGHT", "7%", "FLIGHT"),
-        ("STD/ETD", "7%", "STD/ETD"),
+        ("ITEM", "6%", "ITEM"),
+        ("DATE", "8%", "DATE"),
+        ("FLIGHT", "8%", "FLIGHT"),
+        ("STD/ETD", "8%", "STD/ETD"),
         ("DEST", "5%", "DEST"),
-        ("Email Received Time", "9%", "Email Received Time"),
-        ("Physical Cargo Received from Ramp", "10%", "Physical Cargo Received from Ramp"),
-        ("Trolley/ ULD Number", "9%", "Trolley/ ULD Number"),
-        ("Offloading Process Completed in CMS", "10%", "Offloading Process Completed in CMS"),
-        ("Offloading Pieces Verification", "10%", "Offloading Pieces Verification"),
-        ("Offloading Reason", "9%", "Offloading Reason"),
-        ("Remarks/Additional Information", "12%", "Remarks/Additional Information"),
+        ("Email Received Time", "10%", "Email Received Time"),
+        ("Physical Cargo Received from Ramp", "11%", "Physical Cargo Received from Ramp"),
+        ("Trolley/ ULD Number", "10%", "Trolley/ ULD Number"),
+        ("Offloading Process Completed in CMS", "11%", "Offloading Process Completed in CMS"),
+        ("Offloading Pieces Verification", "9%", "Offloading Pieces Verification"),
+        ("Offloading Reason", "7%", "Offloading Reason"),
+        ("Remarks/Additional Information", "7%", "Remarks/Additional Information"),
     ]
 
     def _delete_btn() -> str:
@@ -1662,19 +1663,17 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             f'<td class="offload-idx" data-label="ITEM" '
             f'style="position:relative;padding:18px 6px 7px 24px;border:1px solid {cell_border};'
             f'font-size:12px;font-family:Calibri,Arial,sans-serif;color:{text_dark};background:{bg};'
-            f'text-align:center;vertical-align:middle;width:5%;min-width:56px;">'
+            f'text-align:center;vertical-align:middle;width:6%;min-width:56px;">'
             f'{_delete_btn()}<strong class="offload-row-num">{index}</strong></td>'
         )
-    col_headers = "<colgroup>"
-    for _label, width, _data_label in columns:
-        col_headers += f'<col style="width:{width};">'
-    col_headers += "</colgroup><thead><tr>"
+
+    col_headers = "<thead><tr>"
     for label, width, _data_label in columns:
         col_headers += (
-            f'<th scope="col" style="padding:8px 5px;background-color:{hdr_bg};color:{hdr_color};'
-            f'font-weight:700;font-size:10px;line-height:1.2;font-family:Calibri,Arial,sans-serif;'
+            f'<th scope="col" style="padding:8px 6px;background-color:{hdr_bg};color:{hdr_color};'
+            f'font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;'
             f'border:1px solid {hdr_border};text-align:center;vertical-align:middle;'
-            f'width:{width};word-break:break-word;overflow-wrap:break-word;overflow:hidden;">{label}</th>'
+            f'width:{width};word-break:normal;overflow-wrap:anywhere;">{label}</th>'
         )
     col_headers += "</tr></thead>"
 
@@ -1858,6 +1857,8 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             f'<tr id="nil-row">'
             f'<td colspan="12" style="padding:10px 10px;border:1px solid {cell_border};color:{nil_color};text-align:center;font-style:italic;font-size:12px;font-family:Calibri,Arial,sans-serif;background:{row_even};">'
             f'<span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL — No offload data recorded for this shift.</span>'
+            f'&nbsp;<button type="button" data-no-copy="1" data-email-remove="1" onclick="var r=document.getElementById(\'nil-row\');if(r)r.remove();triggerAutosave();" '
+            f'style="font-size:10px;padding:1px 7px;cursor:pointer;background:{hdr_bg};border:1px solid {header_blue};color:{header_blue};border-radius:3px;vertical-align:middle;">×</button>'
             f'</td></tr>'
         )
         for i in range(1, 4):
@@ -2323,14 +2324,14 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   <style>
     *,*::before,*::after{{box-sizing:border-box;}}
     body{{margin:0;padding:0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;}}
-    .page-wrap{{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;overflow-x:hidden;}}
+    .page-wrap{{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;overflow-x:auto;}}
     #report-content{{width:1180px;max-width:100%;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
     .btn-bar{{max-width:1180px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
     /* جدول الأوفلود — حل جذري للتنسيق على الشاشة والجوال */
-    .offload-wrap{{width:100%;max-width:100%;overflow:hidden;}}
+    .offload-wrap{{width:100%;max-width:100%;overflow:visible;}}
     .offload-table{{width:100%;table-layout:fixed;border-collapse:collapse;}}
-    .offload-table td,.offload-table th{{word-break:break-word;overflow-wrap:break-word;overflow:hidden;}}
+    .offload-table td,.offload-table th{{word-break:break-word;overflow-wrap:anywhere;}}
     .offload-table .offload-idx{{position:relative;}}
     .offload-table .offload-row-num{{display:inline-block;min-width:14px;}}
 
@@ -2756,6 +2757,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   var COPY_SUCCESS_MS = 2500;
   var REPO_OWNER = 'khalidsaif912';
   var REPO_NAME = 'offload-monitor';
+  var SYNC_BRANCH = 'offload-sync';
   var RECIPIENTS_PATH = 'docs/data/email_recipients.json';
   var RECIPIENTS_RAW_URL = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main/' + RECIPIENTS_PATH;
   var RECIPIENTS_EDIT_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/edit/main/' + RECIPIENTS_PATH;
@@ -3182,12 +3184,16 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   function sendEmailNow(){{
     openRecipientsManager('send').then(function(result){{
       if(!result || !result.selected || !result.selected.length) return;
-      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\\n\\nShift: {shift}\\nDate: {date_dir}\\nRecipients: ' + result.selected.join(', '));
+      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟
+
+Shift: {shift}
+Date: {date_dir}
+Recipients: ' + result.selected.join(', '));
       if(!ok) return;
 
       var btn = document.getElementById('btn-email');
       if(!btn) return;
-      btn.innerText = '⏳ Saving edits…';
+      btn.innerText = '⏳ Preparing email…';
       btn.disabled = true;
       btn.style.background = '#64748b';
 
@@ -3203,7 +3209,6 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
         localStorage.setItem('gh_pat', pat);
       }}
 
-      /* ── Step 1: Capture DOM edits (inline styles, clean email-safe HTML) ── */
       var editedHtml = buildReportHtml();
       if(!editedHtml){{
         btn.innerText = '❌ No report found';
@@ -3212,58 +3217,30 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
         return;
       }}
 
-      /* ── Step 2: Get current file SHA then upload the edited HTML to repo ── */
-      var filePath = 'docs/{date_dir}/{shift}/index.html';
-      var apiBase = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/';
+      btn.innerText = '⏳ Sending email…';
       var headers = {{
         'Accept':'application/vnd.github+json',
         'Authorization':'Bearer ' + pat,
         'Content-Type':'application/json'
       }};
+      var editedHtmlB64 = btoa(unescape(encodeURIComponent(editedHtml)));
 
-      btn.innerText = '⏳ Uploading edits…';
-
-      fetch(apiBase + filePath + '?t=' + Date.now(), {{headers:headers}})
-      .then(function(r){{
-        if(r.status === 401){{ localStorage.removeItem('gh_pat'); throw new Error('AUTH'); }}
-        if(!r.ok && r.status !== 404) throw new Error('GET_SHA_' + r.status);
-        return r.ok ? r.json() : null;
-      }})
-      .then(function(fileInfo){{
-        var sha = fileInfo ? fileInfo.sha : undefined;
-        /* Use editedHtml — includes user edits + inline styles + email-safe colors */
-        var encoded = btoa(unescape(encodeURIComponent(editedHtml)));
-        var putBody = {{
-          message: 'Update report with manual edits ({date_dir}/{shift})',
-          content: encoded,
-          branch: 'main'
-        }};
-        if(sha) putBody.sha = sha;
-
-        return fetch(apiBase + filePath, {{
-          method: 'PUT',
-          headers: headers,
-          body: JSON.stringify(putBody)
-        }});
-      }})
-      .then(function(r){{
-        if(r.status === 401){{ localStorage.removeItem('gh_pat'); throw new Error('AUTH'); }}
-        if(!r.ok) throw new Error('PUT_' + r.status);
-        btn.innerText = '⏳ Sending email…';
-
-        /* ── Step 3: Trigger the dispatch to send email ── */
-        return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {{
-          method:'POST',
-          headers: headers,
-          body:JSON.stringify({{
-            event_type:'send_report_now',
-            client_payload:{{date_dir:'{date_dir}', shift:'{shift}', recipients: result.selected}}
-          }})
-        }});
+      return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {{
+        method:'POST',
+        headers: headers,
+        body:JSON.stringify({{
+          event_type:'send_report_now',
+          client_payload:{{
+            date_dir:'{date_dir}',
+            shift:'{shift}',
+            recipients: result.selected,
+            edited_html_b64: editedHtmlB64
+          }}
+        }})
       }})
       .then(function(r){{
         if(r.ok || r.status === 204){{
-          btn.innerText = '✅ Email Sent!';
+          btn.innerText = '✅ Email queued';
           btn.style.background = '#059669';
           resetButton(btn, '✉️ Send Email Now', '#c2410c', 4000);
         }} else {{
@@ -3676,17 +3653,17 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   }};
 
   var OFFLOAD_COLS = [
-    {{ key: 'date',  label: 'DATE' }},
-    {{ key: 'flight',label: 'FLIGHT' }},
-    {{ key: 'std',   label: 'STD/ETD' }},
-    {{ key: 'dest',  label: 'DEST' }},
-    {{ key: 'email', label: 'Email Received Time' }},
-    {{ key: '',      label: 'Physical Cargo Received from Ramp' }},
-    {{ key: '',      label: 'Trolley/ ULD Number' }},
-    {{ key: '',      label: 'Offloading Process Completed in CMS' }},
-    {{ key: '',      label: 'Offloading Pieces Verification' }},
-    {{ key: '',      label: 'Offloading Reason' }},
-    {{ key: '',      label: 'Remarks/Additional Information' }}
+    { key: 'date',  label: 'DATE' },
+    { key: 'flight',label: 'FLIGHT' },
+    { key: 'std',   label: 'STD/ETD' },
+    { key: 'dest',  label: 'DEST' },
+    { key: 'email', label: 'Email Received Time' },
+    { key: '',      label: 'Physical Cargo Received from Ramp' },
+    { key: '',      label: 'Trolley/ ULD Number' },
+    { key: '',      label: 'Offloading Process Completed in CMS' },
+    { key: '',      label: 'Offloading Pieces Verification' },
+    { key: '',      label: 'Offloading Reason' },
+    { key: '',      label: 'Remarks/Additional Information' }
   ];
 
   function buildOffloadIndexCellHTML(idx) {{
@@ -4468,8 +4445,9 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   var PAGE_KEY = location.pathname;
   var REPO_OWNER = 'khalidsaif912';
   var REPO_NAME  = 'offload-monitor';
+  var SYNC_BRANCH = 'offload-sync';
   var CLOUD_PATH = window._REPORT_CLOUD_PATH || '';
-  var CLOUD_RAW_URL = CLOUD_PATH ? ('https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main/' + CLOUD_PATH) : '';
+  var CLOUD_RAW_URL = CLOUD_PATH ? ('https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/' + SYNC_BRANCH + '/' + CLOUD_PATH) : '';
   var CLOUD_API_URL = CLOUD_PATH ? ('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + CLOUD_PATH) : '';
   var _db = null;
   var LS_KEY = 'offload_autosave_cache::' + PAGE_KEY;
@@ -4634,6 +4612,39 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     return getGitHubPat(false);
   }}
 
+  function ensureSyncBranch(headers){{
+    var branchUrl = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/branches/' + SYNC_BRANCH;
+    var mainRefUrl = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/git/ref/heads/main';
+    var createRefUrl = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/git/refs';
+
+    return fetch(branchUrl + '?t=' + Date.now(), {{headers:headers}})
+      .then(function(r){{
+        if(r.ok) return true;
+        if(r.status === 401 || r.status === 403) throw new Error('AUTH');
+        if(r.status !== 404) throw new Error('BRANCH_' + r.status);
+        return fetch(mainRefUrl + '?t=' + Date.now(), {{headers:headers}})
+          .then(function(mainRefResp){{
+            if(mainRefResp.status === 401 || mainRefResp.status === 403) throw new Error('AUTH');
+            if(!mainRefResp.ok) throw new Error('MAINREF_' + mainRefResp.status);
+            return mainRefResp.json();
+          }})
+          .then(function(mainRef){{
+            var baseSha = (((mainRef || {{}}).object || {{}}).sha || '').trim();
+            if(!baseSha) throw new Error('MAINREF_SHA');
+            return fetch(createRefUrl, {{
+              method: 'POST',
+              headers: Object.assign({{'Content-Type':'application/json'}}, headers),
+              body: JSON.stringify({{ ref: 'refs/heads/' + SYNC_BRANCH, sha: baseSha }})
+            }});
+          }})
+          .then(function(createResp){{
+            if(createResp.ok || createResp.status === 422) return true;
+            if(createResp.status === 401 || createResp.status === 403) throw new Error('AUTH');
+            throw new Error('CREATEBRANCH_' + createResp.status);
+          }});
+      }});
+  }}
+
   function fetchCloudRecord(){{
     if(!CLOUD_RAW_URL) return Promise.resolve(null);
     return fetch(CLOUD_RAW_URL + '?t=' + Date.now(), {{cache:'no-store'}})
@@ -4668,7 +4679,8 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     }};
     var content = btoa(unescape(encodeURIComponent(JSON.stringify(record, null, 2))));
 
-    return fetch(CLOUD_API_URL + '?t=' + Date.now(), {{headers:headers}})
+    return ensureSyncBranch(headers).then(function(){{
+      return fetch(CLOUD_API_URL + '?t=' + Date.now(), {{headers:headers}})
       .then(function(r){{
         if(r.status === 404) return null;
         if(r.status === 401 || r.status === 403){{
@@ -4682,7 +4694,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
         var body = {{
           message: 'Sync report edits for ' + PAGE_KEY,
           content: content,
-          branch: 'main'
+          branch: SYNC_BRANCH
         }};
         if(existing && existing.sha) body.sha = existing.sha;
         return fetch(CLOUD_API_URL, {{
@@ -4705,7 +4717,8 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
         _lastAppliedTs = Math.max(_lastAppliedTs, Number(record.ts || 0));
         setCloudBtn('☁️ Synced', '#16a34a', 2500);
         return true;
-      }})
+      }});
+    }})
       .catch(function(err){{
         _cloudBusy = false;
         _cloudPending = false;
@@ -5731,6 +5744,23 @@ def _build_email_html(page_html: str) -> str:
 </html>"""
 
 
+def _get_force_send_html_override() -> Optional[str]:
+    """Read manual-send edited HTML from repository_dispatch payload, if provided."""
+    event_path = os.environ.get("GITHUB_EVENT_PATH", "").strip()
+    if not event_path or not Path(event_path).exists():
+        return None
+    try:
+        event_data = json.loads(Path(event_path).read_text(encoding="utf-8"))
+        payload = event_data.get("client_payload") or {}
+        edited_html_b64 = str(payload.get("edited_html_b64") or "").strip()
+        if not edited_html_b64:
+            return None
+        return base64.b64decode(edited_html_b64).decode("utf-8")
+    except Exception as exc:
+        print(f"  [email] Could not decode edited HTML from event payload: {exc}")
+        return None
+
+
 def send_shift_report_email(date_dir: str, shift: str) -> None:
     """إرسال تقرير المناوبة بالبريد الإلكتروني كـ HTML كامل."""
     import smtplib
@@ -5760,12 +5790,16 @@ def send_shift_report_email(date_dir: str, shift: str) -> None:
         print("  [email] Skipping — EMAIL_SENDER / EMAIL_APP_PASSWORD / recipients not set.")
         return
 
-    report_file = DOCS_DIR / date_dir / shift / "index.html"
-    if not report_file.exists():
-        print(f"  [email] Report not found: {report_file}")
-        return
+    page_html = _get_force_send_html_override()
+    if page_html:
+        print("  [email] Using edited HTML from dispatch payload.")
+    else:
+        report_file = DOCS_DIR / date_dir / shift / "index.html"
+        if not report_file.exists():
+            print(f"  [email] Report not found: {report_file}")
+            return
+        page_html = report_file.read_text(encoding="utf-8")
 
-    page_html = report_file.read_text(encoding="utf-8")
     html_content = _build_email_html(page_html)
 
     shift_names = {
@@ -6006,7 +6040,8 @@ def main() -> None:
     if force_date and force_shift:
         print(f"[force-send] Sending {force_shift} report for {force_date}…")
         report_file = DOCS_DIR / force_date / force_shift / "index.html"
-        if not report_file.exists():
+        payload_html = _get_force_send_html_override()
+        if not report_file.exists() and not payload_html:
             print(f"[force-send] Report not found: {report_file} — rebuilding first…")
             build_shift_report(force_date, force_shift)
         # احذف ملف .sent حتى يُرسل حتى لو أُرسل مسبقاً
