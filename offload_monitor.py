@@ -1844,7 +1844,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
 
         data_rows += f"""
       <tr>
-        <td {td_s}><strong>{item_num}</strong></td>
+        <td {td_s}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">✕</button><strong class="row-index-label">{item_num}</strong></div></td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="date">{date}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="flight">{flt}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="std">{std_etd_display}</td>
@@ -1856,10 +1856,6 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{verified}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{reason_display}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{remarks}</td>
-        <td style="padding:7px 6px;border:1px solid {cell_border};background:{bg};text-align:center;vertical-align:middle;">
-          <button type="button" onclick="deleteOffloadRow(this)"
-            style="font-size:10px;padding:3px 8px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:4px;font-family:Calibri,Arial,sans-serif;">✕ Delete</button>
-        </td>
       </tr>"""
 
     # ── 3 empty rows for manual entry ──
@@ -1870,7 +1866,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         item_num += 1
         data_rows += f"""
       <tr>
-        <td {_empty_td}><strong>{item_num}</strong></td>
+        <td {_empty_td}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">✕</button><strong class="row-index-label">{item_num}</strong></div></td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="date">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="flight">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="std">&nbsp;</td>
@@ -1882,21 +1878,17 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid {cell_border};background:{row_even};text-align:center;vertical-align:middle;">
-          <button type="button" onclick="deleteOffloadRow(this)"
-            style="font-size:10px;padding:3px 8px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:4px;font-family:Calibri,Arial,sans-serif;">✕ Delete</button>
-        </td>
       </tr>"""
 
     # ── NIL case ──
     if not flights:
         data_rows = f"""
       <tr id="nil-row">
-        <td colspan="13" style="padding:10px 10px; border:1px solid {cell_border};
+        <td colspan="12" style="padding:10px 10px; border:1px solid {cell_border};
             color:{nil_color}; text-align:center; font-style:italic; font-size:12px;
             font-family:Calibri,Arial,sans-serif; background:{row_even};">
           <span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL \u2014 No offload data recorded for this shift.</span>
-          &nbsp;<button onclick="var r=document.getElementById('nil-row');if(r)r.remove();triggerAutosave();"
+          &nbsp;<button data-no-copy="1" onclick="var r=document.getElementById('nil-row');if(r)r.remove();triggerAutosave();"
             style="font-size:10px;padding:1px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;vertical-align:middle;">\u2715 Remove</button>
         </td>
       </tr>"""
@@ -1904,7 +1896,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         for i in range(1, 4):
             data_rows += f"""
       <tr>
-        <td {_empty_td}><strong>{i}</strong></td>
+        <td {_empty_td}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">✕</button><strong class="row-index-label">{i}</strong></div></td>
         <td {_empty_td} contenteditable="true" data-col="date">&nbsp;</td>
         <td {_empty_td} contenteditable="true" data-col="flight">&nbsp;</td>
         <td {_empty_td} contenteditable="true" data-col="std">&nbsp;</td>
@@ -1916,10 +1908,6 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         <td {_empty_td} contenteditable="true">&nbsp;</td>
         <td {_empty_td} contenteditable="true">&nbsp;</td>
         <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td style="padding:7px 6px;border:1px solid {cell_border};background:{row_even};text-align:center;vertical-align:middle;">
-          <button type="button" onclick="deleteOffloadRow(this)"
-            style="font-size:10px;padding:3px 8px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:4px;font-family:Calibri,Arial,sans-serif;">✕ Delete</button>
-        </td>
       </tr>"""
 
     table_html = f"""
@@ -2370,6 +2358,12 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     #report-content{{width:900px;max-width:900px;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
     .btn-bar{{max-width:900px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
+    .row-index-wrap{{position:relative;min-height:18px;}}
+    .row-index-label{{display:inline-block;}}
+    .row-delete-btn{{position:absolute;top:-8px;left:-4px;font-size:9px;line-height:1;padding:1px 4px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:10px;font-family:Calibri,Arial,sans-serif;}}
+    @media print{{
+      .btn-bar,[data-no-copy="1"],.row-delete-btn{{display:none!important;}}
+    }}
     /* جدول الأوفلود — يسمح بالتمرير الأفقي على الجوال */
     .offload-scroll{{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}}
     .offload-scroll table{{min-width:900px;width:100%;}}
@@ -3007,10 +3001,9 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     clone.querySelectorAll('[tabindex]').forEach(function(e){{
       e.removeAttribute('tabindex');
     }});
-    /* إزالة أزرار + Add من النسخة المُرسَلة */
+    /* إزالة كل الأزرار من النسخة المُرسَلة/المنسوخة */
     clone.querySelectorAll('button').forEach(function(e){{
-      if(e.textContent.trim().indexOf('Add')!==-1 || e.textContent.trim().indexOf('+')!==-1)
-        e.parentNode && e.parentNode.removeChild(e);
+      e.parentNode && e.parentNode.removeChild(e);
     }});
     /* إزالة عناصر data-no-copy (أزرار النسخ/الإرسال) من نسخة الإيميل */
     clone.querySelectorAll('[data-no-copy]').forEach(function(e){{
@@ -3022,12 +3015,27 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}}table{{border-collapse:collapse;}}img{{max-width:100%;height:auto;display:block;}}</style></head><body>'+clone.outerHTML+'</body></html>';
   }}
 
+
+  function buildReportPlainText(){{
+    var full = buildReportHtml();
+    if(!full) return '';
+    try {{
+      var doc = new DOMParser().parseFromString(full, 'text/html');
+      var body = doc && doc.body ? doc.body : null;
+      return body ? String(body.innerText || body.textContent || '').trim() : '';
+    }} catch(ex) {{
+      var el = document.getElementById('report-content');
+      return el ? String(el.innerText || el.textContent || '').trim() : '';
+    }}
+  }}
+
   function onCopyReport(){{
     var btn = document.getElementById('btn-copy');
     var el = document.getElementById('report-content');
     if(!btn || !el) return;
 
     var full = buildReportHtml();
+    var plain = buildReportPlainText();
     if(!full) return;
 
     function markCopied(){{
@@ -3039,21 +3047,21 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     if(navigator.clipboard && window.ClipboardItem){{
       var item = new ClipboardItem({{
         'text/html': new Blob([full], {{type:'text/html'}}),
-        'text/plain': new Blob([el.innerText], {{type:'text/plain'}})
+        'text/plain': new Blob([plain], {{type:'text/plain'}})
       }});
       navigator.clipboard.write([item]).then(markCopied).catch(function(){{
         if(navigator.clipboard && navigator.clipboard.writeText){{
-          navigator.clipboard.writeText(el.innerText).then(markCopied).catch(function(){{
-            plainCopyFallback(el.innerText, full);
+          navigator.clipboard.writeText(plain).then(markCopied).catch(function(){{
+            plainCopyFallback(plain, full);
             markCopied();
           }});
         }} else {{
-          plainCopyFallback(el.innerText, full);
+          plainCopyFallback(plain, full);
           markCopied();
         }}
       }});
     }} else {{
-      plainCopyFallback(el.innerText, full);
+      plainCopyFallback(plain, full);
       markCopied();
     }}
   }}
@@ -3823,7 +3831,19 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     }});
     rows.forEach(function(row, idx) {{
       var first = row.querySelector('td');
-      if(first) first.innerHTML = '<strong>' + (idx + 1) + '</strong>';
+      if(!first) return;
+      var label = first.querySelector('.row-index-label');
+      if(!label) {{
+        var num = (String(first.textContent || '').match(/\d+/) || [''])[0] || String(idx + 1);
+        first.innerHTML = '<div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">✕</button><strong class="row-index-label">' + num + '</strong></div>';
+        label = first.querySelector('.row-index-label');
+      }}
+      if(label) label.textContent = String(idx + 1);
+      if(!first.querySelector('.row-delete-btn')) {{
+        var wrap = first.querySelector('.row-index-wrap') || first;
+        var btn = createOffloadDeleteButton();
+        if(wrap.firstChild) wrap.insertBefore(btn, wrap.firstChild); else wrap.appendChild(btn);
+      }}
     }});
     var ti = 1;
     rows.forEach(function(row) {{
@@ -3837,16 +3857,63 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   function createOffloadDeleteButton() {{
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.textContent = '✕ Delete';
+    btn.textContent = '✕';
+    btn.className = 'row-delete-btn';
+    btn.setAttribute('data-no-copy', '1');
+    btn.setAttribute('aria-label', 'Delete row');
+    btn.setAttribute('title', 'Delete row');
     btn.setAttribute('onclick', 'deleteOffloadRow(this)');
-    btn.setAttribute('style', 'font-size:10px;padding:3px 8px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:4px;font-family:Calibri,Arial,sans-serif;');
     return btn;
+  }}
+
+  function createOffloadIndexCell(index, tdStyle) {{
+    var idxCell = document.createElement('td');
+    idxCell.setAttribute('style', tdStyle);
+    var wrap = document.createElement('div');
+    wrap.className = 'row-index-wrap';
+    wrap.appendChild(createOffloadDeleteButton());
+    var label = document.createElement('strong');
+    label.className = 'row-index-label';
+    label.textContent = String(index || 0);
+    wrap.appendChild(label);
+    idxCell.appendChild(wrap);
+    return idxCell;
+  }}
+
+  function normalizeOffloadRowLayout() {{
+    var tbody = document.getElementById('offload-tbody');
+    if(!tbody) return;
+    Array.from(tbody.querySelectorAll('tr')).forEach(function(row) {{
+      if(!row.querySelector('td[contenteditable="true"]')) return;
+      var cells = Array.from(row.children || []);
+      if(!cells.length) return;
+      var first = cells[0];
+      var label = first.querySelector('.row-index-label');
+      if(!label) {{
+        var num = (String(first.textContent || '').match(/\d+/) || ['0'])[0] || '0';
+        first.innerHTML = '';
+        var wrap = document.createElement('div');
+        wrap.className = 'row-index-wrap';
+        wrap.appendChild(createOffloadDeleteButton());
+        var strong = document.createElement('strong');
+        strong.className = 'row-index-label';
+        strong.textContent = num;
+        wrap.appendChild(strong);
+        first.appendChild(wrap);
+      }} else if(!first.querySelector('.row-delete-btn')) {{
+        var wrap2 = first.querySelector('.row-index-wrap') || first;
+        wrap2.insertBefore(createOffloadDeleteButton(), wrap2.firstChild);
+      }}
+      var lastCell = row.lastElementChild;
+      if(lastCell && lastCell !== first && lastCell.querySelector && lastCell.querySelector('button[onclick="deleteOffloadRow(this)"]')) {{
+        lastCell.remove();
+      }}
+    }});
   }}
 
   function createOffloadRow() {{
     var tr = document.createElement('tr');
     var tdStyle = 'padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;';
-    var actionStyle = 'padding:7px 6px;border:1px solid #d0d9ee;background:#ffffff;text-align:center;vertical-align:middle;';
     var cols = [
       {{ key: 'date' }},
       {{ key: 'flight' }},
@@ -3855,10 +3922,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
       {{ key: 'email' }},
       {{}}, {{}}, {{}}, {{}}, {{}}, {{}}
     ];
-    var idxCell = document.createElement('td');
-    idxCell.setAttribute('style', tdStyle);
-    idxCell.innerHTML = '<strong>0</strong>';
-    tr.appendChild(idxCell);
+    tr.appendChild(createOffloadIndexCell(0, tdStyle));
     cols.forEach(function(col) {{
       var td = document.createElement('td');
       td.setAttribute('style', tdStyle);
@@ -3867,10 +3931,6 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
       td.innerHTML = '&nbsp;';
       tr.appendChild(td);
     }});
-    var actionTd = document.createElement('td');
-    actionTd.setAttribute('style', actionStyle);
-    actionTd.appendChild(createOffloadDeleteButton());
-    tr.appendChild(actionTd);
     return tr;
   }}
 
@@ -3914,9 +3974,12 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   }}
 
   function initTableCells() {{
+    normalizeOffloadRowLayout();
     document.querySelectorAll('#offload-tbody td[contenteditable="true"]').forEach(setupTableCell);
     document.querySelectorAll('#offload-tbody button[onclick="deleteOffloadRow(this)"]').forEach(function(btn) {{
       btn.type = 'button';
+      btn.classList.add('row-delete-btn');
+      btn.setAttribute('data-no-copy', '1');
     }});
     reindexOffloadRows();
     /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
