@@ -49,37 +49,16 @@
       .mp-list li{font-size:12px!important;line-height:1.7!important;}
       .mp-list span[style*="width:200px"]{width:150px!important;}
 
-      /* الأوفلود على الجوال — جدول حقيقي مع سحب أفقي */
-      .offload-wrap{
-        width:100%;
-        max-width:100%;
-        overflow-x:auto!important;
-        overflow-y:hidden!important;
-        -webkit-overflow-scrolling:touch;
-      }
-      .offload-table{
-        width:1180px!important;
-        min-width:1180px!important;
-        table-layout:fixed!important;
-        border-collapse:collapse!important;
-      }
+      /* الأوفلود على الجوال — جدول طبيعي مع سحب أفقي */
+      .offload-wrap{width:100%;max-width:100%;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch;}
+      .offload-table{width:1180px!important;min-width:1180px!important;table-layout:fixed!important;border-collapse:collapse!important;}
       .offload-table thead{display:table-header-group!important;}
       .offload-table tbody{display:table-row-group!important;}
       .offload-table tr{display:table-row!important;margin:0!important;border:none!important;background:transparent!important;}
-      .offload-table th,
-      .offload-table td{
-        display:table-cell!important;
-        width:auto!important;
-        min-height:auto!important;
-        text-align:center!important;
-        vertical-align:middle!important;
-        padding:7px 6px!important;
-        border-left:1px solid #d0d9ee!important;
-        border-right:1px solid #d0d9ee!important;
-      }
+      .offload-table th,.offload-table td{display:table-cell!important;width:auto!important;text-align:center!important;vertical-align:middle!important;padding:7px 6px!important;min-height:auto!important;border-left:1px solid #d0d9ee!important;border-right:1px solid #d0d9ee!important;}
       .offload-table td::before{content:none!important;display:none!important;}
       .offload-table td.offload-idx{padding:18px 6px 7px 28px!important;min-width:58px!important;}
-      .offload-table .offload-row-delete{top:4px!important;left:4px!important;}
+      .offload-table .offload-row-delete{top:4px!important;left:4px!important;z-index:2;}
 
       /* footer */
       .report-footer-td{padding:14px 12px!important;font-size:11px!important;}
@@ -1353,6 +1332,11 @@ Recipients: ' + result.selected.join(', '));
     return ul.id.indexOf('ul-dept-') === 0 || MP_IDS.indexOf(ul.id) !== -1;
   }
 
+  function isCustomBulletUl(ul) {
+    if(!ul || !ul.id) return false;
+    return ul.id === 'ul-csdrescreening' || ul.id === 'ul-special-handover' || ul.id === 'ul-other';
+  }
+
   function createEditableListItem(ul) {
     var li = document.createElement('li');
     li.contentEditable = 'true';
@@ -1362,6 +1346,15 @@ Recipients: ' + result.selected.join(', '));
       li.textContent = '​';
     } else {
       li.innerHTML = '&nbsp;';
+      li.style.display = 'list-item';
+      if(isCustomBulletUl(ul)) {
+        li.style.listStyle = 'none';
+        li.style.paddingLeft = '14px';
+        li.style.position = 'relative';
+      } else {
+        li.style.listStyleType = 'disc';
+        li.style.listStylePosition = 'outside';
+      }
     }
     return li;
   }
@@ -1428,7 +1421,7 @@ Recipients: ' + result.selected.join(', '));
     var row = btn && btn.closest ? btn.closest('tr') : null;
     var tbody = document.getElementById('offload-tbody');
     if(!row || !tbody) return;
-    row.parentNode && row.parentNode.removeChild(row);
+    if(row.parentNode) row.parentNode.removeChild(row);
     var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {
       return !!r.querySelector('td[contenteditable="true"]');
     });
@@ -1436,6 +1429,14 @@ Recipients: ' + result.selected.join(', '));
     reindexOffloadRows();
     if(typeof triggerAutosave === 'function') triggerAutosave();
   };
+
+  document.addEventListener('click', function(ev) {
+    var btn = ev.target && ev.target.closest ? ev.target.closest('.offload-row-delete') : null;
+    if(!btn) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    if(typeof window.deleteOffloadRow === 'function') window.deleteOffloadRow(btn);
+  });
 
   function decorateOffloadRow(row) {
     if(!row) return;
