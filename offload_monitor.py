@@ -1614,56 +1614,50 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
 # ══════════════════════════════════════════════════════════════════
 
 def _render_offload_table(flights: list[dict], meta: dict) -> str:
-    """Render offload section as a single vertical table (Type B style).
-    Columns: ITEM | DATE | FLIGHT | STD/ETD | DEST | Email Received Time |
-             Physical Cargo Received from Ramp | Trolley/ULD Number |
-             Offloading Process Completed in CMS | Offloading Pieces Verification |
-             Offloading Reason | Remarks/Additional Information
+    """Render offload section as a compact editable table that fits the page.
+
+    The first cell contains a small delete button (×) in the top-left corner.
+    That button is marked as non-copy / non-email so it never appears in copied
+    HTML or outgoing email.
     """
     if not flights:
         flights = []
 
-    # ── Styles ──
-    hdr_bg      = "#dce6f4"
-    hdr_color   = "#1b1f2a"
-    hdr_border  = "#a8bcd8"
-    row_even    = "#ffffff"
-    row_odd     = "#f4f7fc"
+    hdr_bg = "#dce6f4"
+    hdr_color = "#1b1f2a"
+    hdr_border = "#a8bcd8"
+    row_even = "#ffffff"
+    row_odd = "#f4f7fc"
     cell_border = "#d0d9ee"
-    nil_color   = "#64748b"
-    text_dark   = "#1b1f2a"
-    totals_bg   = "#eef3fc"
-    totals_border = "#0b3a78"
-    totals_color = "#0b3a78"
+    nil_color = "#64748b"
+    text_dark = "#1b1f2a"
 
-    # ── Column headers ──
     columns = [
-        ("ITEM", "62px"),
-        ("DATE", "86px"),
-        ("FLIGHT", "82px"),
-        ("STD/ETD", "82px"),
-        ("DEST", "60px"),
-        ("Email Received Time", "98px"),
-        ("Physical Cargo Received from Ramp", "118px"),
-        ("Trolley/ ULD Number", "102px"),
-        ("Offloading Process Completed in CMS", "118px"),
-        ("Offloading Pieces Verification", "108px"),
-        ("Offloading Reason", "110px"),
-        ("Remarks/Additional Information", "154px"),
+        ("ITEM", "54px"),
+        ("DATE", "82px"),
+        ("FLIGHT", "78px"),
+        ("STD/ETD", "72px"),
+        ("DEST", "54px"),
+        ("Email Received Time", "86px"),
+        ("Physical Cargo Received from Ramp", "110px"),
+        ("Trolley/ ULD Number", "92px"),
+        ("Offloading Process Completed in CMS", "92px"),
+        ("Offloading Pieces Verification", "92px"),
+        ("Offloading Reason", "98px"),
+        ("Remarks/Additional Information", "150px"),
     ]
 
     col_headers = "<tr>"
     for label, width in columns:
-        w = f"width:{width};" if width else ""
         col_headers += (
-            f'<td style="padding:8px 6px; background-color:{hdr_bg}; color:{hdr_color};'
-            f'font-weight:700; font-size:10.5px; line-height:1.25; font-family:Calibri,Arial,sans-serif;'
-            f'border:1px solid {hdr_border}; text-align:center; vertical-align:middle; {w}">'
+            f'<td style="padding:8px 5px; width:{width}; min-width:{width}; max-width:{width}; '
+            f'background-color:{hdr_bg}; color:{hdr_color}; font-weight:700; font-size:10px; '
+            f'font-family:Calibri,Arial,sans-serif; border:1px solid {hdr_border}; '
+            f'text-align:center; vertical-align:middle; line-height:1.25; white-space:normal; word-break:break-word;">'
             f'{label}</td>'
         )
     col_headers += "</tr>"
 
-    # ── Deduplicate flights by flight number (keep first occurrence) ──
     seen_flights: set[str] = set()
     unique_flights: list[dict] = []
     for f in flights:
@@ -1675,26 +1669,22 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         unique_flights.append(f)
     flights = unique_flights
 
-    # ── Data rows ──
     data_rows = ""
     item_num = 0
-
-    # tabindex counter for Tab navigation
     _ti = [1]
+
     def _next_ti():
-        v = _ti[0]; _ti[0] += 1; return v
+        v = _ti[0]
+        _ti[0] += 1
+        return v
 
     def _format_full_date(raw: str) -> str:
-        """Force date into DD-MMM-YY format (e.g. 15-MAR-26) no matter what input arrives."""
         raw = (raw or "").strip()
         if not raw or raw == "—":
-            # No date provided — use today's date in Muscat timezone
             today = datetime.now(ZoneInfo(TIMEZONE))
             return today.strftime("%d-%b-%y").upper()
 
         raw_up = raw.upper().replace("/", "-").replace(".", "-")
-
-        # 1) ISO: 2026-03-15 or 2026-03-15T...
         m = re.match(r"(\d{4})-(\d{1,2})-(\d{1,2})", raw_up)
         if m:
             try:
@@ -1703,7 +1693,6 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             except ValueError:
                 pass
 
-        # 2) Full with year: 15-MAR-26, 15MAR26, 15-MAR-2026, 15MAR2026
         for fmt in ("%d-%b-%y", "%d%b%y", "%d-%b-%Y", "%d%b%Y"):
             try:
                 dt = datetime.strptime(raw_up, fmt)
@@ -1711,7 +1700,6 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             except ValueError:
                 pass
 
-        # 3) Short without year: 15MAR or 15-MAR — attach current year
         m = re.match(r"(\d{1,2})-?([A-Z]{3})$", raw_up)
         if m:
             try:
@@ -1721,67 +1709,72 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             except ValueError:
                 pass
 
-        # 4) Try extracting any day+month from the string
         m = re.search(r"(\d{1,2})\s*-?\s*([A-Z]{3})\s*-?\s*(\d{2,4})?", raw_up)
         if m:
             day, mon = m.group(1), m.group(2)
-            yr_str = m.group(3)
-            if not yr_str:
-                yr_str = str(datetime.now(ZoneInfo(TIMEZONE)).year)
+            yr_str = m.group(3) or str(datetime.now(ZoneInfo(TIMEZONE)).year)
             try:
                 dt = datetime.strptime(f"{day}{mon}{yr_str}", "%d%b%Y" if len(yr_str) == 4 else "%d%b%y")
                 return dt.strftime("%d-%b-%y").upper()
             except ValueError:
                 pass
 
-        # 5) Absolute fallback — return today's date
         today = datetime.now(ZoneInfo(TIMEZONE))
         return today.strftime("%d-%b-%y").upper()
 
     def _to_muscat_time(time_str: str) -> str:
-        """Convert time string to Muscat local time (UTC+4).
-
-        - ISO datetime with explicit tz offset -> convert to Muscat.
-        - Bare HH:MM from HTML table (STD/ETD column) -> treat as UTC and add +4h.
-          Reason: The offload report stores STD/ETD in UTC (e.g. 06:40 UTC = 10:40 MCT).
-        """
         s = (time_str or "").strip()
         if not s:
             return ""
-        # Full ISO datetime -> convert to Muscat
         try:
             dt = datetime.fromisoformat(s)
             if dt.tzinfo is not None:
                 dt = dt.astimezone(ZoneInfo(TIMEZONE))
                 return dt.strftime("%H:%M")
-            # ISO without tz -> treat as UTC
             dt = dt.replace(tzinfo=ZoneInfo("UTC"))
             return dt.astimezone(ZoneInfo(TIMEZONE)).strftime("%H:%M")
         except (ValueError, TypeError):
             pass
-        # Bare HH:MM -> treat as UTC and convert to Muscat (UTC+4)
         m_t = re.match(r"^(\d{1,2}):(\d{2})$", s)
         if m_t:
             try:
                 today = datetime.now(ZoneInfo(TIMEZONE)).date()
-                dt_utc = datetime(today.year, today.month, today.day,
-                                  int(m_t.group(1)), int(m_t.group(2)),
-                                  tzinfo=ZoneInfo("UTC"))
-                converted = dt_utc.astimezone(ZoneInfo(TIMEZONE)).strftime("%H:%M")
-                if converted != s:
-                    print(f"  [tz-convert] STD/ETD {s!r} (UTC) -> {converted!r} (MCT)")
-                return converted
+                dt_utc = datetime(today.year, today.month, today.day, int(m_t.group(1)), int(m_t.group(2)), tzinfo=ZoneInfo("UTC"))
+                return dt_utc.astimezone(ZoneInfo(TIMEZONE)).strftime("%H:%M")
             except Exception:
                 pass
         return s
 
+    def _idx_td_style(bg: str) -> str:
+        return (
+            f'padding:18px 4px 6px 4px;border:1px solid {cell_border};font-size:12px;'
+            f'font-family:Calibri,Arial,sans-serif;color:{text_dark};background:{bg};'
+            f'text-align:center;vertical-align:top;position:relative;width:54px;min-width:54px;max-width:54px;'
+        )
+
+    def _cell_style(bg: str) -> str:
+        return (
+            f'padding:7px 5px;border:1px solid {cell_border};font-size:11px;'
+            f'font-family:Calibri,Arial,sans-serif;color:{text_dark};background:{bg};'
+            f'text-align:center;vertical-align:middle;line-height:1.25;white-space:normal;word-break:break-word;'
+        )
+
+    def _idx_html(n: int) -> str:
+        return (
+            '<button type="button" data-del-row="1" data-no-copy="1" data-no-email="1" '
+            'aria-label="Delete row" '
+            'style="position:absolute;top:3px;left:3px;width:12px;height:12px;padding:0;margin:0;'
+            'display:inline-flex;align-items:center;justify-content:center;border:1px solid #dc2626;'
+            'background:#fff;color:#dc2626;font-size:10px;line-height:1;font-weight:700;border-radius:0;cursor:pointer;">×</button>'
+            f'<strong style="display:inline-block;margin-top:2px;">{n}</strong>'
+        )
+
     for flight in flights:
-        flt  = (flight.get("flight", "") or "—").upper()
+        flt = (flight.get("flight", "") or "—").upper()
         date = _format_full_date(flight.get("date", "") or "")
         dest = (flight.get("destination", "") or "—").upper()
         std_raw = flight.get("std_etd", "") or ""
         std_val, etd_val = _format_std_etd(std_raw)
-        # Convert times to Muscat timezone
         std_val = _to_muscat_time(std_val)
         etd_val = _to_muscat_time(etd_val)
         std_etd_display = f"{std_val}/{etd_val}" if std_val or etd_val else "—"
@@ -1790,7 +1783,6 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         elif etd_val and not std_val:
             std_etd_display = etd_val
 
-        # Ops status
         email = (flight.get("email_time") or "").strip()
         if not email:
             _saved_at = (flight.get("saved_at") or "").strip()
@@ -1802,9 +1794,9 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
                     email = _sa_dt.strftime("%H:%M")
                 except Exception:
                     email = ""
-        physical = (flight.get("physical")   or "").strip().upper() or ""
-        cms      = (flight.get("cms")        or "").strip().upper() or ""
-        # Pieces verification: sum PCS from all items
+
+        physical = (flight.get("physical") or "").strip().upper() or ""
+        cms = (flight.get("cms") or "").strip().upper() or ""
         total_pcs = 0
         for it in flight.get("items", []):
             try:
@@ -1812,20 +1804,10 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             except (ValueError, TypeError):
                 pass
         verified = str(total_pcs) if total_pcs > 0 else ""
-        remarks  = (flight.get("remarks")    or "").strip().upper() or ""
+        remarks = (flight.get("remarks") or "").strip().upper() or ""
 
         items = flight.get("items", [])
-        real_items = [i for i in items if (i.get("awb","") or "").strip()]
-
-        # ── Single row per flight ──
-        item_num += 1
-        bg = row_odd if item_num % 2 == 0 else row_even
-
-        td_s = (f'style="padding:7px 6px;border:1px solid {cell_border};'
-                f'font-size:12px;font-family:Calibri,Arial,sans-serif;color:{text_dark};'
-                f'background:{bg};text-align:center;vertical-align:middle;"')
-
-        # Offloading reason: combine unique reasons from items
+        real_items = [i for i in items if (i.get("awb", "") or "").strip()]
         reasons = []
         for it in real_items:
             r = (it.get("reason", "") or "").strip().upper()
@@ -1833,7 +1815,6 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
                 reasons.append(r)
         reason_display = ", ".join(reasons) if reasons else ""
 
-        # Trolley/ULD: only use trolley field — never fall back to AWB numbers
         uld_parts = []
         for it in real_items:
             u = (it.get("trolley", "") or "").strip().upper()
@@ -1841,84 +1822,81 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
                 uld_parts.append(u)
         uld_display = ", ".join(uld_parts) if uld_parts else ""
 
+        item_num += 1
+        bg = row_odd if item_num % 2 == 0 else row_even
+        idx_td = _idx_td_style(bg)
+        td_s = _cell_style(bg)
+
         data_rows += f"""
       <tr>
-        <td {td_s}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">x</button><strong class="row-index-label">{item_num}</strong></div></td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="date">{date}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="flight">{flt}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="std">{std_etd_display}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="dest">{dest}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="email">{email}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{physical}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{uld_display}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{cms}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{verified}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{reason_display}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{remarks}</td>
+        <td style="{idx_td}">{_idx_html(item_num)}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}" data-col="date">{date}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}" data-col="flight">{flt}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}" data-col="std">{std_etd_display}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}" data-col="dest">{dest}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}" data-col="email">{email}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}">{physical}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}">{uld_display}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}">{cms}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}">{verified}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}">{reason_display}</td>
+        <td style="{td_s}" contenteditable="true" tabindex="{_next_ti()}">{remarks}</td>
       </tr>"""
 
-    # ── 3 empty rows for manual entry ──
-    _empty_td = (f'style="padding:7px 6px;border:1px solid {cell_border};'
-                 f'font-size:12px;font-family:Calibri,Arial,sans-serif;color:{text_dark};'
-                 f'background:{row_even};text-align:center;"')
+    idx_empty = _idx_td_style(row_even)
+    _empty_td = _cell_style(row_even)
     for _ in range(3):
         item_num += 1
         data_rows += f"""
       <tr>
-        <td {_empty_td}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">x</button><strong class="row-index-label">{item_num}</strong></div></td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="date">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="flight">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="std">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="dest">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="email">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td style="{idx_empty}">{_idx_html(item_num)}</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}" data-col="date">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}" data-col="flight">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}" data-col="std">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}" data-col="dest">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}" data-col="email">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
       </tr>"""
 
-    # ── NIL case ──
     if not flights:
         data_rows = f"""
       <tr id="nil-row">
-        <td colspan="12" style="padding:10px 10px; border:1px solid {cell_border};
-            color:{nil_color}; text-align:center; font-style:italic; font-size:12px;
-            font-family:Calibri,Arial,sans-serif; background:{row_even};">
-          <span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL \u2014 No offload data recorded for this shift.</span>
-          &nbsp;<button data-no-copy="1" onclick="var r=document.getElementById('nil-row');if(r)r.remove();triggerAutosave();"
-            style="font-size:10px;padding:1px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;vertical-align:middle;">\u2715 Remove</button>
+        <td colspan="12" style="padding:9px 10px; border:1px solid {cell_border}; color:{nil_color}; text-align:center; font-style:italic; font-size:12px; font-family:Calibri,Arial,sans-serif; background:{row_even};">
+          <span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL — No offload data recorded for this shift.</span>
         </td>
       </tr>"""
-        # Add 3 empty rows even for NIL
         for i in range(1, 4):
             data_rows += f"""
       <tr>
-        <td {_empty_td}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">x</button><strong class="row-index-label">{i}</strong></div></td>
-        <td {_empty_td} contenteditable="true" data-col="date">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="flight">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="std">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="dest">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="email">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
+        <td style="{idx_empty}">{_idx_html(i)}</td>
+        <td style="{_empty_td}" contenteditable="true" data-col="date">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" data-col="flight">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" data-col="std">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" data-col="dest">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true" data-col="email">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true">&nbsp;</td>
+        <td style="{_empty_td}" contenteditable="true">&nbsp;</td>
       </tr>"""
 
     table_html = f"""
     <table width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; margin-top:12px; margin-bottom:14px;">
+           style="border-collapse:collapse; width:100%; table-layout:fixed; font-family:Calibri,Arial,sans-serif; margin-top:12px; margin-bottom:14px;">
       {col_headers}
       <tbody id="offload-tbody">
       {data_rows}
       </tbody>
     </table>"""
 
-    return f'<div class="offload-scroll" style="margin-top:12px;">{table_html}</div>'
+    return f'<div class="offload-scroll" style="margin-top:12px; width:100%; overflow:visible;">{table_html}</div>'
 
 
 def _render_manpower_section(roster: dict, supervisor_display: str = "", import_roster: dict | None = None) -> str:
@@ -2353,19 +2331,14 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   <style>
     *,*::before,*::after{{box-sizing:border-box;}}
     body{{margin:0;padding:0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;}}
-    .page-wrap{{background:#eef1f7;padding:16px 8px 40px;min-height:100vh;overflow-x:hidden;}}
+    .page-wrap{{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;overflow-x:hidden;}}
     #report-content{{width:1180px;max-width:1180px;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
     .btn-bar{{max-width:1180px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
-    .row-index-wrap{{position:relative;display:flex;align-items:center;justify-content:center;min-height:26px;padding:9px 0 2px 0;}}
-    .row-index-label{{display:inline-block;padding-top:4px;font-size:12px;line-height:1;}}
-    .row-delete-btn{{position:absolute;top:1px;left:1px;width:14px;height:14px;padding:0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;line-height:1;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:2px;font-family:Calibri,Arial,sans-serif;}}
-    @media print{{
-      .btn-bar,[data-no-copy="1"],.row-delete-btn{{display:none!important;}}
-    }}
-    /* جدول الأوفلود — بدون شريط تمرير أفقي */
-    .offload-scroll{{overflow:visible;width:100%;max-width:100%;}}
-    .offload-scroll table{{min-width:0;width:100%;table-layout:auto;}}
+    /* جدول الأوفلود — بدون شريط تمرير أفقي داخل الجدول */
+    .offload-scroll{{overflow:visible;width:100%;}}
+    .offload-scroll table{{width:100%;table-layout:fixed;}}
+    #offload-tbody button[data-del-row]{{display:inline-flex;}}
 
     /* ══════════════ MOBILE ══════════════ */
     @media(max-width:700px){{
@@ -2412,9 +2385,9 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 </head>
 <body>
 <div class="page-wrap">
-<div style="width:1180px;max-width:1180px;margin:0 auto;">
+<div style="width:900px;max-width:900px;margin:0 auto;">
 
-<table width="1180" cellpadding="0" cellspacing="0" border="0" id="report-content"
+<table width="900" cellpadding="0" cellspacing="0" border="0" id="report-content"
        style="background-color:#ffffff; border:1px solid #d0d5e8;">
 
   <!-- ═══ HEADER ═══ -->
@@ -3000,12 +2973,8 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     clone.querySelectorAll('[tabindex]').forEach(function(e){{
       e.removeAttribute('tabindex');
     }});
-    /* إزالة كل الأزرار من النسخة المُرسَلة/المنسوخة */
-    clone.querySelectorAll('button').forEach(function(e){{
-      e.parentNode && e.parentNode.removeChild(e);
-    }});
-    /* إزالة عناصر data-no-copy (أزرار النسخ/الإرسال) من نسخة الإيميل */
-    clone.querySelectorAll('[data-no-copy]').forEach(function(e){{
+    /* إزالة جميع الأزرار والعناصر غير المطلوبة من نسخة الإيميل/النسخ */
+    clone.querySelectorAll('button,[data-no-copy],[data-no-email]').forEach(function(e){{
       e.parentNode && e.parentNode.removeChild(e);
     }});
     var br=clone.querySelector('#back-link-row');
@@ -3014,28 +2983,16 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}}table{{border-collapse:collapse;}}img{{max-width:100%;height:auto;display:block;}}</style></head><body>'+clone.outerHTML+'</body></html>';
   }}
 
-
-  function buildReportPlainText(){{
-    var full = buildReportHtml();
-    if(!full) return '';
-    try {{
-      var doc = new DOMParser().parseFromString(full, 'text/html');
-      var body = doc && doc.body ? doc.body : null;
-      return body ? String(body.innerText || body.textContent || '').trim() : '';
-    }} catch(ex) {{
-      var el = document.getElementById('report-content');
-      return el ? String(el.innerText || el.textContent || '').trim() : '';
-    }}
-  }}
-
   function onCopyReport(){{
     var btn = document.getElementById('btn-copy');
     var el = document.getElementById('report-content');
     if(!btn || !el) return;
 
     var full = buildReportHtml();
-    var plain = buildReportPlainText();
     if(!full) return;
+    var plainHolder = document.createElement('div');
+    plainHolder.innerHTML = full;
+    var plainText = (plainHolder.innerText || plainHolder.textContent || '').replace(/\n{3,}/g, '\n\n').trim();
 
     function markCopied(){{
       btn.innerText = '✅ Copied!';
@@ -3046,21 +3003,21 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     if(navigator.clipboard && window.ClipboardItem){{
       var item = new ClipboardItem({{
         'text/html': new Blob([full], {{type:'text/html'}}),
-        'text/plain': new Blob([plain], {{type:'text/plain'}})
+        'text/plain': new Blob([plainText], {{type:'text/plain'}})
       }});
       navigator.clipboard.write([item]).then(markCopied).catch(function(){{
         if(navigator.clipboard && navigator.clipboard.writeText){{
-          navigator.clipboard.writeText(plain).then(markCopied).catch(function(){{
-            plainCopyFallback(plain, full);
+          navigator.clipboard.writeText(plainText).then(markCopied).catch(function(){{
+            plainCopyFallback(plainText, full);
             markCopied();
           }});
         }} else {{
-          plainCopyFallback(plain, full);
+          plainCopyFallback(plainText, full);
           markCopied();
         }}
       }});
     }} else {{
-      plainCopyFallback(plain, full);
+      plainCopyFallback(plainText, full);
       markCopied();
     }}
   }}
@@ -3822,6 +3779,20 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   }}
 
 
+  function removeNilRowIfNeeded(force) {{
+    var nr = document.getElementById('nil-row');
+    if(!nr) return;
+    var tbody = document.getElementById('offload-tbody');
+    if(!tbody) return;
+    var hasData = Array.from(tbody.querySelectorAll('tr')).some(function(row) {{
+      if(row.id === 'nil-row') return false;
+      return Array.from(row.querySelectorAll('td[contenteditable="true"]')).some(function(cell){{
+        return (cell.innerText || '').replace(/ /g,' ').trim();
+      }});
+    }});
+    if(force || hasData) nr.remove();
+  }}
+
   function reindexOffloadRows() {{
     var tbody = document.getElementById('offload-tbody');
     if(!tbody) return;
@@ -3830,18 +3801,16 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     }});
     rows.forEach(function(row, idx) {{
       var first = row.querySelector('td');
-      if(!first) return;
-      var label = first.querySelector('.row-index-label');
-      if(!label) {{
-        var num = (String(first.textContent || '').match(/\d+/) || [''])[0] || String(idx + 1);
-        first.innerHTML = '<div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">x</button><strong class="row-index-label">' + num + '</strong></div>';
-        label = first.querySelector('.row-index-label');
-      }}
-      if(label) label.textContent = String(idx + 1);
-      if(!first.querySelector('.row-delete-btn')) {{
-        var wrap = first.querySelector('.row-index-wrap') || first;
-        var btn = createOffloadDeleteButton();
-        if(wrap.firstChild) wrap.insertBefore(btn, wrap.firstChild); else wrap.appendChild(btn);
+      if(first) {{
+        first.style.position = 'relative';
+        first.style.padding = '18px 4px 6px 4px';
+        first.style.verticalAlign = 'top';
+        first.style.width = '54px';
+        first.style.minWidth = '54px';
+        first.style.maxWidth = '54px';
+        first.innerHTML = ''
+          + '<button type="button" data-del-row="1" data-no-copy="1" data-no-email="1" aria-label="Delete row" style="position:absolute;top:3px;left:3px;width:12px;height:12px;padding:0;margin:0;display:inline-flex;align-items:center;justify-content:center;border:1px solid #dc2626;background:#fff;color:#dc2626;font-size:10px;line-height:1;font-weight:700;border-radius:0;cursor:pointer;">×</button>'
+          + '<strong style="display:inline-block;margin-top:2px;">' + (idx + 1) + '</strong>';
       }}
     }});
     var ti = 1;
@@ -3851,68 +3820,11 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
       }});
     }});
   }}
-  window.renumberOffloadRows = reindexOffloadRows;
-
-  function createOffloadDeleteButton() {{
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.textContent = 'x';
-    btn.className = 'row-delete-btn';
-    btn.setAttribute('data-no-copy', '1');
-    btn.setAttribute('aria-label', 'Delete row');
-    btn.setAttribute('title', 'Delete row');
-    btn.setAttribute('onclick', 'deleteOffloadRow(this)');
-    return btn;
-  }}
-
-  function createOffloadIndexCell(index, tdStyle) {{
-    var idxCell = document.createElement('td');
-    idxCell.setAttribute('style', tdStyle);
-    var wrap = document.createElement('div');
-    wrap.className = 'row-index-wrap';
-    wrap.appendChild(createOffloadDeleteButton());
-    var label = document.createElement('strong');
-    label.className = 'row-index-label';
-    label.textContent = String(index || 0);
-    wrap.appendChild(label);
-    idxCell.appendChild(wrap);
-    return idxCell;
-  }}
-
-  function normalizeOffloadRowLayout() {{
-    var tbody = document.getElementById('offload-tbody');
-    if(!tbody) return;
-    Array.from(tbody.querySelectorAll('tr')).forEach(function(row) {{
-      if(!row.querySelector('td[contenteditable="true"]')) return;
-      var cells = Array.from(row.children || []);
-      if(!cells.length) return;
-      var first = cells[0];
-      var label = first.querySelector('.row-index-label');
-      if(!label) {{
-        var num = (String(first.textContent || '').match(/\d+/) || ['0'])[0] || '0';
-        first.innerHTML = '';
-        var wrap = document.createElement('div');
-        wrap.className = 'row-index-wrap';
-        wrap.appendChild(createOffloadDeleteButton());
-        var strong = document.createElement('strong');
-        strong.className = 'row-index-label';
-        strong.textContent = num;
-        wrap.appendChild(strong);
-        first.appendChild(wrap);
-      }} else if(!first.querySelector('.row-delete-btn')) {{
-        var wrap2 = first.querySelector('.row-index-wrap') || first;
-        wrap2.insertBefore(createOffloadDeleteButton(), wrap2.firstChild);
-      }}
-      var lastCell = row.lastElementChild;
-      if(lastCell && lastCell !== first && lastCell.querySelector && lastCell.querySelector('button[onclick="deleteOffloadRow(this)"]')) {{
-        lastCell.remove();
-      }}
-    }});
-  }}
 
   function createOffloadRow() {{
     var tr = document.createElement('tr');
-    var tdStyle = 'padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;';
+    var idxStyle = 'padding:18px 4px 6px 4px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:top;position:relative;width:54px;min-width:54px;max-width:54px;';
+    var tdStyle = 'padding:7px 5px;border:1px solid #d0d9ee;font-size:11px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;line-height:1.25;white-space:normal;word-break:break-word;';
     var cols = [
       {{ key: 'date' }},
       {{ key: 'flight' }},
@@ -3921,7 +3833,10 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
       {{ key: 'email' }},
       {{}}, {{}}, {{}}, {{}}, {{}}, {{}}
     ];
-    tr.appendChild(createOffloadIndexCell(0, tdStyle));
+    var idxCell = document.createElement('td');
+    idxCell.setAttribute('style', idxStyle);
+    idxCell.innerHTML = '<button type="button" data-del-row="1" data-no-copy="1" data-no-email="1" aria-label="Delete row" style="position:absolute;top:3px;left:3px;width:12px;height:12px;padding:0;margin:0;display:inline-flex;align-items:center;justify-content:center;border:1px solid #dc2626;background:#fff;color:#dc2626;font-size:10px;line-height:1;font-weight:700;border-radius:0;cursor:pointer;">×</button><strong style="display:inline-block;margin-top:2px;">0</strong>';
+    tr.appendChild(idxCell);
     cols.forEach(function(col) {{
       var td = document.createElement('td');
       td.setAttribute('style', tdStyle);
@@ -3933,28 +3848,8 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
     return tr;
   }}
 
-  function ensureOffloadRowExists() {{
-    var tbody = document.getElementById('offload-tbody');
-    if(!tbody) return null;
-    var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(row) {{
-      return !!row.querySelector('td[contenteditable="true"]');
-    }});
-    if(rows.length) return rows[0] || null;
-    return appendOffloadRow(false);
-  }}
-
-  function deleteOffloadRow(btn) {{
-    var row = btn && btn.closest ? btn.closest('tr') : null;
-    var tbody = row && row.parentElement;
-    if(!row || !tbody || tbody.id !== 'offload-tbody') return;
-    row.remove();
-    ensureOffloadRowExists();
-    reindexOffloadRows();
-    if(typeof triggerAutosave === 'function') triggerAutosave();
-  }}
-  window.deleteOffloadRow = deleteOffloadRow;
-
   function appendOffloadRow(focusFirst) {{
+    removeNilRowIfNeeded(true);
     var tbody = document.getElementById('offload-tbody');
     if(!tbody) return null;
     var tr = createOffloadRow();
@@ -3973,32 +3868,34 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   }}
 
   function initTableCells() {{
-    normalizeOffloadRowLayout();
-    document.querySelectorAll('#offload-tbody td[contenteditable="true"]').forEach(setupTableCell);
-    document.querySelectorAll('#offload-tbody button[onclick="deleteOffloadRow(this)"]').forEach(function(btn) {{
-      btn.type = 'button';
-      btn.classList.add('row-delete-btn');
-      btn.setAttribute('data-no-copy', '1');
-    }});
+    document.querySelectorAll('#offload-tbody td[contenteditable="true"]').forEach(function(td){{ setupTableCell(td); td.addEventListener('input', function(){{ removeNilRowIfNeeded(false); }}); }});
     reindexOffloadRows();
-    /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
     var tbody = document.getElementById('offload-tbody');
+    if(tbody && !tbody.dataset.deleteBound) {{
+      tbody.dataset.deleteBound = '1';
+      tbody.addEventListener('click', function(ev){{
+        var btn = ev.target && ev.target.closest('[data-del-row]');
+        if(!btn) return;
+        var row = btn.closest('tr');
+        if(row && row.parentNode) row.parentNode.removeChild(row);
+        var rowsLeft = Array.from(tbody.querySelectorAll('tr')).filter(function(r){{ return !!r.querySelector('td[contenteditable="true"]'); }});
+        if(!rowsLeft.length) appendOffloadRow(false);
+        reindexOffloadRows();
+        if(typeof triggerAutosave === 'function') triggerAutosave();
+      }});
+    }}
+    /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
     if(tbody) {{
       new MutationObserver(function(muts) {{
         muts.forEach(function(m) {{
           m.addedNodes.forEach(function(n) {{
             if(n.nodeType===1) {{
-              n.querySelectorAll('td[contenteditable="true"]').forEach(setupTableCell);
+              n.querySelectorAll('td[contenteditable="true"]').forEach(function(td){{ setupTableCell(td); td.addEventListener('input', function(){{ removeNilRowIfNeeded(false); }}); }});
             }}
           }});
         }});
       }}).observe(tbody, {{childList:true}});
     }}
-  }}
-  if(document.readyState === 'loading') {{
-    document.addEventListener('DOMContentLoaded', initTableCells);
-  }} else {{
-    initTableCells();
   }}
 
   /* ══════════════════════════════════════
@@ -4648,11 +4545,6 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
       data['__ul__'+ul.id] = ul.innerHTML;
     }});
 
-    var offloadTbody = document.getElementById('offload-tbody');
-    if(offloadTbody){{
-      data['__offload_tbody__'] = offloadTbody.innerHTML;
-    }}
-
     data['__nil_row_removed__'] = !document.getElementById('nil-row');
 
     return {{
@@ -4674,11 +4566,6 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
         if(ul) ul.innerHTML = data[k];
       }}
     }});
-
-    if(typeof data['__offload_tbody__'] === 'string'){{
-      var savedTbody = document.getElementById('offload-tbody');
-      if(savedTbody) savedTbody.innerHTML = data['__offload_tbody__'];
-    }}
 
     Object.keys(data).forEach(function(k){{
       if(k.indexOf('__') === 0) return;
@@ -5750,10 +5637,18 @@ def _extract_report_content_html(page_html: str) -> str:
         flags=re.DOTALL | re.IGNORECASE,
     )
 
-    # ── 3) Strip attributes invalid in email clients ──
+    # ── 3) Remove interactive controls / non-email markers ──
+    html = re.sub(r'<button[^>]*>.*?</button>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    html = re.sub(r'<[^>]+data-no-email="1"[^>]*>.*?</[^>]+>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    html = re.sub(r'<[^>]+data-no-copy="1"[^>]*>.*?</[^>]+>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+    # ── 4) Strip attributes invalid in email clients ──
     html = re.sub(r'\s+contenteditable="[^"]*"', '', html)
     html = re.sub(r'\s+tabindex="[^"]*"', '', html)
     html = re.sub(r'\s+class="[^"]*"', '', html)
+    html = re.sub(r'\s+data-no-email="[^"]*"', '', html)
+    html = re.sub(r'\s+data-no-copy="[^"]*"', '', html)
+    html = re.sub(r'\s+aria-label="[^"]*"', '', html)
 
     return html
 
@@ -5762,10 +5657,10 @@ def _build_email_html(page_html: str) -> str:
     """Build a mobile-friendly HTML email — left-aligned, no centering."""
     report_html = _extract_report_content_html(page_html)
     # Make the report table full-width regardless of inline width/max-width
-    report_html = re.sub(r'width="(760|900|1100|1180)"', 'width="1180"', report_html)
+    report_html = re.sub(r'width="(760|900|1100|1180)"', 'width="900"', report_html)
     report_html = re.sub(
         r'style="width:(760|900|1100|1180)px;[^"]*"',
-        'style="width:1180px; max-width:1180px; background-color:#ffffff; border:none; table-layout:fixed;"',
+        'style="width:900px; max-width:900px; background-color:#ffffff; border:none; table-layout:fixed;"',
         report_html,
     )
 
@@ -5797,7 +5692,7 @@ def _build_email_html(page_html: str) -> str:
         line-height: 1.65 !important;
       }}
       .mobile-wrap {{ padding: 4px 6px 14px !important; }}
-      table[width="100%"], table[width="1180"] {{ width: 100% !important; max-width: 1180px !important; }}
+      table[width="100%"], table[width="900"] {{ width: 100% !important; max-width: 900px !important; }}
       td[style*="font-size:20px"] div {{ font-size: 18px !important; }}
       td[style*="font-size:13.5px"], div[style*="font-size:13.5px"], span[style*="font-size:12px"], td[style*="font-size:12px"] {{
         font-size: 15px !important;
