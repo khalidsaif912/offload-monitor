@@ -3676,17 +3676,17 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   }};
 
   var OFFLOAD_COLS = [
-    { key: 'date',  label: 'DATE' },
-    { key: 'flight',label: 'FLIGHT' },
-    { key: 'std',   label: 'STD/ETD' },
-    { key: 'dest',  label: 'DEST' },
-    { key: 'email', label: 'Email Received Time' },
-    { key: '',      label: 'Physical Cargo Received from Ramp' },
-    { key: '',      label: 'Trolley/ ULD Number' },
-    { key: '',      label: 'Offloading Process Completed in CMS' },
-    { key: '',      label: 'Offloading Pieces Verification' },
-    { key: '',      label: 'Offloading Reason' },
-    { key: '',      label: 'Remarks/Additional Information' }
+    {{ key: 'date',  label: 'DATE' }},
+    {{ key: 'flight',label: 'FLIGHT' }},
+    {{ key: 'std',   label: 'STD/ETD' }},
+    {{ key: 'dest',  label: 'DEST' }},
+    {{ key: 'email', label: 'Email Received Time' }},
+    {{ key: '',      label: 'Physical Cargo Received from Ramp' }},
+    {{ key: '',      label: 'Trolley/ ULD Number' }},
+    {{ key: '',      label: 'Offloading Process Completed in CMS' }},
+    {{ key: '',      label: 'Offloading Pieces Verification' }},
+    {{ key: '',      label: 'Offloading Reason' }},
+    {{ key: '',      label: 'Remarks/Additional Information' }}
   ];
 
   function buildOffloadIndexCellHTML(idx) {{
