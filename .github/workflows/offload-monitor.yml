@@ -9,7 +9,7 @@ concurrency:
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # بدل كل 5 دقائق
+    - cron: "*/10 * * * *"
 
   workflow_dispatch:
     inputs:
@@ -17,18 +17,22 @@ on:
         description: "Force rebuild changed reports only (1 = yes)"
         required: false
         default: "0"
+
       retro_enrich:
         description: "Re-fetch DEST/STD for all saved flights from AirLabs (1 = yes)"
         required: false
         default: "0"
+
       rebuild_all:
         description: "Rebuild ALL historical reports from saved data (1 = yes)"
         required: false
         default: "0"
+
       fix_old_times:
         description: "Fix UTC→MCT times in old JSON files (1 = yes) — شغّله مرة واحدة فقط"
         required: false
         default: "0"
+
       force_roster:
         description: "Force rebuild roster.json even if Excel unchanged (1 = yes)"
         required: false
@@ -57,6 +61,8 @@ jobs:
       - name: Install deps
         run: pip install requests beautifulsoup4 pandas openpyxl
 
+      # ─── تحديث الروستر من OneDrive ────────────────────────────────────
+      # يشتغل في كل run — يتحقق داخلياً إذا تغيّر الملف قبل ما يعيد البناء
       - name: Update Roster JSON
         if: ${{ github.event_name != 'repository_dispatch' }}
         env:
@@ -64,25 +70,32 @@ jobs:
           FORCE_REBUILD: "${{ github.event.inputs.force_roster || '0' }}"
         run: python roster_to_json.py
 
+      # ─── خطوة تصحيح الملفات القديمة ───────────────────────────────
+      # شغّلها مرة واحدة فقط عبر: Actions → Run workflow → fix_old_times = 1
+      # بعد التأكد من النتيجة لا تحتاج تشغّلها مرة أخرى
       - name: Fix old UTC times in JSON files
         if: ${{ github.event_name != 'repository_dispatch' && github.event.inputs.fix_old_times == '1' }}
         run: python fix_times.py
 
+      # ─── إعادة بناء التقارير بعد التصحيح ──────────────────────────
       - name: Run script
         env:
           ONEDRIVE_FILE_URL: ${{ secrets.ONEDRIVE_FILE_URL }}
           AIRLABS_API_KEY: ${{ secrets.AIRLABS_API_KEY }}
           FORCE_REBUILD: "${{ github.event.inputs.force_rebuild || '0' }}"
           RETRO_ENRICH: "${{ github.event.inputs.retro_enrich || '0' }}"
+          # إذا شغّلنا fix_old_times → نعيد بناء جميع التقارير تلقائياً
           REBUILD_ALL: "${{ github.event.inputs.fix_old_times == '1' && '1' || github.event.inputs.rebuild_all || '0' }}"
           EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
           EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
           EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
           FORCE_SEND_DATE: "${{ github.event.client_payload.date_dir }}"
           FORCE_SEND_SHIFT: "${{ github.event.client_payload.shift }}"
+          FORCE_SEND_HTML_B64: "${{ github.event.client_payload.edited_html_b64 }}"
         run: python offload_monitor.py
 
       - name: Commit and push changes
+        if: ${{ github.event_name != 'repository_dispatch' }}
         run: |
           set -e
           git config user.name "github-actions"
