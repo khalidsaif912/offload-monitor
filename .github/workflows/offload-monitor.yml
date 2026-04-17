@@ -1,5 +1,12 @@
 name: Offload Monitor
 
+permissions:
+  contents: write
+
+concurrency:
+  group: offload-monitor-main
+  cancel-in-progress: false
+
 on:
   schedule:
     - cron: "*/5 * * * *"
@@ -41,6 +48,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -81,11 +91,20 @@ jobs:
           FORCE_SEND_SHIFT: "${{ github.event.client_payload.shift }}"
         run: python offload_monitor.py
 
-      - name: Commit changes
+      - name: Commit and push changes
         run: |
+          set -e
           git config user.name "github-actions"
           git config user.email "github-actions@github.com"
           git add docs data
           git add roster_state.txt 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "Auto archive offload"
-          git push
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Auto archive offload [skip ci]"
+          git fetch origin main
+          git rebase origin/main
+          git push origin HEAD:main
