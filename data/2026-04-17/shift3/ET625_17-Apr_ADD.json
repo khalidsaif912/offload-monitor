@@ -19,8 +19,5 @@
   "email_time": "04:37",
   "saved_at": "2026-04-17T04:37:00+04:00",
   "storage_date_dir": "2026-04-17",
-  "storage_shift": "shift3",
-  "_tz_fixed": "2026-04-17T16:26:42Z",
-  "retro_enriched_at": "2026-04-17T20:26:43.055307+04:00",
-  "retro_enriched_source": "local_db"
+  "storage_shift": "shift3"
 }
