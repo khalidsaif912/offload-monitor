@@ -1,0 +1,128 @@
+name: Offload Monitor
+
+permissions:
+  contents: write
+
+concurrency:
+  group: offload-monitor-main
+  cancel-in-progress: false
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+
+  workflow_dispatch:
+    inputs:
+      force_rebuild:
+        description: "Force rebuild changed reports only (1 = yes)"
+        required: false
+        default: "0"
+
+      retro_enrich:
+        description: "Re-fetch DEST/STD for all saved flights from AirLabs (1 = yes)"
+        required: false
+        default: "0"
+
+      rebuild_all:
+        description: "Rebuild ALL historical reports from saved data (1 = yes)"
+        required: false
+        default: "0"
+
+      fix_old_times:
+        description: "Fix UTC→MCT times in old JSON files (1 = yes) — شغّله مرة واحدة فقط"
+        required: false
+        default: "0"
+
+      force_roster:
+        description: "Force rebuild roster.json even if Excel unchanged (1 = yes)"
+        required: false
+        default: "0"
+
+  repository_dispatch:
+    types: [send_report_now]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install deps
+        run: pip install requests beautifulsoup4 pandas openpyxl
+
+      # ─── تحديث الروستر من OneDrive ────────────────────────────────────
+      # يشتغل في كل run — يتحقق داخلياً إذا تغيّر الملف قبل ما يعيد البناء
+      - name: Update Roster JSON
+        if: ${{ github.event_name != 'repository_dispatch' }}
+        env:
+          ONEDRIVE_ROSTER_URL: ${{ secrets.ONEDRIVE_ROSTER_URL }}
+          FORCE_REBUILD: "${{ github.event.inputs.force_roster || '0' }}"
+        run: python roster_to_json.py
+
+      # ─── خطوة تصحيح الملفات القديمة ───────────────────────────────
+      # شغّلها مرة واحدة فقط عبر: Actions → Run workflow → fix_old_times = 1
+      # بعد التأكد من النتيجة لا تحتاج تشغّلها مرة أخرى
+      - name: Fix old UTC times in JSON files
+        if: ${{ github.event_name != 'repository_dispatch' && github.event.inputs.fix_old_times == '1' }}
+        run: python fix_times.py
+
+      # ─── إعادة بناء التقارير بعد التصحيح ──────────────────────────
+      - name: Run script
+        env:
+          ONEDRIVE_FILE_URL: ${{ secrets.ONEDRIVE_FILE_URL }}
+          AIRLABS_API_KEY: ${{ secrets.AIRLABS_API_KEY }}
+          FORCE_REBUILD: "${{ github.event.inputs.force_rebuild || '0' }}"
+          RETRO_ENRICH: "${{ github.event.inputs.retro_enrich || '0' }}"
+          # إذا شغّلنا fix_old_times → نعيد بناء جميع التقارير تلقائياً
+          REBUILD_ALL: "${{ github.event.inputs.fix_old_times == '1' && '1' || github.event.inputs.rebuild_all || '0' }}"
+          EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          EMAIL_RECIPIENTS: ${{ secrets.EMAIL_RECIPIENTS }}
+          FORCE_SEND_DATE: "${{ github.event.client_payload.date_dir }}"
+          FORCE_SEND_SHIFT: "${{ github.event.client_payload.shift }}"
+          FORCE_SEND_HTML_B64: "${{ github.event.client_payload.edited_html_b64 }}"
+        run: python offload_monitor.py
+
+      - name: Commit and push changes
+        if: ${{ github.event_name != 'repository_dispatch' }}
+        run: |
+          set -e
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add docs data
+          git add roster_state.txt 2>/dev/null || true
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git commit -m "Auto archive offload [skip ci]"
+
+          for i in 1 2 3; do
+            echo "Push attempt $i..."
+            git fetch origin main
+            if git rebase origin/main; then
+              if git push origin HEAD:main; then
+                echo "Push succeeded"
+                exit 0
+              fi
+            else
+              git rebase --abort || true
+            fi
+            sleep 5
+          done
+
+          echo "Push failed after 3 attempts"
+          exit 1
