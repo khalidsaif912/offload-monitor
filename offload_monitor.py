@@ -1638,7 +1638,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
 
     # ── Column headers ──
     columns = [
-        ("ITEM", "40px"),
+        ("ITEM", "54px"),
         ("DATE", "80px"),
         ("FLIGHT", "80px"),
         ("STD/ETD", "80px"),
@@ -1650,7 +1650,6 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         ("Offloading Pieces Verification", "100px"),
         ("Offloading Reason", "100px"),
         ("Remarks/Additional Information", ""),
-        ("ACTION", "72px"),
     ]
 
     col_headers = "<tr>"
@@ -1844,7 +1843,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
 
         data_rows += f"""
       <tr>
-        <td {td_s}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">✕</button><strong class="row-index-label">{item_num}</strong></div></td>
+        <td {td_s}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">x</button><strong class="row-index-label">{item_num}</strong></div></td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="date">{date}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="flight">{flt}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="std">{std_etd_display}</td>
@@ -1866,7 +1865,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         item_num += 1
         data_rows += f"""
       <tr>
-        <td {_empty_td}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">✕</button><strong class="row-index-label">{item_num}</strong></div></td>
+        <td {_empty_td}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">x</button><strong class="row-index-label">{item_num}</strong></div></td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="date">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="flight">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="std">&nbsp;</td>
@@ -1896,7 +1895,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         for i in range(1, 4):
             data_rows += f"""
       <tr>
-        <td {_empty_td}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">✕</button><strong class="row-index-label">{i}</strong></div></td>
+        <td {_empty_td}><div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">x</button><strong class="row-index-label">{i}</strong></div></td>
         <td {_empty_td} contenteditable="true" data-col="date">&nbsp;</td>
         <td {_empty_td} contenteditable="true" data-col="flight">&nbsp;</td>
         <td {_empty_td} contenteditable="true" data-col="std">&nbsp;</td>
@@ -2358,15 +2357,15 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     #report-content{{width:900px;max-width:900px;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
     .btn-bar{{max-width:900px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
-    .row-index-wrap{{position:relative;min-height:18px;}}
-    .row-index-label{{display:inline-block;}}
-    .row-delete-btn{{position:absolute;top:-8px;left:-4px;font-size:9px;line-height:1;padding:1px 4px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:10px;font-family:Calibri,Arial,sans-serif;}}
+    .row-index-wrap{{position:relative;display:flex;align-items:center;justify-content:center;min-height:22px;padding:6px 0 0 0;}}
+    .row-index-label{{display:inline-block;padding-top:2px;}}
+    .row-delete-btn{{position:absolute;top:1px;left:1px;width:13px;height:13px;padding:0;display:flex;align-items:center;justify-content:center;font-size:9px;line-height:1;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:2px;font-family:Calibri,Arial,sans-serif;}}
     @media print{{
       .btn-bar,[data-no-copy="1"],.row-delete-btn{{display:none!important;}}
     }}
-    /* جدول الأوفلود — يسمح بالتمرير الأفقي على الجوال */
-    .offload-scroll{{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}}
-    .offload-scroll table{{min-width:900px;width:100%;}}
+    /* جدول الأوفلود — بدون شريط تمرير أفقي */
+    .offload-scroll{{overflow:visible;width:100%;}}
+    .offload-scroll table{{min-width:0;width:100%;table-layout:fixed;}}
 
     /* ══════════════ MOBILE ══════════════ */
     @media(max-width:700px){{
@@ -3835,7 +3834,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
       var label = first.querySelector('.row-index-label');
       if(!label) {{
         var num = (String(first.textContent || '').match(/\d+/) || [''])[0] || String(idx + 1);
-        first.innerHTML = '<div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">✕</button><strong class="row-index-label">' + num + '</strong></div>';
+        first.innerHTML = '<div class="row-index-wrap"><button type="button" class="row-delete-btn" data-no-copy="1" onclick="deleteOffloadRow(this)">x</button><strong class="row-index-label">' + num + '</strong></div>';
         label = first.querySelector('.row-index-label');
       }}
       if(label) label.textContent = String(idx + 1);
@@ -3857,7 +3856,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   function createOffloadDeleteButton() {{
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.textContent = '✕';
+    btn.textContent = 'x';
     btn.className = 'row-delete-btn';
     btn.setAttribute('data-no-copy', '1');
     btn.setAttribute('aria-label', 'Delete row');
