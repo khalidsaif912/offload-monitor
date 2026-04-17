@@ -1633,18 +1633,18 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     header_blue = "#0b3a78"
 
     columns = [
-        ("ITEM", "6%", "ITEM"),
-        ("DATE", "8%", "DATE"),
-        ("FLIGHT", "8%", "FLIGHT"),
-        ("STD/ETD", "8%", "STD/ETD"),
+        ("ITEM", "5%", "ITEM"),
+        ("DATE", "7%", "DATE"),
+        ("FLIGHT", "7%", "FLIGHT"),
+        ("STD/ETD", "7%", "STD/ETD"),
         ("DEST", "5%", "DEST"),
-        ("Email Received Time", "10%", "Email Received Time"),
-        ("Physical Cargo Received from Ramp", "11%", "Physical Cargo Received from Ramp"),
-        ("Trolley/ ULD Number", "10%", "Trolley/ ULD Number"),
-        ("Offloading Process Completed in CMS", "11%", "Offloading Process Completed in CMS"),
-        ("Offloading Pieces Verification", "9%", "Offloading Pieces Verification"),
-        ("Offloading Reason", "7%", "Offloading Reason"),
-        ("Remarks/Additional Information", "7%", "Remarks/Additional Information"),
+        ("Email Received Time", "9%", "Email Received Time"),
+        ("Physical Cargo Received from Ramp", "10%", "Physical Cargo Received from Ramp"),
+        ("Trolley/ ULD Number", "9%", "Trolley/ ULD Number"),
+        ("Offloading Process Completed in CMS", "10%", "Offloading Process Completed in CMS"),
+        ("Offloading Pieces Verification", "10%", "Offloading Pieces Verification"),
+        ("Offloading Reason", "9%", "Offloading Reason"),
+        ("Remarks/Additional Information", "12%", "Remarks/Additional Information"),
     ]
 
     def _delete_btn() -> str:
@@ -1662,17 +1662,19 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             f'<td class="offload-idx" data-label="ITEM" '
             f'style="position:relative;padding:18px 6px 7px 24px;border:1px solid {cell_border};'
             f'font-size:12px;font-family:Calibri,Arial,sans-serif;color:{text_dark};background:{bg};'
-            f'text-align:center;vertical-align:middle;width:6%;min-width:56px;">'
+            f'text-align:center;vertical-align:middle;width:5%;min-width:56px;">'
             f'{_delete_btn()}<strong class="offload-row-num">{index}</strong></td>'
         )
-
-    col_headers = "<thead><tr>"
+    col_headers = "<colgroup>"
+    for _label, width, _data_label in columns:
+        col_headers += f'<col style="width:{width};">'
+    col_headers += "</colgroup><thead><tr>"
     for label, width, _data_label in columns:
         col_headers += (
-            f'<th scope="col" style="padding:8px 6px;background-color:{hdr_bg};color:{hdr_color};'
-            f'font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;'
+            f'<th scope="col" style="padding:8px 5px;background-color:{hdr_bg};color:{hdr_color};'
+            f'font-weight:700;font-size:10px;line-height:1.2;font-family:Calibri,Arial,sans-serif;'
             f'border:1px solid {hdr_border};text-align:center;vertical-align:middle;'
-            f'width:{width};word-break:normal;overflow-wrap:anywhere;">{label}</th>'
+            f'width:{width};word-break:break-word;overflow-wrap:break-word;overflow:hidden;">{label}</th>'
         )
     col_headers += "</tr></thead>"
 
@@ -1856,8 +1858,6 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             f'<tr id="nil-row">'
             f'<td colspan="12" style="padding:10px 10px;border:1px solid {cell_border};color:{nil_color};text-align:center;font-style:italic;font-size:12px;font-family:Calibri,Arial,sans-serif;background:{row_even};">'
             f'<span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL — No offload data recorded for this shift.</span>'
-            f'&nbsp;<button type="button" data-no-copy="1" data-email-remove="1" onclick="var r=document.getElementById(\'nil-row\');if(r)r.remove();triggerAutosave();" '
-            f'style="font-size:10px;padding:1px 7px;cursor:pointer;background:{hdr_bg};border:1px solid {header_blue};color:{header_blue};border-radius:3px;vertical-align:middle;">×</button>'
             f'</td></tr>'
         )
         for i in range(1, 4):
@@ -2323,14 +2323,14 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   <style>
     *,*::before,*::after{{box-sizing:border-box;}}
     body{{margin:0;padding:0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;}}
-    .page-wrap{{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;overflow-x:auto;}}
+    .page-wrap{{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;overflow-x:hidden;}}
     #report-content{{width:1180px;max-width:100%;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
     .btn-bar{{max-width:1180px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
     /* جدول الأوفلود — حل جذري للتنسيق على الشاشة والجوال */
-    .offload-wrap{{width:100%;max-width:100%;overflow:visible;}}
+    .offload-wrap{{width:100%;max-width:100%;overflow:hidden;}}
     .offload-table{{width:100%;table-layout:fixed;border-collapse:collapse;}}
-    .offload-table td,.offload-table th{{word-break:break-word;overflow-wrap:anywhere;}}
+    .offload-table td,.offload-table th{{word-break:break-word;overflow-wrap:break-word;overflow:hidden;}}
     .offload-table .offload-idx{{position:relative;}}
     .offload-table .offload-row-num{{display:inline-block;min-width:14px;}}
 
