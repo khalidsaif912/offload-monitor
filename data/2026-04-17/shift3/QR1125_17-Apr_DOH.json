@@ -1,0 +1,23 @@
+{
+  "flight": "QR1125",
+  "date": "17-Apr",
+  "std_etd": "23:15",
+  "destination": "DOH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "PMC8778QR",
+      "pcs": "145",
+      "kgs": "2473",
+      "description": "CONSOL",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "23:40",
+  "saved_at": "2026-04-18T23:40:00+04:00",
+  "storage_date_dir": "2026-04-17",
+  "storage_shift": "shift3"
+}
