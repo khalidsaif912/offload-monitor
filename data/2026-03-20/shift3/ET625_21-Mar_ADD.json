@@ -20,7 +20,7 @@
   "saved_at": "2026-03-21T04:54:00+04:00",
   "enrichment_source": "Flightradar",
   "last_enriched": "2026-04-14T14:54:47.481156+04:00",
-  "_tz_fixed": "2026-04-17T13:54:07Z",
-  "retro_enriched_at": "2026-04-17T17:54:08.129857+04:00",
+  "_tz_fixed": "2026-04-17T14:16:39Z",
+  "retro_enriched_at": "2026-04-17T18:16:39.238122+04:00",
   "retro_enriched_source": "local_db"
 }
