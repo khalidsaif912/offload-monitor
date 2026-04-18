@@ -1,7 +1,7 @@
 {
   "flight": "QR1127",
   "date": "24-Mar",
-  "std_etd": "08:50|09:13",
+  "std_etd": "08:50",
   "destination": "DOH",
   "format": "A",
   "items": [
@@ -29,5 +29,5 @@
   "email_time": "12:25",
   "saved_at": "2026-03-24T12:25:00+04:00",
   "enrichment_source": "Flightradar",
-  "last_enriched": "2026-04-18T13:38:52.042764+04:00"
+  "last_enriched": "2026-04-18T14:05:53.784122+04:00"
 }
