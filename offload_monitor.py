@@ -14,6 +14,7 @@ from __future__ import annotations
 import os
 import re
 import json
+import base64
 import hashlib
 import calendar as _cal
 from collections import OrderedDict
@@ -1614,56 +1615,68 @@ def fetch_roster_staff(date_dir: str, shift: str) -> dict:
 # ══════════════════════════════════════════════════════════════════
 
 def _render_offload_table(flights: list[dict], meta: dict) -> str:
-    """Render offload section as a single vertical table (Type B style).
-    Columns: ITEM | DATE | FLIGHT | STD/ETD | DEST | Email Received Time |
-             Physical Cargo Received from Ramp | Trolley/ULD Number |
-             Offloading Process Completed in CMS | Offloading Pieces Verification |
-             Offloading Reason | Remarks/Additional Information
+    """Render offload section as a responsive table.
+
+    Desktop: fixed-width table that fits fully inside the report container.
+    Mobile: cards/stacked rows via CSS using data-label attributes.
     """
     if not flights:
         flights = []
 
-    # ── Styles ──
-    hdr_bg      = "#dce6f4"
-    hdr_color   = "#1b1f2a"
-    hdr_border  = "#a8bcd8"
-    row_even    = "#ffffff"
-    row_odd     = "#f4f7fc"
+    hdr_bg = "#dce6f4"
+    hdr_color = "#1b1f2a"
+    hdr_border = "#a8bcd8"
+    row_even = "#ffffff"
+    row_odd = "#f4f7fc"
     cell_border = "#d0d9ee"
-    nil_color   = "#64748b"
-    text_dark   = "#1b1f2a"
-    totals_bg   = "#eef3fc"
-    totals_border = "#0b3a78"
-    totals_color = "#0b3a78"
+    nil_color = "#64748b"
+    text_dark = "#1b1f2a"
+    header_blue = "#0b3a78"
 
-    # ── Column headers ──
     columns = [
-        ("ITEM", "40px"),
-        ("DATE", "80px"),
-        ("FLIGHT", "80px"),
-        ("STD/ETD", "80px"),
-        ("DEST", "60px"),
-        ("Email Received Time", "90px"),
-        ("Physical Cargo Received from Ramp", "100px"),
-        ("Trolley/ ULD Number", "90px"),
-        ("Offloading Process Completed in CMS", "100px"),
-        ("Offloading Pieces Verification", "100px"),
-        ("Offloading Reason", "100px"),
-        ("Remarks/Additional Information", ""),
+        ("ITEM", "6%", "ITEM"),
+        ("DATE", "8%", "DATE"),
+        ("FLIGHT", "8%", "FLIGHT"),
+        ("STD/ETD", "8%", "STD/ETD"),
+        ("DEST", "5%", "DEST"),
+        ("Email Received Time", "10%", "Email Received Time"),
+        ("Physical Cargo Received from Ramp", "11%", "Physical Cargo Received from Ramp"),
+        ("Trolley/ ULD Number", "10%", "Trolley/ ULD Number"),
+        ("Offloading Process Completed in CMS", "11%", "Offloading Process Completed in CMS"),
+        ("Offloading Pieces Verification", "9%", "Offloading Pieces Verification"),
+        ("Offloading Reason", "7%", "Offloading Reason"),
+        ("Remarks/Additional Information", "7%", "Remarks/Additional Information"),
     ]
 
-    col_headers = "<tr>"
-    for label, width in columns:
-        w = f"width:{width};" if width else ""
-        col_headers += (
-            f'<td style="padding:8px 6px; background-color:{hdr_bg}; color:{hdr_color};'
-            f'font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;'
-            f'border:1px solid {hdr_border}; text-align:center; vertical-align:middle; {w}">'
-            f'{label}</td>'
+    def _delete_btn() -> str:
+        return (
+            f'<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" '
+            f'aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" '
+            f'style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;'
+            f'padding:0;margin:0;border:1px solid {header_blue};background:{hdr_bg};color:{header_blue};'
+            f'border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;'
+            f'align-items:center;justify-content:center;">×</button>'
         )
-    col_headers += "</tr>"
 
-    # ── Deduplicate flights by flight number (keep first occurrence) ──
+    def _idx_cell(index: int, bg: str) -> str:
+        return (
+            f'<td class="offload-idx" data-label="ITEM" '
+            f'style="position:relative;padding:18px 6px 7px 24px;border:1px solid {cell_border};'
+            f'font-size:12px;font-family:Calibri,Arial,sans-serif;color:{text_dark};background:{bg};'
+            f'text-align:center;vertical-align:middle;width:6%;min-width:56px;">'
+            f'{_delete_btn()}<strong class="offload-row-num">{index}</strong></td>'
+        )
+
+    col_headers = "<thead><tr>"
+    for label, width, _data_label in columns:
+        col_headers += (
+            f'<th scope="col" style="padding:8px 6px;background-color:{hdr_bg};color:{hdr_color};'
+            f'font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;'
+            f'border:1px solid {hdr_border};text-align:center;vertical-align:middle;'
+            f'width:{width};word-break:normal;overflow-wrap:anywhere;">{label}</th>'
+        )
+    col_headers += "</tr></thead>"
+
     seen_flights: set[str] = set()
     unique_flights: list[dict] = []
     for f in flights:
@@ -1675,26 +1688,30 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         unique_flights.append(f)
     flights = unique_flights
 
-    # ── Data rows ──
     data_rows = ""
     item_num = 0
-
-    # tabindex counter for Tab navigation
     _ti = [1]
     def _next_ti():
-        v = _ti[0]; _ti[0] += 1; return v
+        v = _ti[0]
+        _ti[0] += 1
+        return v
+
+    def _editable_td(content: str, bg: str, data_label: str, *, data_col: str = "") -> str:
+        data_col_attr = f' data-col="{data_col}"' if data_col else ""
+        return (
+            f'<td data-label="{data_label}"{data_col_attr} '
+            f'style="padding:7px 6px;border:1px solid {cell_border};font-size:12px;'
+            f'font-family:Calibri,Arial,sans-serif;color:{text_dark};background:{bg};'
+            f'text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" '
+            f'contenteditable="true" tabindex="{_next_ti()}">{content}</td>'
+        )
 
     def _format_full_date(raw: str) -> str:
-        """Force date into DD-MMM-YY format (e.g. 15-MAR-26) no matter what input arrives."""
         raw = (raw or "").strip()
         if not raw or raw == "—":
-            # No date provided — use today's date in Muscat timezone
             today = datetime.now(ZoneInfo(TIMEZONE))
             return today.strftime("%d-%b-%y").upper()
-
         raw_up = raw.upper().replace("/", "-").replace(".", "-")
-
-        # 1) ISO: 2026-03-15 or 2026-03-15T...
         m = re.match(r"(\d{4})-(\d{1,2})-(\d{1,2})", raw_up)
         if m:
             try:
@@ -1702,16 +1719,12 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
                 return dt.strftime("%d-%b-%y").upper()
             except ValueError:
                 pass
-
-        # 2) Full with year: 15-MAR-26, 15MAR26, 15-MAR-2026, 15MAR2026
         for fmt in ("%d-%b-%y", "%d%b%y", "%d-%b-%Y", "%d%b%Y"):
             try:
                 dt = datetime.strptime(raw_up, fmt)
                 return dt.strftime("%d-%b-%y").upper()
             except ValueError:
                 pass
-
-        # 3) Short without year: 15MAR or 15-MAR — attach current year
         m = re.match(r"(\d{1,2})-?([A-Z]{3})$", raw_up)
         if m:
             try:
@@ -1720,68 +1733,46 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
                 return dt.strftime("%d-%b-%y").upper()
             except ValueError:
                 pass
-
-        # 4) Try extracting any day+month from the string
         m = re.search(r"(\d{1,2})\s*-?\s*([A-Z]{3})\s*-?\s*(\d{2,4})?", raw_up)
         if m:
             day, mon = m.group(1), m.group(2)
-            yr_str = m.group(3)
-            if not yr_str:
-                yr_str = str(datetime.now(ZoneInfo(TIMEZONE)).year)
+            yr_str = m.group(3) or str(datetime.now(ZoneInfo(TIMEZONE)).year)
             try:
                 dt = datetime.strptime(f"{day}{mon}{yr_str}", "%d%b%Y" if len(yr_str) == 4 else "%d%b%y")
                 return dt.strftime("%d-%b-%y").upper()
             except ValueError:
                 pass
-
-        # 5) Absolute fallback — return today's date
         today = datetime.now(ZoneInfo(TIMEZONE))
         return today.strftime("%d-%b-%y").upper()
 
     def _to_muscat_time(time_str: str) -> str:
-        """Convert time string to Muscat local time (UTC+4).
-
-        - ISO datetime with explicit tz offset -> convert to Muscat.
-        - Bare HH:MM from HTML table (STD/ETD column) -> treat as UTC and add +4h.
-          Reason: The offload report stores STD/ETD in UTC (e.g. 06:40 UTC = 10:40 MCT).
-        """
         s = (time_str or "").strip()
         if not s:
             return ""
-        # Full ISO datetime -> convert to Muscat
         try:
             dt = datetime.fromisoformat(s)
             if dt.tzinfo is not None:
-                dt = dt.astimezone(ZoneInfo(TIMEZONE))
-                return dt.strftime("%H:%M")
-            # ISO without tz -> treat as UTC
+                return dt.astimezone(ZoneInfo(TIMEZONE)).strftime("%H:%M")
             dt = dt.replace(tzinfo=ZoneInfo("UTC"))
             return dt.astimezone(ZoneInfo(TIMEZONE)).strftime("%H:%M")
         except (ValueError, TypeError):
             pass
-        # Bare HH:MM -> treat as UTC and convert to Muscat (UTC+4)
         m_t = re.match(r"^(\d{1,2}):(\d{2})$", s)
         if m_t:
             try:
                 today = datetime.now(ZoneInfo(TIMEZONE)).date()
-                dt_utc = datetime(today.year, today.month, today.day,
-                                  int(m_t.group(1)), int(m_t.group(2)),
-                                  tzinfo=ZoneInfo("UTC"))
-                converted = dt_utc.astimezone(ZoneInfo(TIMEZONE)).strftime("%H:%M")
-                if converted != s:
-                    print(f"  [tz-convert] STD/ETD {s!r} (UTC) -> {converted!r} (MCT)")
-                return converted
+                dt_utc = datetime(today.year, today.month, today.day, int(m_t.group(1)), int(m_t.group(2)), tzinfo=ZoneInfo("UTC"))
+                return dt_utc.astimezone(ZoneInfo(TIMEZONE)).strftime("%H:%M")
             except Exception:
                 pass
         return s
 
     for flight in flights:
-        flt  = (flight.get("flight", "") or "—").upper()
+        flt = (flight.get("flight", "") or "—").upper()
         date = _format_full_date(flight.get("date", "") or "")
         dest = (flight.get("destination", "") or "—").upper()
         std_raw = flight.get("std_etd", "") or ""
         std_val, etd_val = _format_std_etd(std_raw)
-        # Convert times to Muscat timezone
         std_val = _to_muscat_time(std_val)
         etd_val = _to_muscat_time(etd_val)
         std_etd_display = f"{std_val}/{etd_val}" if std_val or etd_val else "—"
@@ -1790,7 +1781,6 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         elif etd_val and not std_val:
             std_etd_display = etd_val
 
-        # Ops status
         email = (flight.get("email_time") or "").strip()
         if not email:
             _saved_at = (flight.get("saved_at") or "").strip()
@@ -1802,9 +1792,8 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
                     email = _sa_dt.strftime("%H:%M")
                 except Exception:
                     email = ""
-        physical = (flight.get("physical")   or "").strip().upper() or ""
-        cms      = (flight.get("cms")        or "").strip().upper() or ""
-        # Pieces verification: sum PCS from all items
+        physical = (flight.get("physical") or "").strip().upper() or ""
+        cms = (flight.get("cms") or "").strip().upper() or ""
         total_pcs = 0
         for it in flight.get("items", []):
             try:
@@ -1812,20 +1801,9 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             except (ValueError, TypeError):
                 pass
         verified = str(total_pcs) if total_pcs > 0 else ""
-        remarks  = (flight.get("remarks")    or "").strip().upper() or ""
+        remarks = (flight.get("remarks") or "").strip().upper() or ""
 
-        items = flight.get("items", [])
-        real_items = [i for i in items if (i.get("awb","") or "").strip()]
-
-        # ── Single row per flight ──
-        item_num += 1
-        bg = row_odd if item_num % 2 == 0 else row_even
-
-        td_s = (f'style="padding:7px 6px;border:1px solid {cell_border};'
-                f'font-size:12px;font-family:Calibri,Arial,sans-serif;color:{text_dark};'
-                f'background:{bg};text-align:center;vertical-align:middle;"')
-
-        # Offloading reason: combine unique reasons from items
+        real_items = [i for i in flight.get("items", []) if (i.get("awb", "") or "").strip()]
         reasons = []
         for it in real_items:
             r = (it.get("reason", "") or "").strip().upper()
@@ -1833,7 +1811,6 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
                 reasons.append(r)
         reason_display = ", ".join(reasons) if reasons else ""
 
-        # Trolley/ULD: only use trolley field — never fall back to AWB numbers
         uld_parts = []
         for it in real_items:
             u = (it.get("trolley", "") or "").strip().upper()
@@ -1841,84 +1818,78 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
                 uld_parts.append(u)
         uld_display = ", ".join(uld_parts) if uld_parts else ""
 
-        data_rows += f"""
-      <tr>
-        <td {td_s}><strong>{item_num}</strong></td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="date">{date}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="flight">{flt}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="std">{std_etd_display}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="dest">{dest}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}" data-col="email">{email}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{physical}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{uld_display}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{cms}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{verified}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{reason_display}</td>
-        <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{remarks}</td>
-      </tr>"""
+        item_num += 1
+        bg = row_odd if item_num % 2 == 0 else row_even
+        row_html = [f"<tr>", _idx_cell(item_num, bg)]
+        row_html.append(_editable_td(date, bg, "DATE", data_col="date"))
+        row_html.append(_editable_td(flt, bg, "FLIGHT", data_col="flight"))
+        row_html.append(_editable_td(std_etd_display, bg, "STD/ETD", data_col="std"))
+        row_html.append(_editable_td(dest, bg, "DEST", data_col="dest"))
+        row_html.append(_editable_td(email, bg, "Email Received Time", data_col="email"))
+        row_html.append(_editable_td(physical, bg, "Physical Cargo Received from Ramp"))
+        row_html.append(_editable_td(uld_display, bg, "Trolley/ ULD Number"))
+        row_html.append(_editable_td(cms, bg, "Offloading Process Completed in CMS"))
+        row_html.append(_editable_td(verified, bg, "Offloading Pieces Verification"))
+        row_html.append(_editable_td(reason_display, bg, "Offloading Reason"))
+        row_html.append(_editable_td(remarks, bg, "Remarks/Additional Information"))
+        row_html.append("</tr>")
+        data_rows += "".join(row_html)
 
-    # ── 3 empty rows for manual entry ──
-    _empty_td = (f'style="padding:7px 6px;border:1px solid {cell_border};'
-                 f'font-size:12px;font-family:Calibri,Arial,sans-serif;color:{text_dark};'
-                 f'background:{row_even};text-align:center;"')
     for _ in range(3):
         item_num += 1
-        data_rows += f"""
-      <tr>
-        <td {_empty_td}><strong>{item_num}</strong></td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="date">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="flight">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="std">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="dest">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}" data-col="email">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
-      </tr>"""
+        row_html = ["<tr>", _idx_cell(item_num, row_even)]
+        row_html.append(_editable_td("&nbsp;", row_even, "DATE", data_col="date"))
+        row_html.append(_editable_td("&nbsp;", row_even, "FLIGHT", data_col="flight"))
+        row_html.append(_editable_td("&nbsp;", row_even, "STD/ETD", data_col="std"))
+        row_html.append(_editable_td("&nbsp;", row_even, "DEST", data_col="dest"))
+        row_html.append(_editable_td("&nbsp;", row_even, "Email Received Time", data_col="email"))
+        row_html.append(_editable_td("&nbsp;", row_even, "Physical Cargo Received from Ramp"))
+        row_html.append(_editable_td("&nbsp;", row_even, "Trolley/ ULD Number"))
+        row_html.append(_editable_td("&nbsp;", row_even, "Offloading Process Completed in CMS"))
+        row_html.append(_editable_td("&nbsp;", row_even, "Offloading Pieces Verification"))
+        row_html.append(_editable_td("&nbsp;", row_even, "Offloading Reason"))
+        row_html.append(_editable_td("&nbsp;", row_even, "Remarks/Additional Information"))
+        row_html.append("</tr>")
+        data_rows += "".join(row_html)
 
-    # ── NIL case ──
     if not flights:
-        data_rows = f"""
-      <tr id="nil-row">
-        <td colspan="12" style="padding:10px 10px; border:1px solid {cell_border};
-            color:{nil_color}; text-align:center; font-style:italic; font-size:12px;
-            font-family:Calibri,Arial,sans-serif; background:{row_even};">
-          <span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL \u2014 No offload data recorded for this shift.</span>
-          &nbsp;<button onclick="var r=document.getElementById('nil-row');if(r)r.remove();triggerAutosave();"
-            style="font-size:10px;padding:1px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;vertical-align:middle;">\u2715 Remove</button>
-        </td>
-      </tr>"""
-        # Add 3 empty rows even for NIL
+        data_rows = (
+            f'<tr id="nil-row">'
+            f'<td colspan="12" style="padding:10px 10px;border:1px solid {cell_border};color:{nil_color};text-align:center;font-style:italic;font-size:12px;font-family:Calibri,Arial,sans-serif;background:{row_even};">'
+            f'<span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL — No offload data recorded for this shift.</span>'
+            f'&nbsp;<button type="button" data-no-copy="1" data-email-remove="1" onclick="var r=document.getElementById(\'nil-row\');if(r)r.remove();triggerAutosave();" '
+            f'style="font-size:10px;padding:1px 7px;cursor:pointer;background:{hdr_bg};border:1px solid {header_blue};color:{header_blue};border-radius:3px;vertical-align:middle;">×</button>'
+            f'</td></tr>'
+        )
         for i in range(1, 4):
-            data_rows += f"""
-      <tr>
-        <td {_empty_td}><strong>{i}</strong></td>
-        <td {_empty_td} contenteditable="true" data-col="date">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="flight">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="std">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="dest">&nbsp;</td>
-        <td {_empty_td} contenteditable="true" data-col="email">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-        <td {_empty_td} contenteditable="true">&nbsp;</td>
-      </tr>"""
+            data_rows += (
+                "<tr>"
+                + _idx_cell(i, row_even)
+                + _editable_td("&nbsp;", row_even, "DATE", data_col="date")
+                + _editable_td("&nbsp;", row_even, "FLIGHT", data_col="flight")
+                + _editable_td("&nbsp;", row_even, "STD/ETD", data_col="std")
+                + _editable_td("&nbsp;", row_even, "DEST", data_col="dest")
+                + _editable_td("&nbsp;", row_even, "Email Received Time", data_col="email")
+                + _editable_td("&nbsp;", row_even, "Physical Cargo Received from Ramp")
+                + _editable_td("&nbsp;", row_even, "Trolley/ ULD Number")
+                + _editable_td("&nbsp;", row_even, "Offloading Process Completed in CMS")
+                + _editable_td("&nbsp;", row_even, "Offloading Pieces Verification")
+                + _editable_td("&nbsp;", row_even, "Offloading Reason")
+                + _editable_td("&nbsp;", row_even, "Remarks/Additional Information")
+                + "</tr>"
+            )
 
-    table_html = f"""
-    <table width="100%" cellpadding="0" cellspacing="0" border="0"
-           style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; margin-top:12px; margin-bottom:14px;">
-      {col_headers}
-      <tbody id="offload-tbody">
-      {data_rows}
-      </tbody>
-    </table>"""
+    table_html = (
+        '<div class="offload-wrap" style="margin-top:12px;">'
+        '<table class="offload-table" width="100%" cellpadding="0" cellspacing="0" border="0" '
+        'style="border-collapse:collapse;table-layout:fixed;width:100%;font-family:Calibri,Arial,sans-serif;margin-top:12px;margin-bottom:14px;">'
+        + col_headers
+        + '<tbody id="offload-tbody">'
+        + data_rows
+        + '</tbody></table></div>'
+    )
 
-    return f'<div class="offload-scroll" style="margin-top:12px;">{table_html}</div>'
+    return table_html
 
 
 def _render_manpower_section(roster: dict, supervisor_display: str = "", import_roster: dict | None = None) -> str:
@@ -1960,14 +1931,16 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
             name_part = raw
             sn_part   = sn
         note_html = ""
-        # تنسيق: SN بخط عريض أزرق + اسم في عمود محدد
-        sn_display   = f"SN{sn_part}" if sn_part else ""
+        # عرض الرقم فقط بدون حروف قبله
+        parts = []
+        if sn_part:
+            parts.append(f'<strong style="color:#1b1f2a;">{sn_part}</strong>')
+        parts.append(f'<span style="color:#1b1f2a;">{name_part}</span>')
+        inner_html = '&nbsp;&nbsp;'.join(parts)
         return (
             f'<span data-sn="{sn_part}" data-name="{name_part}" '
             f'style="font-family:Calibri,Arial,sans-serif;">'
-            f'<strong style="color:#1b1f2a;">{sn_display}</strong>'
-            f'&nbsp;&nbsp;'
-            f'<span style="color:#1b1f2a;">{name_part}</span>'
+            f'{inner_html}'
             f'</span>'
             f'{note_html}'
         )
@@ -1993,18 +1966,15 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
         sup_li_roster = "".join(f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>\n' for e in sup_in_roster)
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}">{sup_li_roster}</ul>
-      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}">{sup_li_roster}</ul>"""
     elif supervisor_display:
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;"><strong>{supervisor_display}</strong></li></ul>
-      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;"><strong>{supervisor_display}</strong></li></ul>"""
     else:
         grouped_html += f"""
       <div style="{dept_hdr}">Supervisors:</div>
-      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>
-      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+      <ul id="ul-supervisors" class="{ul_class}" style="{ul_style}"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>"""
 
     # ثانياً: باقي الأقسام من roster (تخطّى supervisors — مُعالَج أعلاه)
     for dept, emps in by_dept.items():
@@ -2014,8 +1984,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
         items_li = "".join(f'<li contenteditable="true" style="outline:none;">{_fmt_name(e)}</li>\n' for e in emps)
         grouped_html += f"""
       <div style="{dept_hdr}">{dept}:</div>
-      <ul id="{dept_id}" class="{ul_class}" style="{ul_style}">{items_li}</ul>
-      <button onclick="addListItem('{dept_id}')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>"""
+      <ul id="{dept_id}" class="{ul_class}" style="{ul_style}">{items_li}</ul>"""
 
     if not grouped_html:
         grouped_html = f'<ul class="{ul_class}" style="{ul_style}"><li style="color:#64748b;">No roster data available.</li></ul>'
@@ -2024,23 +1993,26 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
     _inventory_from_roster = [e for e in on_duty if str(e.get("sn","")).strip() in INVENTORY_SNS]
 
     def _fmt_emp_row(name, sn):
-        sn_display = f"SN{sn}" if sn else ""
-        return (
+        sn_display = sn if sn else ""
+        row_html = (
             f'<li contenteditable="true" style="outline:none;">'
             f'<span data-sn="{sn}" data-name="{name}" '
             f'style="font-family:Calibri,Arial,sans-serif;">'
-            f'<strong style="color:#1b1f2a;">{sn_display}</strong>'
-            f'&nbsp;&nbsp;'
+        )
+        if sn_display:
+            row_html += f'<strong style="color:#1b1f2a;">{sn_display}</strong>&nbsp;&nbsp;'
+        row_html += (
             f'<span style="color:#1b1f2a;">{name}</span>'
             f'</span></li>'
         )
+        return row_html
 
     if _inventory_from_roster:
         _inventory_staff_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in _inventory_from_roster)
     else:
         _inventory_staff_items = '<li style="color:#64748b;">—</li>'
 
-    # ── C) Support Team: من الروستر بـ SN أو dept/name يحتوي support ──
+    # ── Support Team: من الروستر بـ SN أو dept/name يحتوي support ──
     _support_by_sn   = [e for e in on_duty if str(e.get("sn","")).strip() in SUPPORT_SNS]
     _support_by_name = [e for e in on_duty if _is_support(e) and str(e.get("sn","")).strip() not in SUPPORT_SNS]
     _seen_sup = set()
@@ -2064,69 +2036,58 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
 
     # section_b
     section_b = (
-        f'<div style="{hdr_style}">B) CTU Staff On Duty:</div>'
+        f'<div style="{hdr_style}">CTU Staff On Duty:</div>'
         f'<ul id="ul-ctu" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-ctu\')" style="{_btn_style}">+ Add</button>'
     )
 
     # Inventory section
     section_inventory = (
         f'<div style="{hdr_style}">Inventory:</div>'
         f'<ul id="ul-inventory" class="{ul_class}" style="{ul_style}">{_inventory_staff_items}</ul>'
-        f'<button onclick="addListItem(\'ul-inventory\')" style="{_btn_style}">+ Add</button>'
     )
 
     # section_c
     section_c = (
-        f'<div style="{hdr_style}">C) Support Team:</div>'
+        f'<div style="{hdr_style}">Support Team:</div>'
         f'<ul id="ul-support" class="{ul_class}" style="{ul_style}">{_c_items}</ul>'
-        f'<button onclick="addListItem(\'ul-support\')" style="{_btn_style}">+ Add</button>'
     )
 
     fd_export_staff = import_roster.get("fd_export", [])
     fd_import_staff = import_roster.get("fd_import", [])
+    fd_combined_staff = []
+    fd_seen = set()
+    for e in fd_export_staff + fd_import_staff:
+        key = (str(e.get("sn", "")).strip(), str(e.get("name", "")).strip().lower())
+        if key in fd_seen:
+            continue
+        fd_seen.add(key)
+        fd_combined_staff.append(e)
 
-    if fd_export_staff:
-        _fd_export_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in fd_export_staff)
+    if fd_combined_staff:
+        _fd_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in fd_combined_staff)
     else:
-        _fd_export_items = '<li style="color:#64748b;">NIL</li>'
+        _fd_items = '<li style="color:#64748b;">NIL</li>'
 
-    if fd_import_staff:
-        _fd_import_items = "\n".join(_fmt_emp_row(e["name"], e["sn"]) for e in fd_import_staff)
-    else:
-        _fd_import_items = '<li style="color:#64748b;">NIL</li>'
-
-    section_fd_export = (
-        f'<div style="{hdr_style}">Flight Dispatch (Export):</div>'
-        f'<ul id="ul-fd-export" class="{ul_class}" style="{ul_style}">{_fd_export_items}</ul>'
-        f'<button onclick="addListItem(\'ul-fd-export\')" style="{_btn_style}">+ Add</button>'
-    )
-
-    section_fd_import = (
-        f'<div style="{hdr_style}">Flight Dispatch (Import):</div>'
-        f'<ul id="ul-fd-import" class="{ul_class}" style="{ul_style}">{_fd_import_items}</ul>'
-        f'<button onclick="addListItem(\'ul-fd-import\')" style="{_btn_style}">+ Add</button>'
+    section_flight_dispatch = (
+        f'<div style="{hdr_style}">Flight Dispatch:</div>'
+        f'<ul id="ul-flight-dispatch" class="{ul_class}" style="{ul_style}">{_fd_items}</ul>'
     )
 
     section_d = (
-        f'<div style="{hdr_style}">D) Sick Leave / No Show / Others:</div>'
+        f'<div style="{hdr_style}">Sick Leave / No Show / Others:</div>'
         f'<ul id="ul-sickleave" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-sickleave\')" style="{_btn_style}">+ Add</button>'
     )
     section_e = (
-        f'<div style="{hdr_style}">E) Annual Leave / Course / Off in Lieu:</div>'
+        f'<div style="{hdr_style}">Annual Leave / Course / Off in Lieu:</div>'
         f'<ul id="ul-annualleave" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-annualleave\')" style="{_btn_style}">+ Add</button>'
     )
     section_f = (
-        f'<div style="{hdr_style}">F) Trainee:</div>'
+        f'<div style="{hdr_style}">Trainee:</div>'
         f'<ul id="ul-trainee" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-trainee\')" style="{_btn_style}">+ Add</button>'
     )
     section_g = (
-        f'<div style="{hdr_style}">G) Overtime Justification:</div>'
+        f'<div style="{hdr_style}">Overtime Justification:</div>'
         f'<ul id="ul-overtime" class="{ul_class}" style="{ul_style}">{_li_edit}</ul>'
-        f'<button onclick="addListItem(\'ul-overtime\')" style="{_btn_style}">+ Add</button>'
     )
 
     return f"""
@@ -2135,8 +2096,7 @@ def _render_manpower_section(roster: dict, supervisor_display: str = "", import_
           {section_b}
           {section_inventory}
           {section_c}
-          {section_fd_export}
-          {section_fd_import}
+          {section_flight_dispatch}
           {section_d}
           {section_e}
           {section_f}
@@ -2364,13 +2324,16 @@ def build_shift_report(date_dir: str, shift: str) -> None:
   <style>
     *,*::before,*::after{{box-sizing:border-box;}}
     body{{margin:0;padding:0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;}}
-    .page-wrap{{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;}}
-    #report-content{{width:100%;max-width:1100px;background:#fff;border:1px solid #d0d5e8;margin:0 auto;}}
-    .btn-bar{{max-width:1100px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
+    .page-wrap{{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;overflow-x:auto;}}
+    #report-content{{width:1180px;max-width:100%;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
+    .btn-bar{{max-width:1180px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
-    /* جدول الأوفلود — يسمح بالتمرير الأفقي على الجوال */
-    .offload-scroll{{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}}
-    .offload-scroll table{{min-width:900px;width:100%;}}
+    /* جدول الأوفلود — حل جذري للتنسيق على الشاشة والجوال */
+    .offload-wrap{{width:100%;max-width:100%;overflow:visible;}}
+    .offload-table{{width:100%;table-layout:fixed;border-collapse:collapse;}}
+    .offload-table td,.offload-table th{{word-break:break-word;overflow-wrap:anywhere;}}
+    .offload-table .offload-idx{{position:relative;}}
+    .offload-table .offload-row-num{{display:inline-block;min-width:14px;}}
 
     /* ══════════════ MOBILE ══════════════ */
     @media(max-width:700px){{
@@ -2398,6 +2361,17 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       .mp-list li{{font-size:12px!important;line-height:1.7!important;}}
       .mp-list span[style*="width:200px"]{{width:150px!important;}}
 
+      /* الأوفلود على الجوال — بطاقات عمودية بدون خروج عن الصفحة */
+      .offload-wrap{{overflow:visible!important;}}
+      .offload-table,.offload-table tbody,.offload-table tr,.offload-table td{{display:block;width:100%!important;}}
+      .offload-table thead{{display:none!important;}}
+      .offload-table tr{{margin:0 0 10px 0;border:1px solid #d0d9ee;background:#ffffff;}}
+      .offload-table td{{position:relative;padding:8px 8px 8px 46%!important;text-align:left!important;min-height:34px;border-left:none!important;border-right:none!important;}}
+      .offload-table td::before{{content:attr(data-label);position:absolute;left:8px;top:8px;width:40%;font-weight:700;color:#0b3a78;text-align:left;line-height:1.25;}}
+      .offload-table td.offload-idx{{padding:18px 8px 8px 46%!important;min-height:40px;}}
+      .offload-table td.offload-idx .offload-row-num{{display:inline-block;font-weight:700;}}
+      .offload-table td.offload-idx::before{{content:'ITEM';}}
+
       /* footer */
       .report-footer-td{{padding:14px 12px!important;font-size:11px!important;}}
 
@@ -2417,9 +2391,9 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 </head>
 <body>
 <div class="page-wrap">
-<div style="max-width:1100px;margin:0 auto;">
+<div style="width:1180px;max-width:100%;margin:0 auto;">
 
-<table width="100%" cellpadding="0" cellspacing="0" border="0" id="report-content"
+<table width="1180" cellpadding="0" cellspacing="0" border="0" id="report-content"
        style="background-color:#ffffff; border:1px solid #d0d5e8;">
 
   <!-- ═══ HEADER ═══ -->
@@ -2455,16 +2429,6 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     </td>
   </tr>
 
-  <!-- ═══ BACK LINK ═══ -->
-  <tr class="back-link-row" id="back-link-row">
-    <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
-      <a href="../../index.html"
-         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none; display:inline-block;">
-        &#8592; Back to Index
-      </a>
-    </td>
-  </tr>
-
   <!-- ═══ SECTION 1: OPERATIONAL ACTIVITIES ═══ -->
   <tr><td class="sec-pad" style="padding:18px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -2477,16 +2441,19 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <strong style="color:#0b3a78;">Load Plan:</strong>
-      <ul id="ul-loadplan" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li></ul>
-      <button onclick="addListItem('ul-loadplan')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
-      <br>
-      <strong style="color:#0b3a78;">Advance Loading:</strong>
-      <ul id="ul-advloading" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li></ul>
-      <button onclick="addListItem('ul-advloading')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
-      <br>
-      <strong style="color:#0b3a78;">CSD Rescreening:</strong>
-      <ul id="ul-csdrescreening" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="52" style="outline:none; min-width:40px;">&nbsp;</li></ul>
-      <button onclick="addListItem('ul-csdrescreening')" style="font-size:11px;padding:1px 8px;margin-bottom:4px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+<ul id="ul-loadplan" data-flight-list="1" style="margin:4px 0 6px 22px; padding-left:18px; color:#1b1f2a; list-style-type:disc; list-style-position:outside;">
+  <li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li>
+</ul>
+
+<strong style="color:#0b3a78;">Advance Loading:</strong>
+<ul id="ul-advloading" data-flight-list="1" style="margin:4px 0 6px 22px; padding-left:18px; color:#1b1f2a; list-style-type:disc; list-style-position:outside;">
+  <li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li>
+</ul>
+
+<strong style="color:#0b3a78;">CSD Rescreening:</strong>
+<ul id="ul-csdrescreening" style="margin:4px 0 6px 22px; padding-left:18px; color:#1b1f2a; list-style-type:disc; list-style-position:outside;">
+  <li contenteditable="true" tabindex="52" style="outline:none; min-width:40px;">&nbsp;</li>
+</ul>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -2515,7 +2482,6 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         <li contenteditable="true" tabindex="69" style="outline:none;">Instructions on attaching printed ULD tags on trolleys.</li>
         <li contenteditable="true" tabindex="70" style="outline:none;">Stationery logbook kept at supervisor desk.</li>
       </ul>
-      <button onclick="addListItem('ul-briefings')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -2552,7 +2518,6 @@ def build_shift_report(date_dir: str, shift: str) -> None:
         <li contenteditable="true" tabindex="81" style="outline:none;">DG embargo station check completed.</li>
         <li contenteditable="true" tabindex="82" style="outline:none;">Pigeonhole check done for any pending documents.</li>
       </ul>
-      <button onclick="addListItem('ul-opnotes')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#f4f5f9;border:1px solid #5b6a8a;color:#3d4a63;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -2646,25 +2611,43 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       </tr>
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul style="margin:0 0 10px 22px; padding:0;">
-        <li>READ AND SIGN.</li>
-        <li>Shell &amp; Al-Maha Card Fuel.</li>
-        <li>DIP MAIL Cage Keys.</li>
-        <li>Supervisor mobile phone H/O in good condition.</li>
-        <li>DSE RADIO.</li>
-        <li>All trolleys arranged for early flight.</li>
+      <ul id="ul-handover" style="margin:0 0 10px 22px; padding:0;">
+        <li contenteditable="true" tabindex="90" style="outline:none;">READ AND SIGN.</li>
+        <li contenteditable="true" tabindex="91" style="outline:none;">Shell &amp; Al-Maha Card Fuel.</li>
+        <li contenteditable="true" tabindex="92" style="outline:none;">DIP MAIL Cage Keys.</li>
+        <li contenteditable="true" tabindex="93" style="outline:none;">Supervisor mobile phone H/O in good condition.</li>
+        <li contenteditable="true" tabindex="94" style="outline:none;">DSE RADIO.</li>
+        <li contenteditable="true" tabindex="95" style="outline:none;">All trolleys arranged for early flight.</li>
       </ul>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
-  <!-- ═══ SECTION 9: OTHER ═══ -->
+  <!-- ═══ SECTION 9: SPECIAL H/O ═══ -->
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#eef3fc;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">9-&nbsp; Special H/O:</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul id="ul-special-handover" style="margin:0 0 10px 22px; padding:0;">
+        <li contenteditable="true" tabindex="96" style="outline:none;">&nbsp;</li>
+      </ul>
+    </div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 10: OTHER ═══ -->
   <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#7a5200;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#fdf6ec;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#7a5200; letter-spacing:1px;">9.&nbsp; OTHER</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#7a5200; letter-spacing:1px;">10.&nbsp; OTHER</span>
         </td>
       </tr>
     </table>
@@ -2758,6 +2741,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 <!-- ═══ BUTTONS BAR ═══ -->
 <div class="btn-bar" data-no-copy="1">
   <button id="btn-copy" type="button" data-no-copy="1" style="background:#0b3a78;box-shadow:0 2px 8px rgba(11,58,120,.25);">📋 Copy Report</button>
+  <button id="btn-cloud-sync" type="button" data-no-copy="1" style="background:#0f766e;box-shadow:0 2px 8px rgba(15,118,110,.25);">☁️ Cloud Sync</button>
   <button id="btn-manage-emails" type="button" data-no-copy="1" style="background:#475569;box-shadow:0 2px 8px rgba(71,85,105,.25);">📝 Edit Email List</button>
   <button id="btn-email" type="button" data-no-copy="1" style="background:#c2410c;box-shadow:0 2px 8px rgba(194,65,12,.25);">✉️ Send Email Now</button>
 </div>
@@ -2770,6 +2754,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 window._AIRLABS_KEY        = '';          /* ضع مفتاح AirLabs هنا إذا توفّر */
 window._LOCAL_MCT_FLIGHTS  = {local_flights_js};
 window._ALL_STAFF          = {all_staff_js};
+window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
 </script>
 
 <script>
@@ -2778,6 +2763,7 @@ window._ALL_STAFF          = {all_staff_js};
   var COPY_SUCCESS_MS = 2500;
   var REPO_OWNER = 'khalidsaif912';
   var REPO_NAME = 'offload-monitor';
+  var SYNC_BRANCH = 'offload-sync';
   var RECIPIENTS_PATH = 'docs/data/email_recipients.json';
   var RECIPIENTS_RAW_URL = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main/' + RECIPIENTS_PATH;
   var RECIPIENTS_EDIT_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/edit/main/' + RECIPIENTS_PATH;
@@ -2852,7 +2838,7 @@ window._ALL_STAFF          = {all_staff_js};
   /* ربط الـ li الموجودة مسبقاً بالأحداث عند تحميل الصفحة */
   document.addEventListener('DOMContentLoaded', function(){{
     var editableLists = [
-      'ul-loadplan','ul-advloading','ul-csdrescreening',
+      'ul-loadplan','ul-advloading','ul-csdrescreening','ul-handover','ul-special-handover',
       'ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
       'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'
     ];
@@ -2986,7 +2972,7 @@ window._ALL_STAFF          = {all_staff_js};
       t.setAttribute('border','0');
       t.setAttribute('role','presentation');
       t.style.borderCollapse='collapse';
-      if(!t.style.width) t.style.width='100%';
+      if(t.id==='report-content'){{ t.setAttribute('width','1180'); t.style.width='1180px'; t.style.maxWidth='1180px'; t.style.tableLayout='fixed'; }} else if(!t.style.width) {{ t.style.width='100%'; }}
     }});
     clone.querySelectorAll('td,th').forEach(function(c){{
       if(!c.style.verticalAlign) c.style.verticalAlign='top';
@@ -3000,17 +2986,16 @@ window._ALL_STAFF          = {all_staff_js};
     clone.querySelectorAll('[tabindex]').forEach(function(e){{
       e.removeAttribute('tabindex');
     }});
-    /* إزالة أزرار + Add من النسخة المُرسَلة */
+    /* إزالة جميع الأزرار من النسخة المنسوخة/المرسلة */
     clone.querySelectorAll('button').forEach(function(e){{
-      if(e.textContent.trim().indexOf('Add')!==-1 || e.textContent.trim().indexOf('+')!==-1)
-        e.parentNode && e.parentNode.removeChild(e);
+      e.parentNode && e.parentNode.removeChild(e);
     }});
     /* إزالة عناصر data-no-copy (أزرار النسخ/الإرسال) من نسخة الإيميل */
     clone.querySelectorAll('[data-no-copy]').forEach(function(e){{
       e.parentNode && e.parentNode.removeChild(e);
     }});
     var br=clone.querySelector('#back-link-row');
-    if(br) br.style.display='none';
+    if(br && br.parentNode) br.parentNode.removeChild(br);
 
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}}table{{border-collapse:collapse;}}img{{max-width:100%;height:auto;display:block;}}</style></head><body>'+clone.outerHTML+'</body></html>';
   }}
@@ -3205,12 +3190,16 @@ window._ALL_STAFF          = {all_staff_js};
   function sendEmailNow(){{
     openRecipientsManager('send').then(function(result){{
       if(!result || !result.selected || !result.selected.length) return;
-      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\\n\\nShift: {shift}\\nDate: {date_dir}\\nRecipients: ' + result.selected.join(', '));
+      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟
+
+Shift: {shift}
+Date: {date_dir}
+Recipients: ' + result.selected.join(', '));
       if(!ok) return;
 
       var btn = document.getElementById('btn-email');
       if(!btn) return;
-      btn.innerText = '⏳ Saving edits…';
+      btn.innerText = '⏳ Preparing email…';
       btn.disabled = true;
       btn.style.background = '#64748b';
 
@@ -3226,7 +3215,6 @@ window._ALL_STAFF          = {all_staff_js};
         localStorage.setItem('gh_pat', pat);
       }}
 
-      /* ── Step 1: Capture DOM edits (inline styles, clean email-safe HTML) ── */
       var editedHtml = buildReportHtml();
       if(!editedHtml){{
         btn.innerText = '❌ No report found';
@@ -3235,58 +3223,30 @@ window._ALL_STAFF          = {all_staff_js};
         return;
       }}
 
-      /* ── Step 2: Get current file SHA then upload the edited HTML to repo ── */
-      var filePath = 'docs/{date_dir}/{shift}/index.html';
-      var apiBase = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/';
+      btn.innerText = '⏳ Sending email…';
       var headers = {{
         'Accept':'application/vnd.github+json',
         'Authorization':'Bearer ' + pat,
         'Content-Type':'application/json'
       }};
+      var editedHtmlB64 = btoa(unescape(encodeURIComponent(editedHtml)));
 
-      btn.innerText = '⏳ Uploading edits…';
-
-      fetch(apiBase + filePath + '?t=' + Date.now(), {{headers:headers}})
-      .then(function(r){{
-        if(r.status === 401){{ localStorage.removeItem('gh_pat'); throw new Error('AUTH'); }}
-        if(!r.ok && r.status !== 404) throw new Error('GET_SHA_' + r.status);
-        return r.ok ? r.json() : null;
-      }})
-      .then(function(fileInfo){{
-        var sha = fileInfo ? fileInfo.sha : undefined;
-        /* Use editedHtml — includes user edits + inline styles + email-safe colors */
-        var encoded = btoa(unescape(encodeURIComponent(editedHtml)));
-        var putBody = {{
-          message: 'Update report with manual edits ({date_dir}/{shift})',
-          content: encoded,
-          branch: 'main'
-        }};
-        if(sha) putBody.sha = sha;
-
-        return fetch(apiBase + filePath, {{
-          method: 'PUT',
-          headers: headers,
-          body: JSON.stringify(putBody)
-        }});
-      }})
-      .then(function(r){{
-        if(r.status === 401){{ localStorage.removeItem('gh_pat'); throw new Error('AUTH'); }}
-        if(!r.ok) throw new Error('PUT_' + r.status);
-        btn.innerText = '⏳ Sending email…';
-
-        /* ── Step 3: Trigger the dispatch to send email ── */
-        return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {{
-          method:'POST',
-          headers: headers,
-          body:JSON.stringify({{
-            event_type:'send_report_now',
-            client_payload:{{date_dir:'{date_dir}', shift:'{shift}', recipients: result.selected}}
-          }})
-        }});
+      return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {{
+        method:'POST',
+        headers: headers,
+        body:JSON.stringify({{
+          event_type:'send_report_now',
+          client_payload:{{
+            date_dir:'{date_dir}',
+            shift:'{shift}',
+            recipients: result.selected,
+            edited_html_b64: editedHtmlB64
+          }}
+        }})
       }})
       .then(function(r){{
         if(r.ok || r.status === 204){{
-          btn.innerText = '✅ Email Sent!';
+          btn.innerText = '✅ Email queued';
           btn.style.background = '#059669';
           resetButton(btn, '✉️ Send Email Now', '#c2410c', 4000);
         }} else {{
@@ -3599,6 +3559,49 @@ window._ALL_STAFF          = {all_staff_js};
     }} catch(ex) {{}}
   }}
 
+  function getTextSelectionOffsets(el) {{
+    try {{
+      var sel = window.getSelection && window.getSelection();
+      if(!sel || !sel.rangeCount) return {{start:null, end:null}};
+      var range = sel.getRangeAt(0);
+      if(!el || !el.contains(range.startContainer) || !el.contains(range.endContainer)) return {{start:null, end:null}};
+      var preStart = range.cloneRange();
+      preStart.selectNodeContents(el);
+      preStart.setEnd(range.startContainer, range.startOffset);
+      var preEnd = range.cloneRange();
+      preEnd.selectNodeContents(el);
+      preEnd.setEnd(range.endContainer, range.endOffset);
+      return {{start: preStart.toString().length, end: preEnd.toString().length}};
+    }} catch(ex) {{
+      return {{start:null, end:null}};
+    }}
+  }}
+
+  function setCursorByTextOffset(el, offset) {{
+    try {{
+      if(!el) return;
+      var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
+      var remaining = Math.max(0, Number(offset || 0));
+      var node = null;
+      while((node = walker.nextNode())) {{
+        var len = (node.nodeValue || '').length;
+        if(remaining <= len) {{
+          var r = document.createRange();
+          r.setStart(node, remaining);
+          r.collapse(true);
+          var sel = window.getSelection();
+          sel.removeAllRanges();
+          sel.addRange(r);
+          return;
+        }}
+        remaining -= len;
+      }}
+      setCursorEnd(el);
+    }} catch(ex) {{
+      setCursorEnd(el);
+    }}
+  }}
+
   function isManpowerListUl(ul) {{
     if(!ul || !ul.id) return false;
     return ul.id.indexOf('ul-dept-') === 0 || MP_IDS.indexOf(ul.id) !== -1;
@@ -3655,28 +3658,95 @@ window._ALL_STAFF          = {all_staff_js};
     }}
   }};
 
+  var OFFLOAD_COLS = [
+    {{ key: 'date',  label: 'DATE' }},
+    {{ key: 'flight',label: 'FLIGHT' }},
+    {{ key: 'std',   label: 'STD/ETD' }},
+    {{ key: 'dest',  label: 'DEST' }},
+    {{ key: 'email', label: 'Email Received Time' }},
+    {{ key: '',      label: 'Physical Cargo Received from Ramp' }},
+    {{ key: '',      label: 'Trolley/ ULD Number' }},
+    {{ key: '',      label: 'Offloading Process Completed in CMS' }},
+    {{ key: '',      label: 'Offloading Pieces Verification' }},
+    {{ key: '',      label: 'Offloading Reason' }},
+    {{ key: '',      label: 'Remarks/Additional Information' }}
+  ];
+
+  function buildOffloadIndexCellHTML(idx) {{
+    return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" '
+      + 'style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;padding:0;margin:0;border:1px solid #0b3a78;background:#dce6f4;color:#0b3a78;border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">×</button>'
+      + '<strong class="offload-row-num">' + idx + '</strong>';
+  }}
+
+  window.deleteOffloadRow = function(btn) {{
+    var row = btn && btn.closest ? btn.closest('tr') : null;
+    var tbody = document.getElementById('offload-tbody');
+    if(!row || !tbody) return;
+    row.parentNode && row.parentNode.removeChild(row);
+    var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {{
+      return !!r.querySelector('td[contenteditable="true"]');
+    }});
+    if(!rows.length) appendOffloadRow(false);
+    reindexOffloadRows();
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+  }};
+
+  function decorateOffloadRow(row) {{
+    if(!row) return;
+    var cells = row.querySelectorAll('td');
+    if(!cells.length) return;
+    cells[0].classList.add('offload-idx');
+    cells[0].setAttribute('data-label', 'ITEM');
+    for(var i = 1; i < cells.length && i <= OFFLOAD_COLS.length; i++) {{
+      if(!cells[i].getAttribute('data-label')) cells[i].setAttribute('data-label', OFFLOAD_COLS[i-1].label);
+    }}
+  }}
+
   /* ══════════════════════════════════════
      B) جدول الأوفلود
-        • click/focus على date → يكمل التاريخ
-        • input على flight → يجلب STD+DEST
      ══════════════════════════════════════ */
   function setupTableCell(td) {{
-    if(td._cellSetup) return;   /* منع التكرار */
+    if(td._cellSetup) return;
     td._cellSetup = true;
+
+    td.addEventListener('keydown', function(e) {{
+      if(e.key !== 'Tab' || e.shiftKey) return;
+      var row = td.closest('tr');
+      var tbody = row && row.parentElement;
+      if(!row || !tbody || tbody.id !== 'offload-tbody') return;
+      var editable = Array.from(row.querySelectorAll('td[contenteditable="true"]'));
+      if(!editable.length || editable[editable.length - 1] !== td) return;
+      var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {{
+        return !!r.querySelector('td[contenteditable="true"]');
+      }});
+      if(!rows.length || rows[rows.length - 1] !== row) return;
+      e.preventDefault();
+      var tr = appendOffloadRow(false);
+      if(tr) {{
+        setTimeout(function() {{
+          var firstCell = tr.querySelector('td[contenteditable="true"]');
+          if(firstCell) {{
+            firstCell.focus();
+            setCursorEnd(firstCell);
+          }}
+        }}, 0);
+      }}
+    }});
+
     var col = td.dataset.col;
     if(!col) return;
 
     if(col === 'date') {{
       function autoDate() {{
-        var txt = td.innerText.replace(/\u00a0/g,'').trim();
+        var txt = td.innerText.replace(/ /g,'').trim();
         if(!txt) {{
           td.innerText = todayFull();
           if(typeof triggerAutosave==='function') triggerAutosave();
         }}
       }}
-      td.addEventListener('click',  autoDate);
-      td.addEventListener('focus',  autoDate);
-      td.addEventListener('input',  function() {{ forceUpper(td); }});
+      td.addEventListener('click', autoDate);
+      td.addEventListener('focus', autoDate);
+      td.addEventListener('input', function() {{ forceUpper(td); }});
     }}
 
     if(col === 'flight') {{
@@ -3691,22 +3761,20 @@ window._ALL_STAFF          = {all_staff_js};
       }}
       function onFlightInput() {{
         var flt = normalizeFlightCell();
-        if(flt === _lastFlt) return;   /* لا تغيير حقيقي */
+        if(flt === _lastFlt) return;
         _lastFlt = flt;
         if(!FLT_RE.test(flt)) {{ removeGhost(td); return; }}
-        var row      = td.closest('tr');
-        var dateCell = row && row.querySelector('[data-col="date"]');
-        var stdCell  = row && row.querySelector('[data-col="std"]');
-        var destCell = row && row.querySelector('[data-col="dest"]');
-        var emailCell= row && row.querySelector('[data-col="email"]');
-        /* تعبئة التاريخ تلقائياً إذا كان فارغاً */
+        var row       = td.closest('tr');
+        var dateCell  = row && row.querySelector('[data-col="date"]');
+        var stdCell   = row && row.querySelector('[data-col="std"]');
+        var destCell  = row && row.querySelector('[data-col="dest"]');
         if(dateCell) {{
-          var dv = dateCell.innerText.replace(/\u00a0/g,'').trim();
+          var dv = dateCell.innerText.replace(/ /g,'').trim();
           if(!dv) {{ dateCell.innerText = todayFull(); dv = todayFull(); }}
         }}
         var isoDate = todayISO();
         if(dateCell) {{
-          var dv2 = (dateCell.innerText||'').replace(/\u00a0/g,'').trim().toUpperCase();
+          var dv2 = (dateCell.innerText||'').replace(/ /g,'').trim().toUpperCase();
           var mons = {{JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12}};
           var dm = dv2.match(/^(\d{{1,2}})([A-Z]{{3}})(\d{{2,4}})?$/);
           if(dm) {{
@@ -3714,52 +3782,114 @@ window._ALL_STAFF          = {all_staff_js};
             isoDate = yr+'-'+(mons[dm[2]]||1).toString().padStart(2,'0')+'-'+dm[1].padStart(2,'0');
           }}
         }}
-        showGhost(td, 'fetching '+flt+'\u2026');
+        showGhost(td, 'fetching '+flt+'…');
         fetchFlightInfo(flt, isoDate, function(info) {{
           removeGhost(td);
           if(!info) return;
           if(stdCell) {{
-            var cur = stdCell.innerText.replace(/\u00a0/g,'').trim();
-            if(!cur || cur === '\u00a0') {{
+            var cur = stdCell.innerText.replace(/ /g,'').trim();
+            if(!cur || cur === ' ') {{
               var std = info.std||'', etd = info.etd||'';
-              stdCell.innerText = (std && etd && std!==etd) ? std+'\u202f|\u202f'+etd : (std||etd||'');
+              stdCell.innerText = (std && etd && std!==etd) ? std+' | '+etd : (std||etd||'');
             }}
           }}
           if(destCell) {{
-            var dc = destCell.innerText.replace(/\u00a0/g,'').trim();
+            var dc = destCell.innerText.replace(/ /g,'').trim();
             if((!dc) && info.dest) destCell.innerText = info.dest;
           }}
           if(typeof triggerAutosave==='function') triggerAutosave();
         }});
       }}
-      td.addEventListener('focus',  normalizeFlightCell);
-      td.addEventListener('input',  onFlightInput);
-      td.addEventListener('keyup',  onFlightInput);  /* يشتغل عند paste أيضاً */
+      td.addEventListener('focus', normalizeFlightCell);
+      td.addEventListener('input', onFlightInput);
+      td.addEventListener('keyup', onFlightInput);
       td.addEventListener('paste', function() {{ setTimeout(onFlightInput, 50); }});
     }}
   }}
 
-  function initTableCells() {{
-    document.querySelectorAll('[data-col]').forEach(setupTableCell);
-    /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
+  function reindexOffloadRows() {{
     var tbody = document.getElementById('offload-tbody');
-    if(tbody) {{
-      new MutationObserver(function(muts) {{
-        muts.forEach(function(m) {{
-          m.addedNodes.forEach(function(n) {{
-            if(n.nodeType===1) {{
-              n.querySelectorAll('[data-col]').forEach(setupTableCell);
-            }}
-          }});
-        }});
-      }}).observe(tbody, {{childList:true}});
+    if(!tbody) return;
+    var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(row) {{
+      return !!row.querySelector('td[contenteditable="true"]');
+    }});
+    rows.forEach(function(row, idx) {{
+      decorateOffloadRow(row);
+      var first = row.querySelector('td');
+      if(first) first.innerHTML = buildOffloadIndexCellHTML(idx + 1);
+    }});
+    var ti = 1;
+    rows.forEach(function(row) {{
+      row.querySelectorAll('td[contenteditable="true"]').forEach(function(cell) {{
+        cell.setAttribute('tabindex', String(ti++));
+      }});
+    }});
+  }}
+
+  function createOffloadRow() {{
+    var tr = document.createElement('tr');
+    var tdStyle = 'padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;';
+    var idxCell = document.createElement('td');
+    idxCell.setAttribute('style', tdStyle + 'position:relative;padding:18px 6px 7px 24px;width:6%;min-width:56px;');
+    idxCell.className = 'offload-idx';
+    idxCell.setAttribute('data-label', 'ITEM');
+    idxCell.innerHTML = buildOffloadIndexCellHTML(0);
+    tr.appendChild(idxCell);
+    OFFLOAD_COLS.forEach(function(col) {{
+      var td = document.createElement('td');
+      td.setAttribute('style', tdStyle);
+      td.setAttribute('contenteditable', 'true');
+      td.setAttribute('data-label', col.label);
+      if(col.key) td.dataset.col = col.key;
+      td.innerHTML = '&nbsp;';
+      tr.appendChild(td);
+    }});
+    return tr;
+  }}
+
+  function appendOffloadRow(focusFirst) {{
+    var tbody = document.getElementById('offload-tbody');
+    if(!tbody) return null;
+    var tr = createOffloadRow();
+    tbody.appendChild(tr);
+    tr.querySelectorAll('td[contenteditable="true"]').forEach(setupTableCell);
+    reindexOffloadRows();
+    if(focusFirst) {{
+      var firstCell = tr.querySelector('td[contenteditable="true"]');
+      if(firstCell) {{
+        firstCell.focus();
+        setCursorEnd(firstCell);
+      }}
     }}
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+    return tr;
+  }}
+
+  function initTableCells() {{
+    var tbody = document.getElementById('offload-tbody');
+    if(!tbody) return;
+    tbody.querySelectorAll('tr').forEach(function(tr) {{
+      decorateOffloadRow(tr);
+      tr.querySelectorAll('td[contenteditable="true"]').forEach(setupTableCell);
+    }});
+    reindexOffloadRows();
+    new MutationObserver(function(muts) {{
+      muts.forEach(function(m) {{
+        m.addedNodes.forEach(function(n) {{
+          if(n.nodeType===1) {{
+            decorateOffloadRow(n);
+            n.querySelectorAll('td[contenteditable="true"]').forEach(setupTableCell);
+          }}
+        }});
+      }});
+    }}).observe(tbody, {{childList:true}});
   }}
   if(document.readyState === 'loading') {{
     document.addEventListener('DOMContentLoaded', initTableCells);
   }} else {{
     initTableCells();
   }}
+
 
   /* ══════════════════════════════════════
      C) MANPOWER — SN Autocomplete
@@ -3854,6 +3984,45 @@ window._ALL_STAFF          = {all_staff_js};
     li.textContent = (text || '').replace(/​/g, '');
     setCursorEnd(li);
     if(typeof triggerAutosave === 'function') triggerAutosave();
+  }}
+
+  function convertFormattedManpowerToPlain(li, action) {{
+    if(!li || !isFormattedManpowerEntry(li)) return false;
+    var plain = getManpowerText(li).replace(/​/g, '');
+    var sel = getTextSelectionOffsets(li);
+    var start = sel.start;
+    var end = sel.end;
+    if(start == null || end == null) {{
+      start = plain.length;
+      end = plain.length;
+    }}
+
+    if(action === 'backspace') {{
+      if(start !== end) {{
+        plain = plain.slice(0, start) + plain.slice(end);
+      }} else if(start > 0) {{
+        plain = plain.slice(0, start - 1) + plain.slice(end);
+        start -= 1;
+      }}
+      end = start;
+    }} else if(action === 'delete') {{
+      if(start !== end) {{
+        plain = plain.slice(0, start) + plain.slice(end);
+      }} else if(end < plain.length) {{
+        plain = plain.slice(0, start) + plain.slice(end + 1);
+      }}
+      end = start;
+    }} else if(action && action.type === 'insertText') {{
+      var insertText = String(action.text || '');
+      plain = plain.slice(0, start) + insertText + plain.slice(end);
+      start = start + insertText.length;
+      end = start;
+    }}
+
+    li.textContent = plain || '​';
+    setCursorByTextOffset(li, start);
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+    return true;
   }}
 
   function extractTypedSn(text) {{
@@ -4036,7 +4205,7 @@ window._ALL_STAFF          = {all_staff_js};
         pasted = String(pasted || '').replace(/\s+/g, ' ').trim();
         if(pasted) {{
           ev.preventDefault();
-          replaceManpowerText(li, pasted);
+          convertFormattedManpowerToPlain(li, {{type:'insertText', text:pasted}});
           updateManpowerSuggestion();
           return;
         }}
@@ -4078,7 +4247,7 @@ window._ALL_STAFF          = {all_staff_js};
       if((ev.key === 'Backspace' || ev.key === 'Delete')) {{
         if(isFormattedManpowerEntry(li)) {{
           ev.preventDefault();
-          replaceManpowerText(li, '');
+          convertFormattedManpowerToPlain(li, ev.key === 'Delete' ? 'delete' : 'backspace');
           closeSnDropdown();
           return;
         }}
@@ -4087,6 +4256,13 @@ window._ALL_STAFF          = {all_staff_js};
           removeManpowerLiIfEmpty(li);
           return;
         }}
+      }}
+
+      if(isFormattedManpowerEntry(li) && ev.key && ev.key.length === 1 && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {{
+        ev.preventDefault();
+        convertFormattedManpowerToPlain(li, {{type:'insertText', text:ev.key}});
+        updateManpowerSuggestion();
+        return;
       }}
     }});
 
@@ -4110,7 +4286,7 @@ window._ALL_STAFF          = {all_staff_js};
     }});
   }}
 
-  var MP_IDS = ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
+    var MP_IDS = ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
                 'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'];
   function initManpower() {{
     refreshSnMap();
@@ -4264,16 +4440,55 @@ window._ALL_STAFF          = {all_staff_js};
 
 
 /* ══════════════════════════════════════════════════════
-   AUTOSAVE — IndexedDB
-   يحفظ كل تعديل فوري (كل ضغطة حرف) ويستعيده عند التحميل
-   المفتاح: URL الصفحة (date_dir + shift فريد لكل تقرير)
+   AUTOSAVE — IndexedDB + GitHub Cloud Sync
+   محلياً: يحفظ كل تعديل فوري داخل المتصفح
+   سحابياً: عند تفعيل Cloud Sync يحفظ نفس التقرير في GitHub
+   لكي تظهر التعديلات من الهاتف على الكمبيوتر والعكس
    ══════════════════════════════════════════════════════ */
 (function(){{
   var DB_NAME = 'offload_autosave';
   var STORE   = 'reports';
   var PAGE_KEY = location.pathname;
+  var REPO_OWNER = 'khalidsaif912';
+  var REPO_NAME  = 'offload-monitor';
+  var SYNC_BRANCH = 'offload-sync';
+  var CLOUD_PATH = window._REPORT_CLOUD_PATH || '';
+  var CLOUD_RAW_URL = CLOUD_PATH ? ('https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/' + SYNC_BRANCH + '/' + CLOUD_PATH) : '';
+  var CLOUD_API_URL = CLOUD_PATH ? ('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + CLOUD_PATH) : '';
   var _db = null;
+  var LS_KEY = 'offload_autosave_cache::' + PAGE_KEY;
   var _saveTimer = null;
+  var _cloudTimer = null;
+  var _cloudBusy = false;
+  var _cloudPending = false;
+  var _lastAppliedTs = 0;
+  var _autoPromptShown = false;
+  var _skipAutoPrompt = sessionStorage.getItem('gh_pat_skip_' + PAGE_KEY) === '1';
+
+  function cloudBtn(){{
+    return document.getElementById('btn-cloud-sync');
+  }}
+
+  function updateCloudBtnIdle(){{
+    var btn = cloudBtn();
+    if(!btn) return;
+    var hasPat = !!(localStorage.getItem('gh_pat') || '').trim();
+    btn.disabled = false;
+    btn.innerText = hasPat ? '☁️ Auto Sync On' : '☁️ Set Auto Sync';
+    btn.style.background = hasPat ? '#0f766e' : '#475569';
+  }}
+
+  function setCloudBtn(text, bg, delay){{
+    var btn = cloudBtn();
+    if(!btn) return;
+    btn.innerText = text;
+    if(bg) btn.style.background = bg;
+    if(delay){{
+      setTimeout(function(){{
+        updateCloudBtnIdle();
+      }}, delay);
+    }}
+  }}
 
   function openDB(cb){{
     if(_db){{ cb(_db); return; }}
@@ -4285,15 +4500,28 @@ window._ALL_STAFF          = {all_staff_js};
     req.onerror   = function(){{ console.warn('[autosave] IndexedDB open failed'); }};
   }}
 
-  function saveNow(){{
-    /* جمع كل العناصر القابلة للتعديل وحفظ قيمها */
+  function readLocal(cb){{
+    openDB(function(db){{
+      var tx = db.transaction(STORE,'readonly');
+      var req = tx.objectStore(STORE).get(PAGE_KEY);
+      req.onsuccess = function(e){{ cb((e.target && e.target.result) || null); }};
+      req.onerror = function(){{ cb(null); }};
+    }});
+  }}
+
+  function writeLocal(record){{
+    openDB(function(db){{
+      var tx = db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).put(record);
+    }});
+  }}
+
+  function collectData(){{
     var data = {{}};
 
-    /* contenteditable cells في الجدول */
     document.querySelectorAll('[contenteditable="true"]').forEach(function(el){{
       var id = el.id || el.dataset.saveKey;
       if(!id){{
-        /* أنشئ مفتاح فريد من موضع العنصر في الـ DOM */
         var path = [];
         var node = el;
         while(node && node !== document.body){{
@@ -4307,62 +4535,263 @@ window._ALL_STAFF          = {all_staff_js};
       data[id] = el.innerHTML;
     }});
 
-    /* قوائم ul كاملة (للحفاظ على العناصر المضافة/المحذوفة) */
     document.querySelectorAll('ul[id]').forEach(function(ul){{
       data['__ul__'+ul.id] = ul.innerHTML;
     }});
 
-    /* هل صف NIL موجود؟ */
+    var offloadTbody = document.getElementById('offload-tbody');
+    if(offloadTbody) data['__offload_tbody__'] = offloadTbody.innerHTML;
+
     data['__nil_row_removed__'] = !document.getElementById('nil-row');
 
-    openDB(function(db){{
-      var tx = db.transaction(STORE,'readwrite');
-      tx.objectStore(STORE).put({{key: PAGE_KEY, data: data, ts: Date.now()}});
-    }});
+    return {{
+      key: PAGE_KEY,
+      ts: Date.now(),
+      updated_at: new Date().toISOString(),
+      cloud_path: CLOUD_PATH,
+      data: data
+    }};
   }}
 
-  /* استدعاء خارجي من زر حذف NIL */
+  function applyRecord(rec){{
+    if(!rec || !rec.data) return;
+    var data = rec.data;
+
+    if(data['__offload_tbody__']){{
+      var tbody = document.getElementById('offload-tbody');
+      if(tbody) tbody.innerHTML = data['__offload_tbody__'];
+    }}
+
+    Object.keys(data).forEach(function(k){{
+      if(k.indexOf('__ul__') === 0){{
+        var ul = document.getElementById(k.replace('__ul__',''));
+        if(ul) ul.innerHTML = data[k];
+      }}
+    }});
+
+    Object.keys(data).forEach(function(k){{
+      if(k.indexOf('__') === 0) return;
+      var el = document.getElementById(k) || document.querySelector('[data-save-key="'+k+'"]');
+      if(el && el.isContentEditable) el.innerHTML = data[k];
+    }});
+
+    if(data['__nil_row_removed__']){{
+      var nr = document.getElementById('nil-row');
+      if(nr) nr.remove();
+    }}
+
+    _lastAppliedTs = Math.max(_lastAppliedTs, Number(rec.ts || 0));
+
+    setTimeout(function(){{
+      try {{ if(typeof window.rebindSmartAutocomplete === 'function') window.rebindSmartAutocomplete(); }} catch(ex) {{}}
+      try {{ if(typeof window.initFlightLists === 'function') window.initFlightLists(); }} catch(ex) {{}}
+      try {{ if(typeof initTableCells === 'function') initTableCells(); }} catch(ex) {{}}
+      try {{ if(typeof window.initManpower === 'function') window.initManpower(); }} catch(ex) {{}}
+      try {{ if(typeof refreshSnMap === 'function') refreshSnMap(); }} catch(ex) {{}}
+      try {{ if(typeof window.renumberOffloadRows === 'function') window.renumberOffloadRows(); }} catch(ex) {{}}
+    }}, 0);
+  }}
+
+  function getGitHubPat(silent){{
+    var pat = (localStorage.getItem('gh_pat') || '').trim();
+    if(pat || silent) return pat;
+    pat = prompt('Enter GitHub token once to enable automatic report sync between phone and computer.\\n\\nPress Cancel to keep local-only saving on this device for now.');
+    if(pat){{
+      pat = pat.trim();
+      localStorage.setItem('gh_pat', pat);
+      sessionStorage.removeItem('gh_pat_skip_' + PAGE_KEY);
+      _skipAutoPrompt = false;
+      updateCloudBtnIdle();
+    }} else {{
+      sessionStorage.setItem('gh_pat_skip_' + PAGE_KEY, '1');
+      _skipAutoPrompt = true;
+      setCloudBtn('☁️ Local only', '#64748b', 2600);
+    }}
+    return (pat || '').trim();
+  }}
+
+  function ensureAutoGitHubPat(){{
+    var pat = (localStorage.getItem('gh_pat') || '').trim();
+    if(pat) return pat;
+    if(_skipAutoPrompt || _autoPromptShown) return '';
+    _autoPromptShown = true;
+    return getGitHubPat(false);
+  }}
+
+  function ensureSyncBranch(headers){{
+    var branchUrl = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/branches/' + SYNC_BRANCH;
+    var mainRefUrl = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/git/ref/heads/main';
+    var createRefUrl = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/git/refs';
+
+    return fetch(branchUrl + '?t=' + Date.now(), {{headers:headers}})
+      .then(function(r){{
+        if(r.ok) return true;
+        if(r.status === 401 || r.status === 403) throw new Error('AUTH');
+        if(r.status !== 404) throw new Error('BRANCH_' + r.status);
+        return fetch(mainRefUrl + '?t=' + Date.now(), {{headers:headers}})
+          .then(function(mainRefResp){{
+            if(mainRefResp.status === 401 || mainRefResp.status === 403) throw new Error('AUTH');
+            if(!mainRefResp.ok) throw new Error('MAINREF_' + mainRefResp.status);
+            return mainRefResp.json();
+          }})
+          .then(function(mainRef){{
+            var baseSha = (((mainRef || {{}}).object || {{}}).sha || '').trim();
+            if(!baseSha) throw new Error('MAINREF_SHA');
+            return fetch(createRefUrl, {{
+              method: 'POST',
+              headers: Object.assign({{'Content-Type':'application/json'}}, headers),
+              body: JSON.stringify({{ ref: 'refs/heads/' + SYNC_BRANCH, sha: baseSha }})
+            }});
+          }})
+          .then(function(createResp){{
+            if(createResp.ok || createResp.status === 422) return true;
+            if(createResp.status === 401 || createResp.status === 403) throw new Error('AUTH');
+            throw new Error('CREATEBRANCH_' + createResp.status);
+          }});
+      }});
+  }}
+
+  function fetchCloudRecord(){{
+    if(!CLOUD_RAW_URL) return Promise.resolve(null);
+    return fetch(CLOUD_RAW_URL + '?t=' + Date.now(), {{cache:'no-store'}})
+      .then(function(r){{
+        if(r.status === 404) return null;
+        if(!r.ok) throw new Error('RAW_' + r.status);
+        return r.json();
+      }})
+      .catch(function(){{ return null; }});
+  }}
+
+  function pushCloud(record, forcePrompt){{
+    if(!CLOUD_API_URL) return Promise.resolve(false);
+    var pat = getGitHubPat(!forcePrompt ? true : false);
+    if(!pat){{
+      if(forcePrompt){{
+        setCloudBtn('☁️ Token needed', '#b45309', 2600);
+      }}
+      return Promise.resolve(false);
+    }}
+    if(_cloudBusy){{
+      _cloudPending = true;
+      return Promise.resolve(false);
+    }}
+    _cloudBusy = true;
+    setCloudBtn('☁️ Syncing…', '#0284c7');
+
+    var headers = {{
+      'Accept':'application/vnd.github+json',
+      'Authorization':'Bearer ' + pat,
+      'X-GitHub-Api-Version':'2022-11-28'
+    }};
+    var content = btoa(unescape(encodeURIComponent(JSON.stringify(record, null, 2))));
+
+    return ensureSyncBranch(headers).then(function(){{
+      return fetch(CLOUD_API_URL + '?t=' + Date.now(), {{headers:headers}})
+      .then(function(r){{
+        if(r.status === 404) return null;
+        if(r.status === 401 || r.status === 403){{
+          localStorage.removeItem('gh_pat');
+          throw new Error('AUTH');
+        }}
+        if(!r.ok) throw new Error('GET_' + r.status);
+        return r.json();
+      }})
+      .then(function(existing){{
+        var body = {{
+          message: 'Sync report edits for ' + PAGE_KEY,
+          content: content,
+          branch: SYNC_BRANCH
+        }};
+        if(existing && existing.sha) body.sha = existing.sha;
+        return fetch(CLOUD_API_URL, {{
+          method: 'PUT',
+          headers: Object.assign({{'Content-Type':'application/json'}}, headers),
+          body: JSON.stringify(body)
+        }});
+      }})
+      .then(function(r){{
+        if(r.status === 401 || r.status === 403){{
+          localStorage.removeItem('gh_pat');
+          throw new Error('AUTH');
+        }}
+        if(!r.ok) throw new Error('PUT_' + r.status);
+        return r.json();
+      }})
+      .then(function(){{
+        _cloudBusy = false;
+        _cloudPending = false;
+        _lastAppliedTs = Math.max(_lastAppliedTs, Number(record.ts || 0));
+        setCloudBtn('☁️ Synced', '#16a34a', 2500);
+        return true;
+      }});
+    }})
+      .catch(function(err){{
+        _cloudBusy = false;
+        _cloudPending = false;
+        if((err && err.message) === 'AUTH'){{
+          setCloudBtn('☁️ Re-enter token', '#dc2626', 3200);
+        }} else {{
+          setCloudBtn('☁️ Sync failed', '#dc2626', 3200);
+        }}
+        return false;
+      }});
+  }}
+
+  function scheduleCloudPush(record){{
+    if(!CLOUD_API_URL) return;
+    var pat = ensureAutoGitHubPat();
+    if(!pat) return;
+    clearTimeout(_cloudTimer);
+    _cloudTimer = setTimeout(function(){{
+      pushCloud(record, false);
+    }}, 1400);
+  }}
+
+  function saveNow(forceCloudNow){{
+    var record = collectData();
+    writeLocal(record);
+    if(forceCloudNow) pushCloud(record, false); else scheduleCloudPush(record);
+    return record;
+  }}
+
   window.triggerAutosave = function(){{ saveNow(); }};
+  window.forceCloudSync = function(){{
+    var record = saveNow();
+    return pushCloud(record, true).then(function(ok){{
+      if(ok){{
+        alert('Cloud sync completed. When you open the same report on another device, the latest edits will appear there.');
+      }}
+      return ok;
+    }});
+  }};
 
   function restoreSaved(){{
-    openDB(function(db){{
-      var tx = db.transaction(STORE,'readonly');
-      var req = tx.objectStore(STORE).get(PAGE_KEY);
-      req.onsuccess = function(e){{
-        var rec = e.target && e.target.result;
-        if(!rec || !rec.data) return;
-        var data = rec.data;
+    Promise.all([
+      new Promise(function(resolve){{ readLocal(resolve); }}),
+      fetchCloudRecord()
+    ]).then(function(results){{
+      var localRec = results[0];
+      var cloudRec = results[1];
+      var chosen = null;
 
-        /* استعادة قوائم ul أولاً (تضمن وجود العناصر) */
-        Object.keys(data).forEach(function(k){{
-          if(k.indexOf('__ul__') === 0){{
-            var ul = document.getElementById(k.replace('__ul__',''));
-            if(ul) ul.innerHTML = data[k];
-          }}
-        }});
+      if(localRec && cloudRec){{
+        chosen = Number(cloudRec.ts || 0) > Number(localRec.ts || 0) ? cloudRec : localRec;
+      }} else {{
+        chosen = cloudRec || localRec;
+      }}
 
-        /* استعادة contenteditable */
-        Object.keys(data).forEach(function(k){{
-          if(k.indexOf('__') === 0) return;
-          var el = document.getElementById(k) || document.querySelector('[data-save-key="'+k+'"]');
-          if(el && el.isContentEditable) el.innerHTML = data[k];
-        }});
-
-        /* إزالة صف NIL إذا كان محذوفاً */
-        if(data['__nil_row_removed__']){{
-          var nr = document.getElementById('nil-row');
-          if(nr) nr.remove();
-        }}
-
-        /* بعد استعادة innerHTML تُفقد listeners — أعد ربط autocomplete */
-        setTimeout(function(){{
-          try {{ if(typeof window.rebindSmartAutocomplete === 'function') window.rebindSmartAutocomplete(); }} catch(ex) {{}}
-        }}, 0);
-      }};
+      if(chosen) applyRecord(chosen);
+      if(cloudRec && (!localRec || Number(cloudRec.ts || 0) > Number(localRec.ts || 0))){{
+        writeLocal(cloudRec);
+        setCloudBtn('☁️ Cloud loaded', '#16a34a', 2200);
+      }} else if(localRec && cloudRec && Number(localRec.ts || 0) > Number(cloudRec.ts || 0)){{
+        scheduleCloudPush(localRec);
+      }}
+    }}).catch(function(err){{
+      console.warn('[autosave] restore failed', err);
     }});
   }}
 
-  /* ── ربط الحفظ بكل حدث تعديل ── */
   function _schedSave(){{
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(saveNow, 400);
@@ -4370,8 +4799,14 @@ window._ALL_STAFF          = {all_staff_js};
 
   document.addEventListener('input',  _schedSave);
   document.addEventListener('keyup',  _schedSave);
+  document.addEventListener('change', _schedSave, true);
+  document.addEventListener('blur',   _schedSave, true);
+  document.addEventListener('visibilitychange', function(){{
+    if(document.visibilityState === 'hidden') saveNow(true);
+  }});
+  window.addEventListener('pagehide', function(){{ saveNow(true); }});
+  window.addEventListener('beforeunload', function(){{ saveNow(false); }});
 
-  /* MutationObserver للقوائم (إضافة/حذف عناصر) */
   var mo = new MutationObserver(function(muts){{
     var changed = muts.some(function(m){{
       return m.type==='childList' || m.type==='characterData';
@@ -4380,11 +4815,19 @@ window._ALL_STAFF          = {all_staff_js};
   }});
   mo.observe(document.body, {{childList:true, subtree:true, characterData:true}});
 
-  /* استعادة البيانات بعد تحميل الصفحة */
   if(document.readyState === 'loading'){{
     document.addEventListener('DOMContentLoaded', restoreSaved);
   }} else {{
     restoreSaved();
+  }}
+
+  updateCloudBtnIdle();
+
+  var cloudBtnEl = cloudBtn();
+  if(cloudBtnEl){{
+    cloudBtnEl.addEventListener('click', function(){{
+      window.forceCloudSync();
+    }});
   }}
 }})();
 </script>
@@ -4903,17 +5346,15 @@ function parseImportFlightDispatchText(html, shiftKey) {{
     var target = normShift(SHIFT_MAP[shiftKey] || shiftKey || "Morning");
     var knownDepts = {{
         "documentation": "Documentation",
-        "flight dispatch (export)": "Flight Dispatch (Export)",
-        "flight dispatch (import)": "Flight Dispatch (Import)",
+        "flight dispatch (export)": "Flight Dispatch",
+        "flight dispatch (import)": "Flight Dispatch",
         "import checkers": "Import Checkers",
         "import operators": "Import Operators",
         "release control": "Release Control",
         "supervisors": "Supervisors"
     }};
-    var result = {{
-        "Flight Dispatch (Export)": [],
-        "Flight Dispatch (Import)": []
-    }};
+    var result = [];
+    var seen = {{}};
     var currentDept = "";
     var currentShift = "";
 
@@ -4949,10 +5390,16 @@ function parseImportFlightDispatchText(html, shiftKey) {{
             var mx = line.match(/^(.+?)\s*[·•\-–]\s*(\d{3,6})\b.*$/);
             if (!mx) return;
 
-            result[knownDepts[currentDept]].push({{
-                name: mx[1].trim(),
-                sn: mx[2].trim(),
-                dept: knownDepts[currentDept]
+            var sn = mx[2].trim();
+            var name = mx[1].trim();
+            var key = sn + "|" + name.toLowerCase();
+            if (seen[key]) return;
+            seen[key] = true;
+
+            result.push({{
+                name: name,
+                sn: sn,
+                dept: "Flight Dispatch"
             }});
         }});
 
@@ -4960,7 +5407,8 @@ function parseImportFlightDispatchText(html, shiftKey) {{
 }}
 
 function buildEmpRow(name, sn) {{
-    return '<div class="mp-emp"><span class="emp-sn">' + sn + '</span><span class="emp-name">' + name + '</span></div>';
+    var snHtml = sn ? '<span class="emp-sn">' + sn + '</span>' : '';
+    return '<div class="mp-emp">' + snHtml + '<span class="emp-name">' + name + '</span></div>';
 }}
 
 function loadManpower() {{
@@ -5004,12 +5452,9 @@ function loadManpower() {{
         if (supportEmps.length) grouped["C) Support Team"] = supportEmps.slice();
 
         if (importHtml) {{
-            var fdGroups = parseImportFlightDispatchText(importHtml, shift);
-            if (fdGroups["Flight Dispatch (Export)"].length) {{
-                grouped["Flight Dispatch (Export)"] = fdGroups["Flight Dispatch (Export)"].slice();
-            }}
-            if (fdGroups["Flight Dispatch (Import)"].length) {{
-                grouped["Flight Dispatch (Import)"] = fdGroups["Flight Dispatch (Import)"].slice();
+            var fdStaff = parseImportFlightDispatchText(importHtml, shift);
+            if (fdStaff.length) {{
+                grouped["Flight Dispatch"] = fdStaff.slice();
             }}
         }}
 
@@ -5044,7 +5489,7 @@ function copyManpower() {{
     for (var dept in mpData) {{
         text += dept + ":\\n";
         mpData[dept].forEach(function(e) {{
-            text += "  SN " + e.sn + " — " + e.name + "\\n";
+            text += "  " + (e.sn ? e.sn + " — " : "") + e.name + "\\n";
         }});
         text += "\\n";
     }}
@@ -5229,10 +5674,17 @@ def _extract_report_content_html(page_html: str) -> str:
         flags=re.DOTALL | re.IGNORECASE,
     )
 
-    # ── 3) Strip attributes invalid in email clients ──
+    # ── 3) Remove interactive controls from email HTML ──
+    html = re.sub(r'<button\b[^>]*>.*?</button>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    html = re.sub(r'<[^>]+\sdata-no-copy="1"[^>]*>.*?</[^>]+>', '', html, flags=re.DOTALL | re.IGNORECASE)
+    html = re.sub(r'<[^>]+\sdata-email-remove="1"[^>]*>.*?</[^>]+>', '', html, flags=re.DOTALL | re.IGNORECASE)
+
+    # ── 4) Strip attributes invalid in email clients ──
     html = re.sub(r'\s+contenteditable="[^"]*"', '', html)
     html = re.sub(r'\s+tabindex="[^"]*"', '', html)
     html = re.sub(r'\s+class="[^"]*"', '', html)
+    html = re.sub(r'\s+data-label="[^"]*"', '', html)
+    html = re.sub(r'\s+data-col="[^"]*"', '', html)
 
     return html
 
@@ -5241,10 +5693,10 @@ def _build_email_html(page_html: str) -> str:
     """Build a mobile-friendly HTML email — left-aligned, no centering."""
     report_html = _extract_report_content_html(page_html)
     # Make the report table full-width regardless of inline width/max-width
-    report_html = re.sub(r'width="(760|1100)"', 'width="100%"', report_html)
+    report_html = re.sub(r'width="(760|900|1100|1180)"', 'width="1180"', report_html)
     report_html = re.sub(
-        r'style="width:(760|1100)px;[^"]*"',
-        'style="width:100%; max-width:100%; background-color:#ffffff; border:none;"',
+        r'style="width:(760|900|1100|1180)px;[^"]*"',
+        'style="width:1180px; max-width:1180px; background-color:#ffffff; border:none; table-layout:fixed;"',
         report_html,
     )
 
@@ -5276,7 +5728,7 @@ def _build_email_html(page_html: str) -> str:
         line-height: 1.65 !important;
       }}
       .mobile-wrap {{ padding: 4px 6px 14px !important; }}
-      table[width="100%"] {{ width: 100% !important; }}
+      table[width="100%"], table[width="900"] {{ width: 100% !important; max-width: 900px !important; }}
       td[style*="font-size:20px"] div {{ font-size: 18px !important; }}
       td[style*="font-size:13.5px"], div[style*="font-size:13.5px"], span[style*="font-size:12px"], td[style*="font-size:12px"] {{
         font-size: 15px !important;
@@ -5296,6 +5748,23 @@ def _build_email_html(page_html: str) -> str:
   </div>
 </body>
 </html>"""
+
+
+def _get_force_send_html_override() -> Optional[str]:
+    """Read manual-send edited HTML from repository_dispatch payload, if provided."""
+    event_path = os.environ.get("GITHUB_EVENT_PATH", "").strip()
+    if not event_path or not Path(event_path).exists():
+        return None
+    try:
+        event_data = json.loads(Path(event_path).read_text(encoding="utf-8"))
+        payload = event_data.get("client_payload") or {}
+        edited_html_b64 = str(payload.get("edited_html_b64") or "").strip()
+        if not edited_html_b64:
+            return None
+        return base64.b64decode(edited_html_b64).decode("utf-8")
+    except Exception as exc:
+        print(f"  [email] Could not decode edited HTML from event payload: {exc}")
+        return None
 
 
 def send_shift_report_email(date_dir: str, shift: str) -> None:
@@ -5327,12 +5796,16 @@ def send_shift_report_email(date_dir: str, shift: str) -> None:
         print("  [email] Skipping — EMAIL_SENDER / EMAIL_APP_PASSWORD / recipients not set.")
         return
 
-    report_file = DOCS_DIR / date_dir / shift / "index.html"
-    if not report_file.exists():
-        print(f"  [email] Report not found: {report_file}")
-        return
+    page_html = _get_force_send_html_override()
+    if page_html:
+        print("  [email] Using edited HTML from dispatch payload.")
+    else:
+        report_file = DOCS_DIR / date_dir / shift / "index.html"
+        if not report_file.exists():
+            print(f"  [email] Report not found: {report_file}")
+            return
+        page_html = report_file.read_text(encoding="utf-8")
 
-    page_html = report_file.read_text(encoding="utf-8")
     html_content = _build_email_html(page_html)
 
     shift_names = {
@@ -5573,7 +6046,8 @@ def main() -> None:
     if force_date and force_shift:
         print(f"[force-send] Sending {force_shift} report for {force_date}…")
         report_file = DOCS_DIR / force_date / force_shift / "index.html"
-        if not report_file.exists():
+        payload_html = _get_force_send_html_override()
+        if not report_file.exists() and not payload_html:
             print(f"[force-send] Report not found: {report_file} — rebuilding first…")
             build_shift_report(force_date, force_shift)
         # احذف ملف .sent حتى يُرسل حتى لو أُرسل مسبقاً
