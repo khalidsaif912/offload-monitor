@@ -8,33 +8,13 @@
   <style>
     *,*::before,*::after{box-sizing:border-box;}
     body{margin:0;padding:0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;}
-    .page-wrap{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;overflow-x:auto;}
-    #report-content{width:1180px;max-width:100%;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}
-    .btn-bar{max-width:1180px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}
+    .page-wrap{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;}
+    #report-content{width:100%;max-width:1100px;background:#fff;border:1px solid #d0d5e8;margin:0 auto;}
+    .btn-bar{max-width:1100px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}
     .btn-bar button{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}
-    /* Bullet fix: contenteditable disables list-style in Chrome/Safari — use ::before */
-    #ul-loadplan li,#ul-advloading li,#ul-handover li,#ul-briefings li,#ul-opnotes li,
-    #ul-sickleave li,#ul-annualleave li,#ul-trainee li,#ul-overtime li,
-    #ul-ctu li,#ul-inventory li,#ul-support li,#ul-supervisors li,
-    #ul-fd-export li,#ul-fd-import li,#ul-flight-dispatch li,[id^="ul-dept-"] li{
-      display:block;list-style:none!important;padding-left:14px;position:relative;
-    }
-    #ul-loadplan li::before,#ul-advloading li::before,#ul-handover li::before,#ul-briefings li::before,
-    #ul-opnotes li::before,#ul-sickleave li::before,#ul-annualleave li::before,#ul-trainee li::before,
-    #ul-overtime li::before,#ul-ctu li::before,#ul-inventory li::before,#ul-support li::before,
-    #ul-supervisors li::before,#ul-fd-export li::before,#ul-fd-import li::before,
-    #ul-flight-dispatch li::before,[id^="ul-dept-"] li::before{
-      content:'•';position:absolute;left:1px;top:0;color:#1b1f2a;font-weight:700;
-    }
-    #ul-csdrescreening,#ul-special-handover,#ul-other{list-style:none!important;padding:0!important;margin:4px 0 10px 22px!important;color:#1b1f2a;}
-    #ul-csdrescreening li,#ul-special-handover li,#ul-other li{display:block;position:relative;list-style:none!important;padding-left:14px;min-height:18px;}
-    #ul-csdrescreening li::before,#ul-special-handover li::before,#ul-other li::before{content:'•';position:absolute;left:1px;top:0;color:#1b1f2a;font-weight:700;}
-    /* جدول الأوفلود — حل جذري للتنسيق على الشاشة والجوال */
-    .offload-wrap{width:100%;max-width:100%;overflow:visible;}
-    .offload-table{width:100%;table-layout:fixed;border-collapse:collapse;}
-    .offload-table td,.offload-table th{word-break:break-word;overflow-wrap:anywhere;}
-    .offload-table .offload-idx{position:relative;}
-    .offload-table .offload-row-num{display:inline-block;min-width:14px;}
+    /* جدول الأوفلود — يسمح بالتمرير الأفقي على الجوال */
+    .offload-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}
+    .offload-scroll table{min-width:900px;width:100%;}
 
     /* ══════════════ MOBILE ══════════════ */
     @media(max-width:700px){
@@ -62,17 +42,6 @@
       .mp-list li{font-size:12px!important;line-height:1.7!important;}
       .mp-list span[style*="width:200px"]{width:150px!important;}
 
-      /* الأوفلود على الجوال — جدول طبيعي مع سحب أفقي */
-      .offload-wrap{width:100%;max-width:100%;overflow-x:auto!important;overflow-y:hidden!important;-webkit-overflow-scrolling:touch;}
-      .offload-table{width:1180px!important;min-width:1180px!important;table-layout:fixed!important;border-collapse:collapse!important;}
-      .offload-table thead{display:table-header-group!important;}
-      .offload-table tbody{display:table-row-group!important;}
-      .offload-table tr{display:table-row!important;margin:0!important;border:none!important;background:transparent!important;}
-      .offload-table th,.offload-table td{display:table-cell!important;width:auto!important;text-align:center!important;vertical-align:middle!important;padding:7px 6px!important;min-height:auto!important;border-left:1px solid #d0d9ee!important;border-right:1px solid #d0d9ee!important;}
-      .offload-table td::before{content:none!important;display:none!important;}
-      .offload-table td.offload-idx{padding:18px 6px 7px 28px!important;min-width:58px!important;}
-      .offload-table .offload-row-delete{top:4px!important;left:4px!important;z-index:2;}
-
       /* footer */
       .report-footer-td{padding:14px 12px!important;font-size:11px!important;}
 
@@ -92,9 +61,9 @@
 </head>
 <body>
 <div class="page-wrap">
-<div style="width:1180px;max-width:100%;margin:0 auto;">
+<div style="max-width:1100px;margin:0 auto;">
 
-<table width="1180" cellpadding="0" cellspacing="0" border="0" id="report-content"
+<table width="100%" cellpadding="0" cellspacing="0" border="0" id="report-content"
        style="background-color:#ffffff; border:1px solid #d0d5e8;">
 
   <!-- ═══ HEADER ═══ -->
@@ -130,6 +99,16 @@
     </td>
   </tr>
 
+  <!-- ═══ BACK LINK ═══ -->
+  <tr class="back-link-row" id="back-link-row">
+    <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
+      <a href="../../index.html"
+         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none; display:inline-block;">
+        &#8592; Back to Index
+      </a>
+    </td>
+  </tr>
+
   <!-- ═══ SECTION 1: OPERATIONAL ACTIVITIES ═══ -->
   <tr><td class="sec-pad" style="padding:18px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -142,19 +121,16 @@
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
       <strong style="color:#0b3a78;">Load Plan:</strong>
-<ul id="ul-loadplan" data-flight-list="1" style="margin:4px 0 6px 22px; padding-left:18px; color:#1b1f2a; list-style-type:disc; list-style-position:outside;">
-  <li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li>
-</ul>
-
-<strong style="color:#0b3a78;">Advance Loading:</strong>
-<ul id="ul-advloading" data-flight-list="1" style="margin:4px 0 6px 22px; padding-left:18px; color:#1b1f2a; list-style-type:disc; list-style-position:outside;">
-  <li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li>
-</ul>
-
-<strong style="color:#0b3a78;">CSD Rescreening:</strong>
-<ul id="ul-csdrescreening" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a; list-style:none;">
-  <li contenteditable="true" tabindex="52" style="outline:none; min-width:40px; padding-left:14px; position:relative;">&nbsp;</li>
-</ul>
+      <ul id="ul-loadplan" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <button onclick="addListItem('ul-loadplan')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+      <br>
+      <strong style="color:#0b3a78;">Advance Loading:</strong>
+      <ul id="ul-advloading" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <button onclick="addListItem('ul-advloading')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+      <br>
+      <strong style="color:#0b3a78;">CSD Rescreening:</strong>
+      <ul id="ul-csdrescreening" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="52" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <button onclick="addListItem('ul-csdrescreening')" style="font-size:11px;padding:1px 8px;margin-bottom:4px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -183,6 +159,7 @@
         <li contenteditable="true" tabindex="69" style="outline:none;">Instructions on attaching printed ULD tags on trolleys.</li>
         <li contenteditable="true" tabindex="70" style="outline:none;">Stationery logbook kept at supervisor desk.</li>
       </ul>
+      <button onclick="addListItem('ul-briefings')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -219,6 +196,7 @@
         <li contenteditable="true" tabindex="81" style="outline:none;">DG embargo station check completed.</li>
         <li contenteditable="true" tabindex="82" style="outline:none;">Pigeonhole check done for any pending documents.</li>
       </ul>
+      <button onclick="addListItem('ul-opnotes')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#f4f5f9;border:1px solid #5b6a8a;color:#3d4a63;border-radius:3px;">+ Add</button>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
@@ -245,7 +223,65 @@
         </td>
       </tr>
     </table>
-    <div class="offload-wrap" style="margin-top:12px;"><table class="offload-table" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;table-layout:fixed;width:100%;font-family:Calibri,Arial,sans-serif;margin-top:12px;margin-bottom:14px;"><thead><tr><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:6%;word-break:normal;overflow-wrap:anywhere;">ITEM</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:8%;word-break:normal;overflow-wrap:anywhere;">DATE</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:8%;word-break:normal;overflow-wrap:anywhere;">FLIGHT</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:8%;word-break:normal;overflow-wrap:anywhere;">STD/ETD</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:5%;word-break:normal;overflow-wrap:anywhere;">DEST</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:10%;word-break:normal;overflow-wrap:anywhere;">Email Received Time</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:11%;word-break:normal;overflow-wrap:anywhere;">Physical Cargo Received from Ramp</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:10%;word-break:normal;overflow-wrap:anywhere;">Trolley/ ULD Number</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:11%;word-break:normal;overflow-wrap:anywhere;">Offloading Process Completed in CMS</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:9%;word-break:normal;overflow-wrap:anywhere;">Offloading Pieces Verification</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:7%;word-break:normal;overflow-wrap:anywhere;">Offloading Reason</th><th scope="col" style="padding:8px 6px;background-color:#dce6f4;color:#1b1f2a;font-weight:700;font-size:10.5px;font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8;text-align:center;vertical-align:middle;width:7%;word-break:normal;overflow-wrap:anywhere;">Remarks/Additional Information</th></tr></thead><tbody id="offload-tbody"><tr id="nil-row"><td colspan="12" style="padding:10px 10px;border:1px solid #d0d9ee;color:#64748b;text-align:center;font-style:italic;font-size:12px;font-family:Calibri,Arial,sans-serif;background:#ffffff;"><span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL — No offload data recorded for this shift.</span>&nbsp;<button type="button" data-no-copy="1" data-email-remove="1" onclick="var r=document.getElementById('nil-row');if(r)r.remove();triggerAutosave();" style="font-size:10px;padding:1px 7px;cursor:pointer;background:#dce6f4;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;vertical-align:middle;">×</button></td></tr><tr><td class="offload-idx" data-label="ITEM" style="position:relative;padding:18px 6px 7px 24px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;width:6%;min-width:56px;"><button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;padding:0;margin:0;border:1px solid #0b3a78;background:#dce6f4;color:#0b3a78;border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">×</button><strong class="offload-row-num">1</strong></td><td data-label="DATE" data-col="date" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="34">&nbsp;</td><td data-label="FLIGHT" data-col="flight" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="35">&nbsp;</td><td data-label="STD/ETD" data-col="std" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="36">&nbsp;</td><td data-label="DEST" data-col="dest" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="37">&nbsp;</td><td data-label="Email Received Time" data-col="email" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="38">&nbsp;</td><td data-label="Physical Cargo Received from Ramp" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="39">&nbsp;</td><td data-label="Trolley/ ULD Number" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="40">&nbsp;</td><td data-label="Offloading Process Completed in CMS" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="41">&nbsp;</td><td data-label="Offloading Pieces Verification" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="42">&nbsp;</td><td data-label="Offloading Reason" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="43">&nbsp;</td><td data-label="Remarks/Additional Information" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="44">&nbsp;</td></tr><tr><td class="offload-idx" data-label="ITEM" style="position:relative;padding:18px 6px 7px 24px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;width:6%;min-width:56px;"><button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;padding:0;margin:0;border:1px solid #0b3a78;background:#dce6f4;color:#0b3a78;border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">×</button><strong class="offload-row-num">2</strong></td><td data-label="DATE" data-col="date" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="45">&nbsp;</td><td data-label="FLIGHT" data-col="flight" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="46">&nbsp;</td><td data-label="STD/ETD" data-col="std" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="47">&nbsp;</td><td data-label="DEST" data-col="dest" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="48">&nbsp;</td><td data-label="Email Received Time" data-col="email" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="49">&nbsp;</td><td data-label="Physical Cargo Received from Ramp" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="50">&nbsp;</td><td data-label="Trolley/ ULD Number" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="51">&nbsp;</td><td data-label="Offloading Process Completed in CMS" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="52">&nbsp;</td><td data-label="Offloading Pieces Verification" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="53">&nbsp;</td><td data-label="Offloading Reason" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="54">&nbsp;</td><td data-label="Remarks/Additional Information" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="55">&nbsp;</td></tr><tr><td class="offload-idx" data-label="ITEM" style="position:relative;padding:18px 6px 7px 24px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;width:6%;min-width:56px;"><button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;padding:0;margin:0;border:1px solid #0b3a78;background:#dce6f4;color:#0b3a78;border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">×</button><strong class="offload-row-num">3</strong></td><td data-label="DATE" data-col="date" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="56">&nbsp;</td><td data-label="FLIGHT" data-col="flight" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="57">&nbsp;</td><td data-label="STD/ETD" data-col="std" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="58">&nbsp;</td><td data-label="DEST" data-col="dest" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="59">&nbsp;</td><td data-label="Email Received Time" data-col="email" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="60">&nbsp;</td><td data-label="Physical Cargo Received from Ramp" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="61">&nbsp;</td><td data-label="Trolley/ ULD Number" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="62">&nbsp;</td><td data-label="Offloading Process Completed in CMS" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="63">&nbsp;</td><td data-label="Offloading Pieces Verification" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="64">&nbsp;</td><td data-label="Offloading Reason" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="65">&nbsp;</td><td data-label="Remarks/Additional Information" style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;" contenteditable="true" tabindex="66">&nbsp;</td></tr></tbody></table></div>
+    <div class="offload-scroll" style="margin-top:12px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; margin-top:12px; margin-bottom:14px;">
+      <tr><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:40px;">ITEM</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">DATE</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">FLIGHT</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">STD/ETD</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:60px;">DEST</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:90px;">Email Received Time</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Physical Cargo Received from Ramp</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:90px;">Trolley/ ULD Number</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Process Completed in CMS</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Pieces Verification</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Reason</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; ">Remarks/Additional Information</td></tr>
+      <tbody id="offload-tbody">
+      
+      <tr id="nil-row">
+        <td colspan="12" style="padding:10px 10px; border:1px solid #d0d9ee;
+            color:#64748b; text-align:center; font-style:italic; font-size:12px;
+            font-family:Calibri,Arial,sans-serif; background:#ffffff;">
+          <span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL — No offload data recorded for this shift.</span>
+          &nbsp;<button onclick="var r=document.getElementById('nil-row');if(r)r.remove();triggerAutosave();"
+            style="font-size:10px;padding:1px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;vertical-align:middle;">✕ Remove</button>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;"><strong>1</strong></td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="date">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="flight">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="std">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="dest">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="email">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;"><strong>2</strong></td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="date">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="flight">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="std">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="dest">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="email">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+      </tr>
+      <tr>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;"><strong>3</strong></td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="date">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="flight">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="std">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="dest">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="email">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+      </tr>
+      </tbody>
+    </table></div>
     <div style="border-top:1px solid #e4e9f5; margin-top:16px;"></div>
   </td></tr>
 
@@ -283,35 +319,39 @@
         <td colspan="2" valign="top" style="font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.8;">
           
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Supervisors:</div>
-      <ul id="ul-supervisors" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="80250" data-name="Jay Macalino" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">80250</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Jay Macalino</span></span></li>
+      <ul id="ul-supervisors" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="80250" data-name="Jay Macalino" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN80250</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Jay Macalino</span></span></li>
 </ul>
+      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Load Control:</div>
-      <ul id="ul-dept-loadcontrol" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82551" data-name="Omar Al Obaidi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82551</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Omar Al Obaidi</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="81409" data-name="Qasim Al Maqbali" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">81409</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Qasim Al Maqbali</span></span></li>
+      <ul id="ul-dept-loadcontrol" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82551" data-name="Omar Al Obaidi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82551</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Omar Al Obaidi</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="81409" data-name="Qasim Al Maqbali" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN81409</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Qasim Al Maqbali</span></span></li>
 </ul>
+      <button onclick="addListItem('ul-dept-loadcontrol')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Export Checker:</div>
-      <ul id="ul-dept-exportchecker" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82464" data-name="Wissam Al Kharusi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82464</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Wissam Al Kharusi</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82649" data-name="Saif Al Mahrizi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82649</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Saif Al Mahrizi</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="8930" data-name="Fahim Al Hashni" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">8930</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Fahim Al Hashni</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82283" data-name="Ahmed Al Mawali" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82283</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Ahmed Al Mawali</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82574" data-name="Ali Al Mamari" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82574</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Ali Al Mamari</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82577" data-name="Ali Al Marjubi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82577</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Ali Al Marjubi</span></span></li>
+      <ul id="ul-dept-exportchecker" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82464" data-name="Wissam Al Kharusi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82464</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Wissam Al Kharusi</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82649" data-name="Saif Al Mahrizi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82649</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Saif Al Mahrizi</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="8930" data-name="Fahim Al Hashni" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN8930</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Fahim Al Hashni</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82283" data-name="Ahmed Al Mawali" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82283</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Ahmed Al Mawali</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82574" data-name="Ali Al Mamari" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82574</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Ali Al Mamari</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82577" data-name="Ali Al Marjubi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82577</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Ali Al Marjubi</span></span></li>
 </ul>
+      <button onclick="addListItem('ul-dept-exportchecker')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
       <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Export Operators:</div>
-      <ul id="ul-dept-exportoperators" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82588" data-name="Ghassan Al Tarsi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82588</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Ghassan Al Tarsi</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82468" data-name="Badar Al Fulaiti" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82468</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Badar Al Fulaiti</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82534" data-name="Muadh Al Qasimi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82534</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Muadh Al Qasimi</span></span></li>
+      <ul id="ul-dept-exportoperators" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82588" data-name="Ghassan Al Tarsi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82588</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Ghassan Al Tarsi</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82468" data-name="Badar Al Fulaiti" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82468</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Badar Al Fulaiti</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82534" data-name="Muadh Al Qasimi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82534</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Muadh Al Qasimi</span></span></li>
 </ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">CTU Staff On Duty:</div><ul id="ul-ctu" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Inventory:</div><ul id="ul-inventory" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82592" data-name="Mohamed Al Subhi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82592</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Mohamed Al Subhi</span></span></li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Support Team:</div><ul id="ul-support" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82653" data-name="Ahmed Al Sabii" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82653</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Ahmed Al Sabii</span></span></li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Flight Dispatch:</div><ul id="ul-flight-dispatch" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82431" data-name="MAHMOOD AL BALUSHI" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82431</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">MAHMOOD AL BALUSHI</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82331" data-name="ISMAIL AL MAHARBI" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82331</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">ISMAIL AL MAHARBI</span></span></li>
-<li contenteditable="true" style="outline:none;"><span data-sn="82416" data-name="NASSER AL OMAIRI" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">82416</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">NASSER AL OMAIRI</span></span></li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Sick Leave / No Show / Others:</div><ul id="ul-sickleave" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Annual Leave / Course / Off in Lieu:</div><ul id="ul-annualleave" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Trainee:</div><ul id="ul-trainee" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>
-          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Overtime Justification:</div><ul id="ul-overtime" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul>
+      <button onclick="addListItem('ul-dept-exportoperators')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">B) CTU Staff On Duty:</div><ul id="ul-ctu" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-ctu')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Inventory:</div><ul id="ul-inventory" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82592" data-name="Mohamed Al Subhi" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82592</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Mohamed Al Subhi</span></span></li></ul><button onclick="addListItem('ul-inventory')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">C) Support Team:</div><ul id="ul-support" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82653" data-name="Ahmed Al Sabii" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82653</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">Ahmed Al Sabii</span></span></li></ul><button onclick="addListItem('ul-support')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Flight Dispatch (Export):</div><ul id="ul-fd-export" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82431" data-name="MAHMOOD AL BALUSHI" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82431</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">MAHMOOD AL BALUSHI</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82331" data-name="ISMAIL AL MAHARBI" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82331</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">ISMAIL AL MAHARBI</span></span></li></ul><button onclick="addListItem('ul-fd-export')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Flight Dispatch (Import):</div><ul id="ul-fd-import" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82416" data-name="NASSER AL OMAIRI" style="font-family:Calibri,Arial,sans-serif;"><strong style="color:#1b1f2a;">SN82416</strong>&nbsp;&nbsp;<span style="color:#1b1f2a;">NASSER AL OMAIRI</span></span></li></ul><button onclick="addListItem('ul-fd-import')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">D) Sick Leave / No Show / Others:</div><ul id="ul-sickleave" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-sickleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">E) Annual Leave / Course / Off in Lieu:</div><ul id="ul-annualleave" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-annualleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">F) Trainee:</div><ul id="ul-trainee" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-trainee')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">G) Overtime Justification:</div><ul id="ul-overtime" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-overtime')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
         </td>
       </tr>
     </table>
@@ -345,50 +385,30 @@
       </tr>
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-handover" style="margin:0 0 10px 22px; padding:0;">
-        <li contenteditable="true" tabindex="90" style="outline:none;">READ AND SIGN.</li>
-        <li contenteditable="true" tabindex="91" style="outline:none;">Shell &amp; Al-Maha Card Fuel.</li>
-        <li contenteditable="true" tabindex="92" style="outline:none;">DIP MAIL Cage Keys.</li>
-        <li contenteditable="true" tabindex="93" style="outline:none;">Supervisor mobile phone H/O in good condition.</li>
-        <li contenteditable="true" tabindex="94" style="outline:none;">DSE RADIO.</li>
-        <li contenteditable="true" tabindex="95" style="outline:none;">All trolleys arranged for early flight.</li>
+      <ul style="margin:0 0 10px 22px; padding:0;">
+        <li>READ AND SIGN.</li>
+        <li>Shell &amp; Al-Maha Card Fuel.</li>
+        <li>DIP MAIL Cage Keys.</li>
+        <li>Supervisor mobile phone H/O in good condition.</li>
+        <li>DSE RADIO.</li>
+        <li>All trolleys arranged for early flight.</li>
       </ul>
     </div>
     <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
   </td></tr>
 
-  <!-- ═══ SECTION 9: SPECIAL H/O ═══ -->
-  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0">
-      <tr>
-        <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
-        <td style="padding:6px 10px; background-color:#eef3fc;">
-          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">9-&nbsp; Special H/O:</span>
-        </td>
-      </tr>
-    </table>
-    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-special-handover" style="margin:0 0 10px 22px; padding:0; list-style:none; color:#1b1f2a;">
-        <li contenteditable="true" tabindex="96" style="outline:none; padding-left:14px; position:relative;">&nbsp;</li>
-      </ul>
-    </div>
-    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
-  </td></tr>
-
-  <!-- ═══ SECTION 10: OTHER ═══ -->
+  <!-- ═══ SECTION 9: OTHER ═══ -->
   <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
     <table width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>
         <td width="4" style="background-color:#7a5200;">&nbsp;</td>
         <td style="padding:6px 10px; background-color:#fdf6ec;">
-          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#7a5200; letter-spacing:1px;">10.&nbsp; OTHER</span>
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#7a5200; letter-spacing:1px;">9.&nbsp; OTHER</span>
         </td>
       </tr>
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-other" style="margin:0 0 10px 22px; padding:0; list-style:none; color:#1b1f2a;">
-        <li contenteditable="true" tabindex="97" style="outline:none; padding-left:14px; position:relative;">&nbsp;</li>
-      </ul>
+      &nbsp;
     </div>
   </td></tr>
 
@@ -477,7 +497,6 @@
 <!-- ═══ BUTTONS BAR ═══ -->
 <div class="btn-bar" data-no-copy="1">
   <button id="btn-copy" type="button" data-no-copy="1" style="background:#0b3a78;box-shadow:0 2px 8px rgba(11,58,120,.25);">📋 Copy Report</button>
-  <button id="btn-cloud-sync" type="button" data-no-copy="1" style="background:#0f766e;box-shadow:0 2px 8px rgba(15,118,110,.25);">☁️ Cloud Sync</button>
   <button id="btn-manage-emails" type="button" data-no-copy="1" style="background:#475569;box-shadow:0 2px 8px rgba(71,85,105,.25);">📝 Edit Email List</button>
   <button id="btn-email" type="button" data-no-copy="1" style="background:#c2410c;box-shadow:0 2px 8px rgba(194,65,12,.25);">✉️ Send Email Now</button>
 </div>
@@ -490,7 +509,6 @@
 window._AIRLABS_KEY        = '';          /* ضع مفتاح AirLabs هنا إذا توفّر */
 window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401": {"dest": "CGP", "std": "01:15"}, "WY103": {"dest": "LHR", "std": "01:35"}, "WY685": {"dest": "RUH", "std": "01:45"}, "WY849": {"dest": "CGK", "std": "01:50"}, "TK775": {"dest": "IST", "std": "01:55"}, "BS322": {"dest": "CGP", "std": "02:00"}, "WY251": {"dest": "MAA", "std": "02:05"}, "WY211": {"dest": "TRV", "std": "02:25"}, "WY671": {"dest": "JED", "std": "02:25"}, "WY225": {"dest": "COK", "std": "02:25"}, "6E1272": {"dest": "COK", "std": "03:00"}, "OV513": {"dest": "KHI", "std": "03:15"}, "WY241": {"dest": "DEL", "std": "03:20"}, "ET625": {"dest": "ADD", "std": "04:25"}, "3T263": {"dest": "PZU", "std": "04:30"}, "PC831": {"dest": "SAW", "std": "04:35"}, "OMS287": {"dest": "JED", "std": "05:55"}, "QR1149": {"dest": "DOH", "std": "05:55"}, "J4611": {"dest": "PZU", "std": "06:15"}, "GF561": {"dest": "BAH", "std": "07:30"}, "OMS5071": {"dest": "FAU", "std": "08:00"}, "OV5051": {"dest": "OMM", "std": "08:00"}, "WY323": {"dest": "KHI", "std": "08:05"}, "WY253": {"dest": "MAA", "std": "08:20"}, "WY223": {"dest": "COK", "std": "08:25"}, "WY317": {"dest": "DAC", "std": "08:25"}, "OV101": {"dest": "SLL", "std": "08:30"}, "OV283": {"dest": "JED", "std": "08:30"}, "OV251": {"dest": "FJR", "std": "08:30"}, "OMS101": {"dest": "SLL", "std": "08:35"}, "WY815": {"dest": "BKK", "std": "08:40"}, "WY823": {"dest": "KUL", "std": "08:45"}, "WY903": {"dest": "SLL", "std": "08:45"}, "WY283": {"dest": "BLR", "std": "09:10"}, "WY843": {"dest": "MNL", "std": "09:15"}, "WY203": {"dest": "BOM", "std": "09:20"}, "OV211": {"dest": "DMM", "std": "09:35"}, "WY231": {"dest": "HYD", "std": "10:10"}, "WY245": {"dest": "DEL", "std": "10:25"}, "WY831": {"dest": "HKT", "std": "10:30"}, "OV273": {"dest": "MED", "std": "10:55"}, "WY689": {"dest": "JED", "std": "10:55"}, "EY693": {"dest": "AUH", "std": "11:55"}, "WY905": {"dest": "SLL", "std": "12:30"}, "OV205": {"dest": "RUH", "std": "12:30"}, "WY413": {"dest": "AMM", "std": "13:00"}, "WY165": {"dest": "IST", "std": "13:00"}, "FZ42": {"dest": "DXB", "std": "13:10"}, "OV285": {"dest": "JED", "std": "13:10"}, "WY171": {"dest": "AMS", "std": "13:10"}, "OV103": {"dest": "SLL", "std": "13:15"}, "PF733": {"dest": "LHE", "std": "13:15"}, "WY117": {"dest": "FRA", "std": "13:20"}, "D0832": {"dest": "EMA", "std": "13:30"}, "WY699": {"dest": "TIF", "std": "13:35"}, "OV315": {"dest": "SPX", "std": "13:40"}, "WY683": {"dest": "RUH", "std": "13:55"}, "PF735": {"dest": "ISB", "std": "14:00"}, "OV135": {"dest": "DQM", "std": "14:00"}, "WY153": {"dest": "ZRH", "std": "14:05"}, "G9754": {"dest": "CAI", "std": "14:05"}, "BG122": {"dest": "CGP", "std": "14:10"}, "WY131": {"dest": "CDG", "std": "14:10"}, "OV293": {"dest": "AHB", "std": "14:10"}, "WY101": {"dest": "LHR", "std": "14:15"}, "WY693": {"dest": "DMM", "std": "14:30"}, "OV213": {"dest": "DMM", "std": "14:35"}, "WY405": {"dest": "CAI", "std": "14:40"}, "WY675": {"dest": "JED", "std": "14:50"}, "WY291": {"dest": "CCJ", "std": "15:10"}, "WY915": {"dest": "SLL", "std": "15:30"}, "OV5141": {"dest": "MSH", "std": "15:45"}, "WY123": {"dest": "MUC", "std": "15:45"}, "WY183": {"dest": "SVO", "std": "15:55"}, "OV253": {"dest": "FJR", "std": "16:35"}, "WY907": {"dest": "SLL", "std": "16:40"}, "FZ44": {"dest": "DXB", "std": "16:50"}, "D0856": {"dest": "LEJ", "std": "17:00"}, "EY695": {"dest": "AUH", "std": "17:10"}, "OV507": {"dest": "SKT", "std": "17:35"}, "WY909": {"dest": "SLL", "std": "17:40"}, "BG722": {"dest": "DAC", "std": "17:50"}, "OV105": {"dest": "SLL", "std": "18:00"}, "WY681": {"dest": "RUH", "std": "18:50"}, "OV107": {"dest": "SLL", "std": "19:00"}, "GF565": {"dest": "BAH", "std": "19:10"}, "WY921": {"dest": "SLL", "std": "19:40"}, "EK1066": {"dest": "DXB", "std": "20:00"}, "WY143": {"dest": "MXP", "std": "15:05"}, "WY147": {"dest": "FCO", "std": "15:05"}, "WY133": {"dest": "MXP", "std": "20:20"}, "WY381": {"dest": "KWI", "std": "20:30"}, "WY383": {"dest": "KWI", "std": "20:35"}, "WY303": {"dest": "ZNZ", "std": "20:40"}, "FZ48": {"dest": "DXB", "std": "20:45"}, "IX164": {"dest": "DEL", "std": "21:00"}, "IX712": {"dest": "CNN", "std": "21:10"}, "MU2052": {"dest": "PKX", "std": "21:15"}, "MS931": {"dest": "CAI", "std": "21:20"}, "WY821": {"dest": "KUL", "std": "21:25"}, "WY407": {"dest": "CAI", "std": "21:35"}, "WY677": {"dest": "MED", "std": "21:40"}, "WY673": {"dest": "JED", "std": "21:45"}, "WY817": {"dest": "BKK", "std": "21:50"}, "OV497": {"dest": "DAC", "std": "22:15"}, "OV437": {"dest": "CMB", "std": "22:15"}, "OV747": {"dest": "MAA", "std": "22:20"}, "OV773": {"dest": "CCJ", "std": "22:30"}, "OV735": {"dest": "HYD", "std": "22:30"}, "WY833": {"dest": "HKT", "std": "22:35"}, "WY707": {"dest": "DAR", "std": "22:50"}, "OV563": {"dest": "ISB", "std": "23:00"}, "QR1125": {"dest": "DOH", "std": "23:15"}, "OV705": {"dest": "LKO", "std": "23:20"}, "OV783": {"dest": "BLR", "std": "23:20"}, "IX550": {"dest": "TRV", "std": "23:25"}, "OV463": {"dest": "BKK", "std": "23:30"}, "6E1268": {"dest": "BOM", "std": "23:55"}, "GF567": {"dest": "BAH", "std": "23:55"}, "OV505": {"dest": "SKT", "std": "23:55"}};
 window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI", "82452": "MAHMOOD AL HADIDI", "82476": "AHMED ALRUJAIBI", "81399": "JAMAL AL SINANI", "82444": "MOHAMMED AL YAARUBI", "82100": "YOUSUF AL WAHEEDI", "81351": "IBRAHIM AL QUTAITI", "82541": "MOHAMMED AL WAHAIBI", "80215": "GLENDO", "82664": "HAIFA AL BALUSHI", "82460": "MAHAMAD AL MAHARBI", "82665": "MAHANAD AL HADI", "82431": "MAHMOOD AL BALUSHI", "82331": "ISMAIL AL MAHARBI", "82654": "AHMED AL HADI", "82537": "KHALIFA AL SAADI", "82419": "HAITHAM AL BALUSHI", "82425": "ALI AL SHAMSI", "82414": "BADAR AL BUSAIDI", "82420": "MOHAMMED AL SAADI", "82410": "SAID AL SADI", "82416": "NASSER AL OMAIRI", "82417": "TALAL AL HUSEINI", "82423": "BADAR AL BURTAMANI", "82428": "ABDULLAH AL MAHARBI", "82571": "YAARAB AL RAQADI", "80480": "YOUNIS AL SIYABI", "82566": "ANWAR AL AMRI", "80479": "SAMI AL HADABI", "82583": "BADAR AL SHEHHI", "82668": "IBRAHIM AL HADHRAMI", "82454": "HISHAM AL MAHARBI", "82456": "AHMED AL FARSI", "82496": "ANWAR AL HABSI", "82470": "WAHEB AL BARAIDAI", "82614": "MOHAMMED AL MAWALI", "82107": "OMAR AL FUTAISI", "82286": "MAHMOOD AL SHAMSI", "82667": "MOOSA AL BALUSHI", "82642": "SANAD AL HARTHI", "80481": "SALIM AL MAAWALI", "82590": "NASSER AL MAAMARI", "80833": "SULEIMAN AL MAHARBI", "82455": "AHMED AL HUSAINI", "81983": "JABER AL JULANDANI", "82663": "ABDULLAH AL SINAWI", "8336": "KHALID AL BALUSHI", "82457": "ADIL AL BULUSHI", "81991": "HILAL AL SHAMAKHI", "82049": "MAJID AL GHAFRI", "990895": "MOHD AL HADDABI", "80478": "FARIZ AL BALUSHI", "81080": "AHMED AL AMRI", "8836": "HAMED AL FAKHRI", "81151": "JUMA AL HABSI", "81152": "SAID AL HADI", "82330": "MOHAMMED AL BALUCHI", "82458": "KHALID AL ZADJALI", "82535": "MOHAMED AL MAAWALI", "990751": "KHAMIS AL KASBI", "82459": "ALI AL RIYAMI", "80834": "SAID AL AMRI", "990786": "YASIR AL GHARABI", "82435": "QAIS AL MUKHAINI", "81079": "MOHAMMED AL KULAIBI", "82422": "MAHIR AL BALUSHI", "82434": "HISHAM AL SIYABI", "82412": "QASIM AL GHARIBI", "82536": "MOOSA AL HADI", "8901": "UDUGAMA", "81032": "MOHAMMED SAID", "990896": "SAMEER MAHMOOD", "80269": "FRITZ", "80535": "FROILAN", "80235": "Rodolfo Magcaling", "81392": "Adil Al Balushi", "8926": "Salim Al Masroori", "8899": "Rajaram", "80250": "Jay Macalino", "990737": "Said Al Amri", "81300": "Talal Al Balushi", "81404": "Mohamed Al Amri", "82546": "Saleh Al Rashdi", "82593": "Mohamed Al Kalbani", "82445": "Al Muthana Al Shamfari", "82548": "Ahmed Al Muqaini", "81409": "Qasim Al Maqbali", "82596": "Hamed Al Fulaiti", "82575": "Ahmed Al Kharusi", "81258": "Jaafar Al Balushi", "82437": "Marwan Al Difai", "81402": "Mohamed Al Siyabi", "82114": "Mubarak Al Nofli", "82441": "Mudathir Al Hajri", "82551": "Omar Al Obaidi", "81348": "Assad Al Omairi", "82657": "Bushra Al Wahiebi", "82600": "Habib Al Balushi", "82550": "Saleh Al Aufi", "82649": "Saif Al Mahrizi", "82283": "Ahmed Al Mawali", "82587": "Yousuf Al Balushi", "82574": "Ali Al Mamari", "80695": "Hosni Al Sulti", "82659": "Ammar Al Hashmi", "990752": "Ali Yousuf Al Balushi", "82578": "Raad Al Farsi", "8584": "Adil Al Zadjali", "82555": "Riyadh Al Jabri", "82658": "Mohamed Al Mazroie", "82671": "Khalil Al Hinai", "81393": "Ali Al Farsi", "82674": "Mohamed Al Mamari", "81832": "Ahmed Al Bakari", "82424": "Riyadh Al Sulti", "82673": "Khalifa Al Maqbali", "82464": "Wissam Al Kharusi", "82615": "Rashid Al Farsi", "82672": "Dawood Al Siyabi", "8930": "Fahim Al Hashni", "80482": "Waleed Al Hadabi", "82645": "Abdullah Al Shukeili", "82666": "Mohamed Al Maskari", "82547": "Mazin Al Hajri", "82577": "Ali Al Marjubi", "82439": "Ghaith Al Habsi", "82661": "Mohamed Al Maskari", "8715": "Khalid Al Raqadi", "82592": "Mohamed Al Subhi", "990465": "Abdulfatah Al Shukeili", "80270": "Marlon Esmilla", "82616": "Ahmed Al Hashmi", "81307": "Badar Al Hamadani", "82534": "Muadh Al Qasimi", "82656": "Faisal Al Balushi", "82565": "Jamal Al Hadi", "8714": "Mohana Al Subhi", "8762": "Mohamed Al Falahi", "8647": "Issa Al Douyani", "82653": "Ahmed Al Sabii", "81224": "Mohamed Al Amri", "82415": "Ahmed Al Balushi", "8722": "Salim Sulieman", "82467": "Khamis Al Hinai", "81223": "Mazin Al Siyabi", "8941": "Adil Al Oraimi", "82429": "Zakariya Al Balushi", "8542": "Salim Al Harassi", "82468": "Badar Al Fulaiti", "82588": "Ghassan Al Tarsi", "8744": "Said Al Fahkri"};
-window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/2026-04-06/shift2.json';
 </script>
 
 <script>
@@ -499,7 +517,6 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/2026-04-06/shift2.json';
   var COPY_SUCCESS_MS = 2500;
   var REPO_OWNER = 'khalidsaif912';
   var REPO_NAME = 'offload-monitor';
-  var SYNC_BRANCH = 'offload-sync';
   var RECIPIENTS_PATH = 'docs/data/email_recipients.json';
   var RECIPIENTS_RAW_URL = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main/' + RECIPIENTS_PATH;
   var RECIPIENTS_EDIT_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/edit/main/' + RECIPIENTS_PATH;
@@ -574,7 +591,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/2026-04-06/shift2.json';
   /* ربط الـ li الموجودة مسبقاً بالأحداث عند تحميل الصفحة */
   document.addEventListener('DOMContentLoaded', function(){
     var editableLists = [
-      'ul-loadplan','ul-advloading','ul-csdrescreening','ul-handover','ul-special-handover','ul-other',
+      'ul-loadplan','ul-advloading','ul-csdrescreening',
       'ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
       'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'
     ];
@@ -708,7 +725,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/2026-04-06/shift2.json';
       t.setAttribute('border','0');
       t.setAttribute('role','presentation');
       t.style.borderCollapse='collapse';
-      if(t.id==='report-content'){ t.setAttribute('width','1180'); t.style.width='1180px'; t.style.maxWidth='1180px'; t.style.tableLayout='fixed'; } else if(!t.style.width) { t.style.width='100%'; }
+      if(!t.style.width) t.style.width='100%';
     });
     clone.querySelectorAll('td,th').forEach(function(c){
       if(!c.style.verticalAlign) c.style.verticalAlign='top';
@@ -722,16 +739,17 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/2026-04-06/shift2.json';
     clone.querySelectorAll('[tabindex]').forEach(function(e){
       e.removeAttribute('tabindex');
     });
-    /* إزالة جميع الأزرار من النسخة المنسوخة/المرسلة */
+    /* إزالة أزرار + Add من النسخة المُرسَلة */
     clone.querySelectorAll('button').forEach(function(e){
-      e.parentNode && e.parentNode.removeChild(e);
+      if(e.textContent.trim().indexOf('Add')!==-1 || e.textContent.trim().indexOf('+')!==-1)
+        e.parentNode && e.parentNode.removeChild(e);
     });
     /* إزالة عناصر data-no-copy (أزرار النسخ/الإرسال) من نسخة الإيميل */
     clone.querySelectorAll('[data-no-copy]').forEach(function(e){
       e.parentNode && e.parentNode.removeChild(e);
     });
     var br=clone.querySelector('#back-link-row');
-    if(br && br.parentNode) br.parentNode.removeChild(br);
+    if(br) br.style.display='none';
 
     return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}table{border-collapse:collapse;}img{max-width:100%;height:auto;display:block;}</style></head><body>'+clone.outerHTML+'</body></html>';
   }
@@ -926,13 +944,12 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/2026-04-06/shift2.json';
   function sendEmailNow(){
     openRecipientsManager('send').then(function(result){
       if(!result || !result.selected || !result.selected.length) return;
-      var ok = confirm('Shift: shift2 | Date: 2026-04-06
-Recipients: ' + result.selected.join(', '));
+      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift2\nDate: 2026-04-06\nRecipients: ' + result.selected.join(', '));
       if(!ok) return;
 
       var btn = document.getElementById('btn-email');
       if(!btn) return;
-      btn.innerText = '⏳ Preparing email…';
+      btn.innerText = '⏳ Saving edits…';
       btn.disabled = true;
       btn.style.background = '#64748b';
 
@@ -948,6 +965,7 @@ Recipients: ' + result.selected.join(', '));
         localStorage.setItem('gh_pat', pat);
       }
 
+      /* ── Step 1: Capture DOM edits (inline styles, clean email-safe HTML) ── */
       var editedHtml = buildReportHtml();
       if(!editedHtml){
         btn.innerText = '❌ No report found';
@@ -956,30 +974,58 @@ Recipients: ' + result.selected.join(', '));
         return;
       }
 
-      btn.innerText = '⏳ Sending email…';
+      /* ── Step 2: Get current file SHA then upload the edited HTML to repo ── */
+      var filePath = 'docs/2026-04-06/shift2/index.html';
+      var apiBase = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/';
       var headers = {
         'Accept':'application/vnd.github+json',
         'Authorization':'Bearer ' + pat,
         'Content-Type':'application/json'
       };
-      var editedHtmlB64 = btoa(unescape(encodeURIComponent(editedHtml)));
 
-      return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
-        method:'POST',
-        headers: headers,
-        body:JSON.stringify({
-          event_type:'send_report_now',
-          client_payload:{
-            date_dir:'2026-04-06',
-            shift:'shift2',
-            recipients: result.selected,
-            edited_html_b64: editedHtmlB64
-          }
-        })
+      btn.innerText = '⏳ Uploading edits…';
+
+      fetch(apiBase + filePath + '?t=' + Date.now(), {headers:headers})
+      .then(function(r){
+        if(r.status === 401){ localStorage.removeItem('gh_pat'); throw new Error('AUTH'); }
+        if(!r.ok && r.status !== 404) throw new Error('GET_SHA_' + r.status);
+        return r.ok ? r.json() : null;
+      })
+      .then(function(fileInfo){
+        var sha = fileInfo ? fileInfo.sha : undefined;
+        /* Use editedHtml — includes user edits + inline styles + email-safe colors */
+        var encoded = btoa(unescape(encodeURIComponent(editedHtml)));
+        var putBody = {
+          message: 'Update report with manual edits (2026-04-06/shift2)',
+          content: encoded,
+          branch: 'main'
+        };
+        if(sha) putBody.sha = sha;
+
+        return fetch(apiBase + filePath, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify(putBody)
+        });
+      })
+      .then(function(r){
+        if(r.status === 401){ localStorage.removeItem('gh_pat'); throw new Error('AUTH'); }
+        if(!r.ok) throw new Error('PUT_' + r.status);
+        btn.innerText = '⏳ Sending email…';
+
+        /* ── Step 3: Trigger the dispatch to send email ── */
+        return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
+          method:'POST',
+          headers: headers,
+          body:JSON.stringify({
+            event_type:'send_report_now',
+            client_payload:{date_dir:'2026-04-06', shift:'shift2', recipients: result.selected}
+          })
+        });
       })
       .then(function(r){
         if(r.ok || r.status === 204){
-          btn.innerText = '✅ Email queued';
+          btn.innerText = '✅ Email Sent!';
           btn.style.background = '#059669';
           resetButton(btn, '✉️ Send Email Now', '#c2410c', 4000);
         } else {
@@ -1292,57 +1338,9 @@ Recipients: ' + result.selected.join(', '));
     } catch(ex) {}
   }
 
-  function getTextSelectionOffsets(el) {
-    try {
-      var sel = window.getSelection && window.getSelection();
-      if(!sel || !sel.rangeCount) return {start:null, end:null};
-      var range = sel.getRangeAt(0);
-      if(!el || !el.contains(range.startContainer) || !el.contains(range.endContainer)) return {start:null, end:null};
-      var preStart = range.cloneRange();
-      preStart.selectNodeContents(el);
-      preStart.setEnd(range.startContainer, range.startOffset);
-      var preEnd = range.cloneRange();
-      preEnd.selectNodeContents(el);
-      preEnd.setEnd(range.endContainer, range.endOffset);
-      return {start: preStart.toString().length, end: preEnd.toString().length};
-    } catch(ex) {
-      return {start:null, end:null};
-    }
-  }
-
-  function setCursorByTextOffset(el, offset) {
-    try {
-      if(!el) return;
-      var walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, null);
-      var remaining = Math.max(0, Number(offset || 0));
-      var node = null;
-      while((node = walker.nextNode())) {
-        var len = (node.nodeValue || '').length;
-        if(remaining <= len) {
-          var r = document.createRange();
-          r.setStart(node, remaining);
-          r.collapse(true);
-          var sel = window.getSelection();
-          sel.removeAllRanges();
-          sel.addRange(r);
-          return;
-        }
-        remaining -= len;
-      }
-      setCursorEnd(el);
-    } catch(ex) {
-      setCursorEnd(el);
-    }
-  }
-
   function isManpowerListUl(ul) {
     if(!ul || !ul.id) return false;
     return ul.id.indexOf('ul-dept-') === 0 || MP_IDS.indexOf(ul.id) !== -1;
-  }
-
-  function isCustomBulletUl(ul) {
-    if(!ul || !ul.id) return false;
-    return ul.id === 'ul-csdrescreening' || ul.id === 'ul-special-handover' || ul.id === 'ul-other';
   }
 
   function createEditableListItem(ul) {
@@ -1354,16 +1352,6 @@ Recipients: ' + result.selected.join(', '));
       li.textContent = '​';
     } else {
       li.innerHTML = '&nbsp;';
-      li.style.display = 'list-item';
-      if(isCustomBulletUl(ul)) {
-        li.style.listStyle = 'none';
-        li.style.paddingLeft = '14px';
-        li.style.position = 'relative';
-      } else {
-        li.style.listStyle = 'none';
-        li.style.paddingLeft = '14px';
-        li.style.position = 'relative';
-      }
     }
     return li;
   }
@@ -1406,87 +1394,14 @@ Recipients: ' + result.selected.join(', '));
     }
   };
 
-  var OFFLOAD_COLS = [
-    { key: 'date',  label: 'DATE' },
-    { key: 'flight',label: 'FLIGHT' },
-    { key: 'std',   label: 'STD/ETD' },
-    { key: 'dest',  label: 'DEST' },
-    { key: 'email', label: 'Email Received Time' },
-    { key: '',      label: 'Physical Cargo Received from Ramp' },
-    { key: '',      label: 'Trolley/ ULD Number' },
-    { key: '',      label: 'Offloading Process Completed in CMS' },
-    { key: '',      label: 'Offloading Pieces Verification' },
-    { key: '',      label: 'Offloading Reason' },
-    { key: '',      label: 'Remarks/Additional Information' }
-  ];
-
-  function buildOffloadIndexCellHTML(idx) {
-    return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" '
-      + 'style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;padding:0;margin:0;border:1px solid #0b3a78;background:#dce6f4;color:#0b3a78;border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">×</button>'
-      + '<strong class="offload-row-num">' + idx + '</strong>';
-  }
-
-  window.deleteOffloadRow = function(btn) {
-    var row = btn && btn.closest ? btn.closest('tr') : null;
-    var tbody = document.getElementById('offload-tbody');
-    if(!row || !tbody) return;
-    if(row.parentNode) row.parentNode.removeChild(row);
-    var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {
-      return !!r.querySelector('td[contenteditable="true"]');
-    });
-    if(!rows.length) appendOffloadRow(false);
-    reindexOffloadRows();
-    if(typeof triggerAutosave === 'function') triggerAutosave();
-  };
-
-  document.addEventListener('click', function(ev) {
-    var btn = ev.target && ev.target.closest ? ev.target.closest('.offload-row-delete') : null;
-    if(!btn) return;
-    ev.preventDefault();
-    ev.stopPropagation();
-    window.deleteOffloadRow(btn);
-  }, true);
-
-  function decorateOffloadRow(row) {
-    if(!row) return;
-    var cells = row.querySelectorAll('td');
-    if(!cells.length) return;
-    cells[0].classList.add('offload-idx');
-    cells[0].setAttribute('data-label', 'ITEM');
-    for(var i = 1; i < cells.length && i <= OFFLOAD_COLS.length; i++) {
-      if(!cells[i].getAttribute('data-label')) cells[i].setAttribute('data-label', OFFLOAD_COLS[i-1].label);
-    }
-  }
-
   /* ══════════════════════════════════════
      B) جدول الأوفلود
+        • click/focus على date → يكمل التاريخ
+        • input على flight → يجلب STD+DEST
      ══════════════════════════════════════ */
   function setupTableCell(td) {
-    if(td._cellSetup) return;
+    if(td._cellSetup) return;   /* منع التكرار */
     td._cellSetup = true;
-
-    td.addEventListener('keydown', function(e) {
-      if(e.key !== 'Tab' || e.shiftKey) return;
-      var row = td.closest('tr');
-      var tbody = row && row.parentElement;
-      if(!row || !tbody || tbody.id !== 'offload-tbody') return;
-      var editable = Array.from(row.querySelectorAll('td[contenteditable="true"]'));
-      if(!editable.length || editable[editable.length - 1] !== td) return;
-      var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {
-        return !!r.querySelector('td[contenteditable="true"]');
-      });
-      if(!rows.length || rows[rows.length - 1] !== row) return;
-      e.preventDefault();
-      e.stopImmediatePropagation();
-      var _tr = appendOffloadRow(false);
-      if(_tr) {
-        setTimeout(function() {
-          var firstCell = _tr.querySelector('td[contenteditable="true"]');
-          if(firstCell) firstCell.focus();
-        }, 0);
-      }
-    });
-
     var col = td.dataset.col;
     if(!col) return;
 
@@ -1498,9 +1413,9 @@ Recipients: ' + result.selected.join(', '));
           if(typeof triggerAutosave==='function') triggerAutosave();
         }
       }
-      td.addEventListener('click', autoDate);
-      td.addEventListener('focus', autoDate);
-      td.addEventListener('input', function() { forceUpper(td); });
+      td.addEventListener('click',  autoDate);
+      td.addEventListener('focus',  autoDate);
+      td.addEventListener('input',  function() { forceUpper(td); });
     }
 
     if(col === 'flight') {
@@ -1515,13 +1430,15 @@ Recipients: ' + result.selected.join(', '));
       }
       function onFlightInput() {
         var flt = normalizeFlightCell();
-        if(flt === _lastFlt) return;
+        if(flt === _lastFlt) return;   /* لا تغيير حقيقي */
         _lastFlt = flt;
         if(!FLT_RE.test(flt)) { removeGhost(td); return; }
-        var row       = td.closest('tr');
-        var dateCell  = row && row.querySelector('[data-col="date"]');
-        var stdCell   = row && row.querySelector('[data-col="std"]');
-        var destCell  = row && row.querySelector('[data-col="dest"]');
+        var row      = td.closest('tr');
+        var dateCell = row && row.querySelector('[data-col="date"]');
+        var stdCell  = row && row.querySelector('[data-col="std"]');
+        var destCell = row && row.querySelector('[data-col="dest"]');
+        var emailCell= row && row.querySelector('[data-col="email"]');
+        /* تعبئة التاريخ تلقائياً إذا كان فارغاً */
         if(dateCell) {
           var dv = dateCell.innerText.replace(/ /g,'').trim();
           if(!dv) { dateCell.innerText = todayFull(); dv = todayFull(); }
@@ -1554,96 +1471,34 @@ Recipients: ' + result.selected.join(', '));
           if(typeof triggerAutosave==='function') triggerAutosave();
         });
       }
-      td.addEventListener('focus', normalizeFlightCell);
-      td.addEventListener('input', onFlightInput);
-      td.addEventListener('keyup', onFlightInput);
+      td.addEventListener('focus',  normalizeFlightCell);
+      td.addEventListener('input',  onFlightInput);
+      td.addEventListener('keyup',  onFlightInput);  /* يشتغل عند paste أيضاً */
       td.addEventListener('paste', function() { setTimeout(onFlightInput, 50); });
     }
   }
 
-  function reindexOffloadRows() {
-    var tbody = document.getElementById('offload-tbody');
-    if(!tbody) return;
-    var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(row) {
-      return !!row.querySelector('td[contenteditable="true"]');
-    });
-    rows.forEach(function(row, idx) {
-      decorateOffloadRow(row);
-      var first = row.querySelector('td');
-      if(first) first.innerHTML = buildOffloadIndexCellHTML(idx + 1);
-    });
-    var ti = 1;
-    rows.forEach(function(row) {
-      row.querySelectorAll('td[contenteditable="true"]').forEach(function(cell) {
-        cell.setAttribute('tabindex', String(ti++));
-      });
-    });
-  }
-
-  function createOffloadRow() {
-    var tr = document.createElement('tr');
-    var tdStyle = 'padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;vertical-align:middle;word-break:break-word;overflow-wrap:anywhere;';
-    var idxCell = document.createElement('td');
-    idxCell.setAttribute('style', tdStyle + 'position:relative;padding:18px 6px 7px 24px;width:6%;min-width:56px;');
-    idxCell.className = 'offload-idx';
-    idxCell.setAttribute('data-label', 'ITEM');
-    idxCell.innerHTML = buildOffloadIndexCellHTML(0);
-    tr.appendChild(idxCell);
-    OFFLOAD_COLS.forEach(function(col) {
-      var td = document.createElement('td');
-      td.setAttribute('style', tdStyle);
-      td.setAttribute('contenteditable', 'true');
-      td.setAttribute('data-label', col.label);
-      if(col.key) td.dataset.col = col.key;
-      td.innerHTML = '&nbsp;';
-      tr.appendChild(td);
-    });
-    return tr;
-  }
-
-  function appendOffloadRow(focusFirst) {
-    var tbody = document.getElementById('offload-tbody');
-    if(!tbody) return null;
-    var tr = createOffloadRow();
-    tbody.appendChild(tr);
-    tr.querySelectorAll('td[contenteditable="true"]').forEach(setupTableCell);
-    reindexOffloadRows();
-    if(focusFirst) {
-      var firstCell = tr.querySelector('td[contenteditable="true"]');
-      if(firstCell) {
-        firstCell.focus();
-        setCursorEnd(firstCell);
-      }
-    }
-    if(typeof triggerAutosave === 'function') triggerAutosave();
-    return tr;
-  }
-
   function initTableCells() {
+    document.querySelectorAll('[data-col]').forEach(setupTableCell);
+    /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
     var tbody = document.getElementById('offload-tbody');
-    if(!tbody) return;
-    tbody.querySelectorAll('tr').forEach(function(tr) {
-      decorateOffloadRow(tr);
-      tr.querySelectorAll('td[contenteditable="true"]').forEach(setupTableCell);
-    });
-    reindexOffloadRows();
-    new MutationObserver(function(muts) {
-      muts.forEach(function(m) {
-        m.addedNodes.forEach(function(n) {
-          if(n.nodeType===1) {
-            decorateOffloadRow(n);
-            n.querySelectorAll('td[contenteditable="true"]').forEach(setupTableCell);
-          }
+    if(tbody) {
+      new MutationObserver(function(muts) {
+        muts.forEach(function(m) {
+          m.addedNodes.forEach(function(n) {
+            if(n.nodeType===1) {
+              n.querySelectorAll('[data-col]').forEach(setupTableCell);
+            }
+          });
         });
-      });
-    }).observe(tbody, {childList:true});
+      }).observe(tbody, {childList:true});
+    }
   }
   if(document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initTableCells);
   } else {
     initTableCells();
   }
-
 
   /* ══════════════════════════════════════
      C) MANPOWER — SN Autocomplete
@@ -1738,45 +1593,6 @@ Recipients: ' + result.selected.join(', '));
     li.textContent = (text || '').replace(/​/g, '');
     setCursorEnd(li);
     if(typeof triggerAutosave === 'function') triggerAutosave();
-  }
-
-  function convertFormattedManpowerToPlain(li, action) {
-    if(!li || !isFormattedManpowerEntry(li)) return false;
-    var plain = getManpowerText(li).replace(/​/g, '');
-    var sel = getTextSelectionOffsets(li);
-    var start = sel.start;
-    var end = sel.end;
-    if(start == null || end == null) {
-      start = plain.length;
-      end = plain.length;
-    }
-
-    if(action === 'backspace') {
-      if(start !== end) {
-        plain = plain.slice(0, start) + plain.slice(end);
-      } else if(start > 0) {
-        plain = plain.slice(0, start - 1) + plain.slice(end);
-        start -= 1;
-      }
-      end = start;
-    } else if(action === 'delete') {
-      if(start !== end) {
-        plain = plain.slice(0, start) + plain.slice(end);
-      } else if(end < plain.length) {
-        plain = plain.slice(0, start) + plain.slice(end + 1);
-      }
-      end = start;
-    } else if(action && action.type === 'insertText') {
-      var insertText = String(action.text || '');
-      plain = plain.slice(0, start) + insertText + plain.slice(end);
-      start = start + insertText.length;
-      end = start;
-    }
-
-    li.textContent = plain || '​';
-    setCursorByTextOffset(li, start);
-    if(typeof triggerAutosave === 'function') triggerAutosave();
-    return true;
   }
 
   function extractTypedSn(text) {
@@ -1959,7 +1775,7 @@ Recipients: ' + result.selected.join(', '));
         pasted = String(pasted || '').replace(/\s+/g, ' ').trim();
         if(pasted) {
           ev.preventDefault();
-          convertFormattedManpowerToPlain(li, {type:'insertText', text:pasted});
+          replaceManpowerText(li, pasted);
           updateManpowerSuggestion();
           return;
         }
@@ -2001,7 +1817,7 @@ Recipients: ' + result.selected.join(', '));
       if((ev.key === 'Backspace' || ev.key === 'Delete')) {
         if(isFormattedManpowerEntry(li)) {
           ev.preventDefault();
-          convertFormattedManpowerToPlain(li, ev.key === 'Delete' ? 'delete' : 'backspace');
+          replaceManpowerText(li, '');
           closeSnDropdown();
           return;
         }
@@ -2010,13 +1826,6 @@ Recipients: ' + result.selected.join(', '));
           removeManpowerLiIfEmpty(li);
           return;
         }
-      }
-
-      if(isFormattedManpowerEntry(li) && ev.key && ev.key.length === 1 && !ev.ctrlKey && !ev.metaKey && !ev.altKey) {
-        ev.preventDefault();
-        convertFormattedManpowerToPlain(li, {type:'insertText', text:ev.key});
-        updateManpowerSuggestion();
-        return;
       }
     });
 
@@ -2040,7 +1849,7 @@ Recipients: ' + result.selected.join(', '));
     });
   }
 
-    var MP_IDS = ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
+  var MP_IDS = ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
                 'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'];
   function initManpower() {
     refreshSnMap();
@@ -2194,55 +2003,16 @@ Recipients: ' + result.selected.join(', '));
 
 
 /* ══════════════════════════════════════════════════════
-   AUTOSAVE — IndexedDB + GitHub Cloud Sync
-   محلياً: يحفظ كل تعديل فوري داخل المتصفح
-   سحابياً: عند تفعيل Cloud Sync يحفظ نفس التقرير في GitHub
-   لكي تظهر التعديلات من الهاتف على الكمبيوتر والعكس
+   AUTOSAVE — IndexedDB
+   يحفظ كل تعديل فوري (كل ضغطة حرف) ويستعيده عند التحميل
+   المفتاح: URL الصفحة (date_dir + shift فريد لكل تقرير)
    ══════════════════════════════════════════════════════ */
 (function(){
   var DB_NAME = 'offload_autosave';
   var STORE   = 'reports';
   var PAGE_KEY = location.pathname;
-  var REPO_OWNER = 'khalidsaif912';
-  var REPO_NAME  = 'offload-monitor';
-  var SYNC_BRANCH = 'offload-sync';
-  var CLOUD_PATH = window._REPORT_CLOUD_PATH || '';
-  var CLOUD_RAW_URL = CLOUD_PATH ? ('https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/' + SYNC_BRANCH + '/' + CLOUD_PATH) : '';
-  var CLOUD_API_URL = CLOUD_PATH ? ('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + CLOUD_PATH) : '';
   var _db = null;
-  var LS_KEY = 'offload_autosave_cache::' + PAGE_KEY;
   var _saveTimer = null;
-  var _cloudTimer = null;
-  var _cloudBusy = false;
-  var _cloudPending = false;
-  var _lastAppliedTs = 0;
-  var _autoPromptShown = false;
-  var _skipAutoPrompt = sessionStorage.getItem('gh_pat_skip_' + PAGE_KEY) === '1';
-
-  function cloudBtn(){
-    return document.getElementById('btn-cloud-sync');
-  }
-
-  function updateCloudBtnIdle(){
-    var btn = cloudBtn();
-    if(!btn) return;
-    var hasPat = !!(localStorage.getItem('gh_pat') || '').trim();
-    btn.disabled = false;
-    btn.innerText = hasPat ? '☁️ Auto Sync On' : '☁️ Set Auto Sync';
-    btn.style.background = hasPat ? '#0f766e' : '#475569';
-  }
-
-  function setCloudBtn(text, bg, delay){
-    var btn = cloudBtn();
-    if(!btn) return;
-    btn.innerText = text;
-    if(bg) btn.style.background = bg;
-    if(delay){
-      setTimeout(function(){
-        updateCloudBtnIdle();
-      }, delay);
-    }
-  }
 
   function openDB(cb){
     if(_db){ cb(_db); return; }
@@ -2254,28 +2024,15 @@ Recipients: ' + result.selected.join(', '));
     req.onerror   = function(){ console.warn('[autosave] IndexedDB open failed'); };
   }
 
-  function readLocal(cb){
-    openDB(function(db){
-      var tx = db.transaction(STORE,'readonly');
-      var req = tx.objectStore(STORE).get(PAGE_KEY);
-      req.onsuccess = function(e){ cb((e.target && e.target.result) || null); };
-      req.onerror = function(){ cb(null); };
-    });
-  }
-
-  function writeLocal(record){
-    openDB(function(db){
-      var tx = db.transaction(STORE,'readwrite');
-      tx.objectStore(STORE).put(record);
-    });
-  }
-
-  function collectData(){
+  function saveNow(){
+    /* جمع كل العناصر القابلة للتعديل وحفظ قيمها */
     var data = {};
 
+    /* contenteditable cells في الجدول */
     document.querySelectorAll('[contenteditable="true"]').forEach(function(el){
       var id = el.id || el.dataset.saveKey;
       if(!id){
+        /* أنشئ مفتاح فريد من موضع العنصر في الـ DOM */
         var path = [];
         var node = el;
         while(node && node !== document.body){
@@ -2289,263 +2046,62 @@ Recipients: ' + result.selected.join(', '));
       data[id] = el.innerHTML;
     });
 
+    /* قوائم ul كاملة (للحفاظ على العناصر المضافة/المحذوفة) */
     document.querySelectorAll('ul[id]').forEach(function(ul){
       data['__ul__'+ul.id] = ul.innerHTML;
     });
 
-    var offloadTbody = document.getElementById('offload-tbody');
-    if(offloadTbody) data['__offload_tbody__'] = offloadTbody.innerHTML;
-
+    /* هل صف NIL موجود؟ */
     data['__nil_row_removed__'] = !document.getElementById('nil-row');
 
-    return {
-      key: PAGE_KEY,
-      ts: Date.now(),
-      updated_at: new Date().toISOString(),
-      cloud_path: CLOUD_PATH,
-      data: data
-    };
-  }
-
-  function applyRecord(rec){
-    if(!rec || !rec.data) return;
-    var data = rec.data;
-
-    if(data['__offload_tbody__']){
-      var tbody = document.getElementById('offload-tbody');
-      if(tbody) tbody.innerHTML = data['__offload_tbody__'];
-    }
-
-    Object.keys(data).forEach(function(k){
-      if(k.indexOf('__ul__') === 0){
-        var ul = document.getElementById(k.replace('__ul__',''));
-        if(ul) ul.innerHTML = data[k];
-      }
+    openDB(function(db){
+      var tx = db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).put({key: PAGE_KEY, data: data, ts: Date.now()});
     });
-
-    Object.keys(data).forEach(function(k){
-      if(k.indexOf('__') === 0) return;
-      var el = document.getElementById(k) || document.querySelector('[data-save-key="'+k+'"]');
-      if(el && el.isContentEditable) el.innerHTML = data[k];
-    });
-
-    if(data['__nil_row_removed__']){
-      var nr = document.getElementById('nil-row');
-      if(nr) nr.remove();
-    }
-
-    _lastAppliedTs = Math.max(_lastAppliedTs, Number(rec.ts || 0));
-
-    setTimeout(function(){
-      try { if(typeof window.rebindSmartAutocomplete === 'function') window.rebindSmartAutocomplete(); } catch(ex) {}
-      try { if(typeof window.initFlightLists === 'function') window.initFlightLists(); } catch(ex) {}
-      try { if(typeof initTableCells === 'function') initTableCells(); } catch(ex) {}
-      try { if(typeof window.initManpower === 'function') window.initManpower(); } catch(ex) {}
-      try { if(typeof refreshSnMap === 'function') refreshSnMap(); } catch(ex) {}
-      try { if(typeof window.renumberOffloadRows === 'function') window.renumberOffloadRows(); } catch(ex) {}
-    }, 0);
   }
 
-  function getGitHubPat(silent){
-    var pat = (localStorage.getItem('gh_pat') || '').trim();
-    if(pat || silent) return pat;
-    pat = prompt('Enter GitHub token once to enable automatic report sync between phone and computer.\n\nPress Cancel to keep local-only saving on this device for now.');
-    if(pat){
-      pat = pat.trim();
-      localStorage.setItem('gh_pat', pat);
-      sessionStorage.removeItem('gh_pat_skip_' + PAGE_KEY);
-      _skipAutoPrompt = false;
-      updateCloudBtnIdle();
-    } else {
-      sessionStorage.setItem('gh_pat_skip_' + PAGE_KEY, '1');
-      _skipAutoPrompt = true;
-      setCloudBtn('☁️ Local only', '#64748b', 2600);
-    }
-    return (pat || '').trim();
-  }
-
-  function ensureAutoGitHubPat(){
-    var pat = (localStorage.getItem('gh_pat') || '').trim();
-    if(pat) return pat;
-    if(_skipAutoPrompt || _autoPromptShown) return '';
-    _autoPromptShown = true;
-    return getGitHubPat(false);
-  }
-
-  function ensureSyncBranch(headers){
-    var branchUrl = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/branches/' + SYNC_BRANCH;
-    var mainRefUrl = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/git/ref/heads/main';
-    var createRefUrl = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/git/refs';
-
-    return fetch(branchUrl + '?t=' + Date.now(), {headers:headers})
-      .then(function(r){
-        if(r.ok) return true;
-        if(r.status === 401 || r.status === 403) throw new Error('AUTH');
-        if(r.status !== 404) throw new Error('BRANCH_' + r.status);
-        return fetch(mainRefUrl + '?t=' + Date.now(), {headers:headers})
-          .then(function(mainRefResp){
-            if(mainRefResp.status === 401 || mainRefResp.status === 403) throw new Error('AUTH');
-            if(!mainRefResp.ok) throw new Error('MAINREF_' + mainRefResp.status);
-            return mainRefResp.json();
-          })
-          .then(function(mainRef){
-            var baseSha = (((mainRef || {}).object || {}).sha || '').trim();
-            if(!baseSha) throw new Error('MAINREF_SHA');
-            return fetch(createRefUrl, {
-              method: 'POST',
-              headers: Object.assign({'Content-Type':'application/json'}, headers),
-              body: JSON.stringify({ ref: 'refs/heads/' + SYNC_BRANCH, sha: baseSha })
-            });
-          })
-          .then(function(createResp){
-            if(createResp.ok || createResp.status === 422) return true;
-            if(createResp.status === 401 || createResp.status === 403) throw new Error('AUTH');
-            throw new Error('CREATEBRANCH_' + createResp.status);
-          });
-      });
-  }
-
-  function fetchCloudRecord(){
-    if(!CLOUD_RAW_URL) return Promise.resolve(null);
-    return fetch(CLOUD_RAW_URL + '?t=' + Date.now(), {cache:'no-store'})
-      .then(function(r){
-        if(r.status === 404) return null;
-        if(!r.ok) throw new Error('RAW_' + r.status);
-        return r.json();
-      })
-      .catch(function(){ return null; });
-  }
-
-  function pushCloud(record, forcePrompt){
-    if(!CLOUD_API_URL) return Promise.resolve(false);
-    var pat = getGitHubPat(!forcePrompt ? true : false);
-    if(!pat){
-      if(forcePrompt){
-        setCloudBtn('☁️ Token needed', '#b45309', 2600);
-      }
-      return Promise.resolve(false);
-    }
-    if(_cloudBusy){
-      _cloudPending = true;
-      return Promise.resolve(false);
-    }
-    _cloudBusy = true;
-    setCloudBtn('☁️ Syncing…', '#0284c7');
-
-    var headers = {
-      'Accept':'application/vnd.github+json',
-      'Authorization':'Bearer ' + pat,
-      'X-GitHub-Api-Version':'2022-11-28'
-    };
-    var content = btoa(unescape(encodeURIComponent(JSON.stringify(record, null, 2))));
-
-    return ensureSyncBranch(headers).then(function(){
-      return fetch(CLOUD_API_URL + '?t=' + Date.now(), {headers:headers})
-      .then(function(r){
-        if(r.status === 404) return null;
-        if(r.status === 401 || r.status === 403){
-          localStorage.removeItem('gh_pat');
-          throw new Error('AUTH');
-        }
-        if(!r.ok) throw new Error('GET_' + r.status);
-        return r.json();
-      })
-      .then(function(existing){
-        var body = {
-          message: 'Sync report edits for ' + PAGE_KEY,
-          content: content,
-          branch: SYNC_BRANCH
-        };
-        if(existing && existing.sha) body.sha = existing.sha;
-        return fetch(CLOUD_API_URL, {
-          method: 'PUT',
-          headers: Object.assign({'Content-Type':'application/json'}, headers),
-          body: JSON.stringify(body)
-        });
-      })
-      .then(function(r){
-        if(r.status === 401 || r.status === 403){
-          localStorage.removeItem('gh_pat');
-          throw new Error('AUTH');
-        }
-        if(!r.ok) throw new Error('PUT_' + r.status);
-        return r.json();
-      })
-      .then(function(){
-        _cloudBusy = false;
-        _cloudPending = false;
-        _lastAppliedTs = Math.max(_lastAppliedTs, Number(record.ts || 0));
-        setCloudBtn('☁️ Synced', '#16a34a', 2500);
-        return true;
-      });
-    })
-      .catch(function(err){
-        _cloudBusy = false;
-        _cloudPending = false;
-        if((err && err.message) === 'AUTH'){
-          setCloudBtn('☁️ Re-enter token', '#dc2626', 3200);
-        } else {
-          setCloudBtn('☁️ Sync failed', '#dc2626', 3200);
-        }
-        return false;
-      });
-  }
-
-  function scheduleCloudPush(record){
-    if(!CLOUD_API_URL) return;
-    var pat = ensureAutoGitHubPat();
-    if(!pat) return;
-    clearTimeout(_cloudTimer);
-    _cloudTimer = setTimeout(function(){
-      pushCloud(record, false);
-    }, 1400);
-  }
-
-  function saveNow(forceCloudNow){
-    var record = collectData();
-    writeLocal(record);
-    if(forceCloudNow) pushCloud(record, false); else scheduleCloudPush(record);
-    return record;
-  }
-
+  /* استدعاء خارجي من زر حذف NIL */
   window.triggerAutosave = function(){ saveNow(); };
-  window.forceCloudSync = function(){
-    var record = saveNow();
-    return pushCloud(record, true).then(function(ok){
-      if(ok){
-        alert('Cloud sync completed. When you open the same report on another device, the latest edits will appear there.');
-      }
-      return ok;
-    });
-  };
 
   function restoreSaved(){
-    Promise.all([
-      new Promise(function(resolve){ readLocal(resolve); }),
-      fetchCloudRecord()
-    ]).then(function(results){
-      var localRec = results[0];
-      var cloudRec = results[1];
-      var chosen = null;
+    openDB(function(db){
+      var tx = db.transaction(STORE,'readonly');
+      var req = tx.objectStore(STORE).get(PAGE_KEY);
+      req.onsuccess = function(e){
+        var rec = e.target && e.target.result;
+        if(!rec || !rec.data) return;
+        var data = rec.data;
 
-      if(localRec && cloudRec){
-        chosen = Number(cloudRec.ts || 0) > Number(localRec.ts || 0) ? cloudRec : localRec;
-      } else {
-        chosen = cloudRec || localRec;
-      }
+        /* استعادة قوائم ul أولاً (تضمن وجود العناصر) */
+        Object.keys(data).forEach(function(k){
+          if(k.indexOf('__ul__') === 0){
+            var ul = document.getElementById(k.replace('__ul__',''));
+            if(ul) ul.innerHTML = data[k];
+          }
+        });
 
-      if(chosen) applyRecord(chosen);
-      if(cloudRec && (!localRec || Number(cloudRec.ts || 0) > Number(localRec.ts || 0))){
-        writeLocal(cloudRec);
-        setCloudBtn('☁️ Cloud loaded', '#16a34a', 2200);
-      } else if(localRec && cloudRec && Number(localRec.ts || 0) > Number(cloudRec.ts || 0)){
-        scheduleCloudPush(localRec);
-      }
-    }).catch(function(err){
-      console.warn('[autosave] restore failed', err);
+        /* استعادة contenteditable */
+        Object.keys(data).forEach(function(k){
+          if(k.indexOf('__') === 0) return;
+          var el = document.getElementById(k) || document.querySelector('[data-save-key="'+k+'"]');
+          if(el && el.isContentEditable) el.innerHTML = data[k];
+        });
+
+        /* إزالة صف NIL إذا كان محذوفاً */
+        if(data['__nil_row_removed__']){
+          var nr = document.getElementById('nil-row');
+          if(nr) nr.remove();
+        }
+
+        /* بعد استعادة innerHTML تُفقد listeners — أعد ربط autocomplete */
+        setTimeout(function(){
+          try { if(typeof window.rebindSmartAutocomplete === 'function') window.rebindSmartAutocomplete(); } catch(ex) {}
+        }, 0);
+      };
     });
   }
 
+  /* ── ربط الحفظ بكل حدث تعديل ── */
   function _schedSave(){
     clearTimeout(_saveTimer);
     _saveTimer = setTimeout(saveNow, 400);
@@ -2553,14 +2109,8 @@ Recipients: ' + result.selected.join(', '));
 
   document.addEventListener('input',  _schedSave);
   document.addEventListener('keyup',  _schedSave);
-  document.addEventListener('change', _schedSave, true);
-  document.addEventListener('blur',   _schedSave, true);
-  document.addEventListener('visibilitychange', function(){
-    if(document.visibilityState === 'hidden') saveNow(true);
-  });
-  window.addEventListener('pagehide', function(){ saveNow(true); });
-  window.addEventListener('beforeunload', function(){ saveNow(false); });
 
+  /* MutationObserver للقوائم (إضافة/حذف عناصر) */
   var mo = new MutationObserver(function(muts){
     var changed = muts.some(function(m){
       return m.type==='childList' || m.type==='characterData';
@@ -2569,19 +2119,11 @@ Recipients: ' + result.selected.join(', '));
   });
   mo.observe(document.body, {childList:true, subtree:true, characterData:true});
 
+  /* استعادة البيانات بعد تحميل الصفحة */
   if(document.readyState === 'loading'){
     document.addEventListener('DOMContentLoaded', restoreSaved);
   } else {
     restoreSaved();
-  }
-
-  updateCloudBtnIdle();
-
-  var cloudBtnEl = cloudBtn();
-  if(cloudBtnEl){
-    cloudBtnEl.addEventListener('click', function(){
-      window.forceCloudSync();
-    });
   }
 })();
 </script>
