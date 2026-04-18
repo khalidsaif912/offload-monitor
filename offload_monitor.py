@@ -1654,7 +1654,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
             f'aria-label="Delete row" title="Delete row" '
             f'style="position:absolute;top:3px;left:3px;width:20px;height:20px;line-height:18px;'
             f'padding:0;margin:0;border:2px solid #c2410c;background:#fee2e2;color:#c2410c;'
-            f'border-radius:3px;font-size:16px;font-weight:900;cursor:pointer;display:inline-flex;'
+            f'border-radius:4px;font-size:16px;font-weight:900;cursor:pointer;display:inline-flex;'
             f'align-items:center;justify-content:center;z-index:10;">×</button>'
         )
 
@@ -2328,31 +2328,10 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     #report-content{{width:1180px;max-width:100%;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
     .btn-bar{{max-width:1180px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
-    /* ══ Bullet fix: contenteditable disables list-style in Chrome/Safari ══ */
-    /* جميع القوائم القابلة للتعديل — نقطة عبر ::before لأن contenteditable يُعطّل ::marker */
-    #ul-loadplan li, #ul-advloading li, #ul-handover li, #ul-briefings li, #ul-opnotes li,
-    #ul-sickleave li, #ul-annualleave li, #ul-trainee li, #ul-overtime li,
-    #ul-ctu li, #ul-inventory li, #ul-support li, #ul-supervisors li,
-    #ul-fd-export li, #ul-fd-import li, #ul-flight-dispatch li,
-    [id^="ul-dept-"] li{{
-      display:block; position:relative;
-      padding-left:16px; min-height:18px;
-      list-style:none!important;
-    }}
-    #ul-loadplan li::before, #ul-advloading li::before, #ul-handover li::before,
-    #ul-briefings li::before, #ul-opnotes li::before,
-    #ul-sickleave li::before, #ul-annualleave li::before, #ul-trainee li::before,
-    #ul-overtime li::before, #ul-ctu li::before, #ul-inventory li::before,
-    #ul-support li::before, #ul-supervisors li::before,
-    #ul-fd-export li::before, #ul-fd-import li::before, #ul-flight-dispatch li::before,
-    [id^="ul-dept-"] li::before{{
-      content:'•'; position:absolute; left:2px; top:0;
-      color:#1b1f2a; font-weight:700; line-height:1.4; pointer-events:none;
-    }}
-    /* القوائم الثلاث الخاصة — نفس الطريقة */
+    /* قوائم bullets ثابتة للأقسام التي كانت تختفي فيها النقطة */
     #ul-csdrescreening, #ul-special-handover, #ul-other{{list-style:none!important;padding:0!important;margin:4px 0 10px 22px!important;color:#1b1f2a;}}
-    #ul-csdrescreening li, #ul-special-handover li, #ul-other li{{display:block;position:relative;list-style:none!important;padding-left:16px;min-height:18px;}}
-    #ul-csdrescreening li::before, #ul-special-handover li::before, #ul-other li::before{{content:'•';position:absolute;left:2px;top:0;color:#1b1f2a;font-weight:700;line-height:1.4;pointer-events:none;}}
+    #ul-csdrescreening li, #ul-special-handover li, #ul-other li{{position:relative;list-style:none!important;padding-left:14px;min-height:18px;}}
+    #ul-csdrescreening li::before, #ul-special-handover li::before, #ul-other li::before{{content:'•';position:absolute;left:0;top:0;color:#1b1f2a;font-weight:700;line-height:1.2;}}
     /* جدول الأوفلود — حل جذري للتنسيق على الشاشة والجوال */
     .offload-wrap{{width:100%;max-width:100%;overflow:visible;}}
     .offload-table{{width:100%;table-layout:fixed;border-collapse:collapse;}}
@@ -3296,12 +3275,19 @@ Recipients: ' + result.selected.join(', '));
     }});
   }}
 
-  var copyBtn = document.getElementById('btn-copy');
-  var manageBtn = document.getElementById('btn-manage-emails');
-  var emailBtn = document.getElementById('btn-email');
-  if(copyBtn) copyBtn.addEventListener('click', onCopyReport);
-  if(manageBtn) manageBtn.addEventListener('click', openRecipientsFile);
-  if(emailBtn) emailBtn.addEventListener('click', sendEmailNow);
+  function _bindButtons() {{
+    var copyBtn = document.getElementById('btn-copy');
+    var manageBtn = document.getElementById('btn-manage-emails');
+    var emailBtn = document.getElementById('btn-email');
+    if(copyBtn && !copyBtn._bound) {{ copyBtn._bound=true; copyBtn.addEventListener('click', onCopyReport); }}
+    if(manageBtn && !manageBtn._bound) {{ manageBtn._bound=true; manageBtn.addEventListener('click', openRecipientsFile); }}
+    if(emailBtn && !emailBtn._bound) {{ emailBtn._bound=true; emailBtn.addEventListener('click', sendEmailNow); }}
+  }}
+  if(document.readyState === 'loading') {{
+    document.addEventListener('DOMContentLoaded', _bindButtons);
+  }} else {{
+    _bindButtons();
+  }}
 }})();
 
 /* ══════════════════════════════════════════════════════
@@ -3654,10 +3640,8 @@ Recipients: ' + result.selected.join(', '));
         li.style.paddingLeft = '14px';
         li.style.position = 'relative';
       }} else {{
-        /* نستخدم CSS ::before بدلاً من list-style لأن contenteditable يُعطّله */
-        li.style.listStyle = 'none';
-        li.style.paddingLeft = '16px';
-        li.style.position = 'relative';
+        li.style.listStyleType = 'disc';
+        li.style.listStylePosition = 'outside';
       }}
     }}
     return li;
@@ -3716,8 +3700,8 @@ Recipients: ' + result.selected.join(', '));
   ];
 
   function buildOffloadIndexCellHTML(idx) {{
-    return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" '
-      + 'style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;padding:0;margin:0;border:1px solid #0b3a78;background:#dce6f4;color:#0b3a78;border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">×</button>'
+    return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" '
+      + 'style="position:absolute;top:3px;left:3px;width:20px;height:20px;line-height:18px;padding:0;margin:0;border:2px solid #c2410c;background:#fee2e2;color:#c2410c;border-radius:4px;font-size:16px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;z-index:10;">×</button>'
       + '<strong class="offload-row-num">' + idx + '</strong>';
   }}
 
@@ -3738,8 +3722,9 @@ Recipients: ' + result.selected.join(', '));
     var btn = ev.target && ev.target.closest ? ev.target.closest('.offload-row-delete') : null;
     if(!btn) return;
     ev.preventDefault();
-    if(typeof window.deleteOffloadRow === 'function') window.deleteOffloadRow(btn);
-  }});
+    ev.stopPropagation();
+    window.deleteOffloadRow(btn);
+  }}, true);
 
   function decorateOffloadRow(row) {{
     if(!row) return;
@@ -3762,8 +3747,8 @@ Recipients: ' + result.selected.join(', '));
     td.addEventListener('keydown', function(e) {{
       if(e.key !== 'Tab' || e.shiftKey) return;
       var row = td.closest('tr');
-      var tbody = row && row.closest('tbody');
-      if(!row || !tbody || tbody.id !== 'offload-tbody') return;
+      var tbody = row && row.closest('#offload-tbody');
+      if(!row || !tbody) return;
       var editable = Array.from(row.querySelectorAll('td[contenteditable="true"]'));
       if(!editable.length || editable[editable.length - 1] !== td) return;
       var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {{
@@ -4872,17 +4857,11 @@ Recipients: ' + result.selected.join(', '));
 
   updateCloudBtnIdle();
 
-  function _bindCloudBtn(){{
-    var btn = cloudBtn();
-    if(btn && !btn._cloudBound){{
-      btn._cloudBound = true;
-      btn.addEventListener('click', function(){{ window.forceCloudSync(); }});
-    }}
-  }}
-  if(document.readyState === 'loading'){{
-    document.addEventListener('DOMContentLoaded', function(){{ _bindCloudBtn(); updateCloudBtnIdle(); }});
-  }} else {{
-    _bindCloudBtn();
+  var cloudBtnEl = cloudBtn();
+  if(cloudBtnEl){{
+    cloudBtnEl.addEventListener('click', function(){{
+      window.forceCloudSync();
+    }});
   }}
 }})();
 </script>
