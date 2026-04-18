@@ -1651,7 +1651,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     def _delete_btn() -> str:
         return (
             f'<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" '
-            f'aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" '
+            f'aria-label="Delete row" title="Delete row" onclick="window.deleteOffloadRow&&window.deleteOffloadRow(this)" '
             f'style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;'
             f'padding:0;margin:0;border:1px solid {header_blue};background:{hdr_bg};color:{header_blue};'
             f'border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;'
@@ -2328,7 +2328,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     #report-content{{width:1180px;max-width:100%;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
     .btn-bar{{max-width:1180px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
-    /* قوائم bullets — نقطة لكل القوائم */
+    /* قوائم bullets ثابتة لجميع القوائم */
     #ul-csdrescreening, #ul-special-handover, #ul-other{{list-style:none!important;padding:0!important;margin:4px 0 10px 22px!important;color:#1b1f2a;}}
     #ul-csdrescreening li, #ul-special-handover li, #ul-other li{{position:relative;list-style:none!important;padding-left:14px;min-height:18px;}}
     #ul-csdrescreening li::before, #ul-special-handover li::before, #ul-other li::before{{content:'•';position:absolute;left:0;top:0;color:#1b1f2a;font-weight:700;line-height:1.2;}}
@@ -2478,7 +2478,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       </tr>
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-briefings" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+      <ul id="ul-briefings" style="margin:0 0 0 22px; padding-left:18px; color:#1b1f2a; list-style-type:disc; list-style-position:outside;">
         <li contenteditable="true" tabindex="60" style="outline:none;">Safety toolbox conducted.</li>
         <li contenteditable="true" tabindex="61" style="outline:none;">ULD and net serviceability checked.</li>
         <li contenteditable="true" tabindex="62" style="outline:none;">Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
@@ -2522,7 +2522,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       </tr>
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-opnotes" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+      <ul id="ul-opnotes" style="margin:0 0 0 22px; padding-left:18px; color:#1b1f2a; list-style-type:disc; list-style-position:outside;">
         <li contenteditable="true" tabindex="80" style="outline:none;">All flights departed on time as per RDM Mr. Saleh.</li>
         <li contenteditable="true" tabindex="81" style="outline:none;">DG embargo station check completed.</li>
         <li contenteditable="true" tabindex="82" style="outline:none;">Pigeonhole check done for any pending documents.</li>
@@ -2620,7 +2620,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       </tr>
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-handover" style="margin:0 0 10px 22px; padding:0;">
+      <ul id="ul-handover" style="margin:0 0 10px 22px; padding-left:18px; list-style-type:disc; list-style-position:outside;">
         <li contenteditable="true" tabindex="90" style="outline:none;">READ AND SIGN.</li>
         <li contenteditable="true" tabindex="91" style="outline:none;">Shell &amp; Al-Maha Card Fuel.</li>
         <li contenteditable="true" tabindex="92" style="outline:none;">DIP MAIL Cage Keys.</li>
@@ -3640,7 +3640,6 @@ Recipients: ' + result.selected.join(', '));
       }} else {{
         li.style.listStyleType = 'disc';
         li.style.listStylePosition = 'outside';
-        li.style.marginLeft = '0';
       }}
     }}
     return li;
@@ -3699,8 +3698,8 @@ Recipients: ' + result.selected.join(', '));
   ];
 
   function buildOffloadIndexCellHTML(idx) {{
-    return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" '
-      + 'style="position:absolute;top:3px;left:3px;width:20px;height:20px;line-height:18px;padding:0;margin:0;border:1px solid #c2410c;background:#fee2e2;color:#c2410c;border-radius:3px;font-size:14px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;z-index:5;">×</button>'
+    return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" '
+      + 'style="position:absolute;top:3px;left:3px;width:20px;height:20px;line-height:18px;padding:0;margin:0;border:1px solid #c2410c;background:#fee2e2;color:#c2410c;border-radius:3px;font-size:15px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;z-index:5;">×</button>'
       + '<strong class="offload-row-num">' + idx + '</strong>';
   }}
 
