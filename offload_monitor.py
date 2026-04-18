@@ -1651,11 +1651,11 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     def _delete_btn() -> str:
         return (
             f'<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" '
-            f'aria-label="Delete row" title="Delete row" onclick="window.deleteOffloadRow&&window.deleteOffloadRow(this)" '
-            f'style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;'
-            f'padding:0;margin:0;border:1px solid {header_blue};background:{hdr_bg};color:{header_blue};'
-            f'border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;'
-            f'align-items:center;justify-content:center;">×</button>'
+            f'aria-label="Delete row" title="Delete row" '
+            f'style="position:absolute;top:3px;left:3px;width:20px;height:20px;line-height:18px;'
+            f'padding:0;margin:0;border:2px solid #c2410c;background:#fee2e2;color:#c2410c;'
+            f'border-radius:3px;font-size:16px;font-weight:900;cursor:pointer;display:inline-flex;'
+            f'align-items:center;justify-content:center;z-index:10;">×</button>'
         )
 
     def _idx_cell(index: int, bg: str) -> str:
@@ -2328,15 +2328,31 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     #report-content{{width:1180px;max-width:100%;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
     .btn-bar{{max-width:1180px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
-    /* قوائم bullets ثابتة لجميع القوائم */
-    #ul-csdrescreening, #ul-special-handover, #ul-other{{list-style:none!important;padding:0!important;margin:4px 0 10px 22px!important;color:#1b1f2a;}}
-    #ul-csdrescreening li, #ul-special-handover li, #ul-other li{{position:relative;list-style:none!important;padding-left:14px;min-height:18px;}}
-    #ul-csdrescreening li::before, #ul-special-handover li::before, #ul-other li::before{{content:'•';position:absolute;left:0;top:0;color:#1b1f2a;font-weight:700;line-height:1.2;}}
+    /* ══ Bullet fix: contenteditable disables list-style in Chrome/Safari ══ */
+    /* جميع القوائم القابلة للتعديل — نقطة عبر ::before لأن contenteditable يُعطّل ::marker */
     #ul-loadplan li, #ul-advloading li, #ul-handover li, #ul-briefings li, #ul-opnotes li,
     #ul-sickleave li, #ul-annualleave li, #ul-trainee li, #ul-overtime li,
     #ul-ctu li, #ul-inventory li, #ul-support li, #ul-supervisors li,
     #ul-fd-export li, #ul-fd-import li, #ul-flight-dispatch li,
-    [id^="ul-dept-"] li{{list-style-type:disc!important;list-style-position:outside!important;}}
+    [id^="ul-dept-"] li{{
+      display:block; position:relative;
+      padding-left:16px; min-height:18px;
+      list-style:none!important;
+    }}
+    #ul-loadplan li::before, #ul-advloading li::before, #ul-handover li::before,
+    #ul-briefings li::before, #ul-opnotes li::before,
+    #ul-sickleave li::before, #ul-annualleave li::before, #ul-trainee li::before,
+    #ul-overtime li::before, #ul-ctu li::before, #ul-inventory li::before,
+    #ul-support li::before, #ul-supervisors li::before,
+    #ul-fd-export li::before, #ul-fd-import li::before, #ul-flight-dispatch li::before,
+    [id^="ul-dept-"] li::before{{
+      content:'•'; position:absolute; left:2px; top:0;
+      color:#1b1f2a; font-weight:700; line-height:1.4; pointer-events:none;
+    }}
+    /* القوائم الثلاث الخاصة — نفس الطريقة */
+    #ul-csdrescreening, #ul-special-handover, #ul-other{{list-style:none!important;padding:0!important;margin:4px 0 10px 22px!important;color:#1b1f2a;}}
+    #ul-csdrescreening li, #ul-special-handover li, #ul-other li{{display:block;position:relative;list-style:none!important;padding-left:16px;min-height:18px;}}
+    #ul-csdrescreening li::before, #ul-special-handover li::before, #ul-other li::before{{content:'•';position:absolute;left:2px;top:0;color:#1b1f2a;font-weight:700;line-height:1.4;pointer-events:none;}}
     /* جدول الأوفلود — حل جذري للتنسيق على الشاشة والجوال */
     .offload-wrap{{width:100%;max-width:100%;overflow:visible;}}
     .offload-table{{width:100%;table-layout:fixed;border-collapse:collapse;}}
@@ -2478,7 +2494,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       </tr>
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-briefings" style="margin:0 0 0 22px; padding-left:18px; color:#1b1f2a; list-style-type:disc; list-style-position:outside;">
+      <ul id="ul-briefings" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
         <li contenteditable="true" tabindex="60" style="outline:none;">Safety toolbox conducted.</li>
         <li contenteditable="true" tabindex="61" style="outline:none;">ULD and net serviceability checked.</li>
         <li contenteditable="true" tabindex="62" style="outline:none;">Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
@@ -2522,7 +2538,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       </tr>
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-opnotes" style="margin:0 0 0 22px; padding-left:18px; color:#1b1f2a; list-style-type:disc; list-style-position:outside;">
+      <ul id="ul-opnotes" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
         <li contenteditable="true" tabindex="80" style="outline:none;">All flights departed on time as per RDM Mr. Saleh.</li>
         <li contenteditable="true" tabindex="81" style="outline:none;">DG embargo station check completed.</li>
         <li contenteditable="true" tabindex="82" style="outline:none;">Pigeonhole check done for any pending documents.</li>
@@ -2620,7 +2636,7 @@ def build_shift_report(date_dir: str, shift: str) -> None:
       </tr>
     </table>
     <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
-      <ul id="ul-handover" style="margin:0 0 10px 22px; padding-left:18px; list-style-type:disc; list-style-position:outside;">
+      <ul id="ul-handover" style="margin:0 0 10px 22px; padding:0;">
         <li contenteditable="true" tabindex="90" style="outline:none;">READ AND SIGN.</li>
         <li contenteditable="true" tabindex="91" style="outline:none;">Shell &amp; Al-Maha Card Fuel.</li>
         <li contenteditable="true" tabindex="92" style="outline:none;">DIP MAIL Cage Keys.</li>
@@ -3638,8 +3654,10 @@ Recipients: ' + result.selected.join(', '));
         li.style.paddingLeft = '14px';
         li.style.position = 'relative';
       }} else {{
-        li.style.listStyleType = 'disc';
-        li.style.listStylePosition = 'outside';
+        /* نستخدم CSS ::before بدلاً من list-style لأن contenteditable يُعطّله */
+        li.style.listStyle = 'none';
+        li.style.paddingLeft = '16px';
+        li.style.position = 'relative';
       }}
     }}
     return li;
@@ -3699,7 +3717,7 @@ Recipients: ' + result.selected.join(', '));
 
   function buildOffloadIndexCellHTML(idx) {{
     return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" '
-      + 'style="position:absolute;top:3px;left:3px;width:20px;height:20px;line-height:18px;padding:0;margin:0;border:1px solid #c2410c;background:#fee2e2;color:#c2410c;border-radius:3px;font-size:15px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;z-index:5;">×</button>'
+      + 'style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;padding:0;margin:0;border:1px solid #0b3a78;background:#dce6f4;color:#0b3a78;border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">×</button>'
       + '<strong class="offload-row-num">' + idx + '</strong>';
   }}
 
@@ -3720,7 +3738,6 @@ Recipients: ' + result.selected.join(', '));
     var btn = ev.target && ev.target.closest ? ev.target.closest('.offload-row-delete') : null;
     if(!btn) return;
     ev.preventDefault();
-    ev.stopPropagation();
     if(typeof window.deleteOffloadRow === 'function') window.deleteOffloadRow(btn);
   }});
 
@@ -3745,7 +3762,7 @@ Recipients: ' + result.selected.join(', '));
     td.addEventListener('keydown', function(e) {{
       if(e.key !== 'Tab' || e.shiftKey) return;
       var row = td.closest('tr');
-      var tbody = row && row.parentElement;
+      var tbody = row && row.closest('tbody');
       if(!row || !tbody || tbody.id !== 'offload-tbody') return;
       var editable = Array.from(row.querySelectorAll('td[contenteditable="true"]'));
       if(!editable.length || editable[editable.length - 1] !== td) return;
@@ -3755,16 +3772,14 @@ Recipients: ' + result.selected.join(', '));
       if(!rows.length || rows[rows.length - 1] !== row) return;
       e.preventDefault();
       e.stopPropagation();
-      var tr = appendOffloadRow(false);
-      if(tr) {{
-        setTimeout(function() {{
+      e.stopImmediatePropagation();
+      setTimeout(function() {{
+        var tr = appendOffloadRow(false);
+        if(tr) {{
           var firstCell = tr.querySelector('td[contenteditable="true"]');
-          if(firstCell) {{
-            firstCell.focus();
-            setCursorEnd(firstCell);
-          }}
-        }}, 10);
-      }}
+          if(firstCell) firstCell.focus();
+        }}
+      }}, 0);
     }});
 
     var col = td.dataset.col;
@@ -4857,11 +4872,17 @@ Recipients: ' + result.selected.join(', '));
 
   updateCloudBtnIdle();
 
-  var cloudBtnEl = cloudBtn();
-  if(cloudBtnEl){{
-    cloudBtnEl.addEventListener('click', function(){{
-      window.forceCloudSync();
-    }});
+  function _bindCloudBtn(){{
+    var btn = cloudBtn();
+    if(btn && !btn._cloudBound){{
+      btn._cloudBound = true;
+      btn.addEventListener('click', function(){{ window.forceCloudSync(); }});
+    }}
+  }}
+  if(document.readyState === 'loading'){{
+    document.addEventListener('DOMContentLoaded', function(){{ _bindCloudBtn(); updateCloudBtnIdle(); }});
+  }} else {{
+    _bindCloudBtn();
   }}
 }})();
 </script>
