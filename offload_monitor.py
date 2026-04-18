@@ -2328,10 +2328,19 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     #report-content{{width:1180px;max-width:100%;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
     .btn-bar{{max-width:1180px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
-    /* قوائم bullets ثابتة للأقسام التي كانت تختفي فيها النقطة */
+    /* قوائم bullets ثابتة لجميع القوائم القابلة للتعديل */
     #ul-csdrescreening, #ul-special-handover, #ul-other{{list-style:none!important;padding:0!important;margin:4px 0 10px 22px!important;color:#1b1f2a;}}
     #ul-csdrescreening li, #ul-special-handover li, #ul-other li{{position:relative;list-style:none!important;padding-left:14px;min-height:18px;}}
     #ul-csdrescreening li::before, #ul-special-handover li::before, #ul-other li::before{{content:'•';position:absolute;left:0;top:0;color:#1b1f2a;font-weight:700;line-height:1.2;}}
+    /* نقطة لكل القوائم الأخرى — loadplan, advloading, handover, briefings, opnotes, etc. */
+    #ul-loadplan li, #ul-advloading li, #ul-handover li, #ul-briefings li, #ul-opnotes li,
+    #ul-sickleave li, #ul-annualleave li, #ul-trainee li, #ul-overtime li,
+    #ul-ctu li, #ul-inventory li, #ul-support li, #ul-supervisors li,
+    #ul-fd-export li, #ul-fd-import li, #ul-flight-dispatch li,
+    [id^="ul-dept-"] li{{
+      list-style-type: disc !important;
+      list-style-position: outside !important;
+    }}
     /* جدول الأوفلود — حل جذري للتنسيق على الشاشة والجوال */
     .offload-wrap{{width:100%;max-width:100%;overflow:visible;}}
     .offload-table{{width:100%;table-layout:fixed;border-collapse:collapse;}}
@@ -3290,7 +3299,7 @@ Recipients: ' + result.selected.join(', '));
 
   /* ── 0) Config & Helpers ── */
   var AIRLABS_KEY = (typeof window._AIRLABS_KEY !== 'undefined') ? window._AIRLABS_KEY : '';
-  var FLT_RE = /^([A-Z]{{2,3}})(\d{{1,5}})$/i;
+  var FLT_RE = /^([A-Z]{{2,3}})(\\d{{1,5}})$/i;
 
   var LOCAL_FLIGHTS = {{}};
   try {{ var lf = window._LOCAL_MCT_FLIGHTS; if(lf) LOCAL_FLIGHTS = lf; }} catch(ex) {{}}
@@ -3319,16 +3328,16 @@ Recipients: ' + result.selected.join(', '));
   function cleanEditableText(el) {{
     return String((el && el.innerText) || '')
       .replace(/[•·▪◦●]/g,' ')
-      .replace(/\u00a0/g,' ')
-      .replace(/^[\s\-–—]+/, '')
-      .replace(/\s+/g,' ')
+      .replace(/\\u00a0/g,' ')
+      .replace(/^[\\s\\-–—]+/, '')
+      .replace(/\\s+/g,' ')
       .trim();
   }}
 
   function isEffectivelyEmptyManpowerLi(li) {{
     if(!li) return true;
     var txt = getManpowerText ? getManpowerText(li) : cleanEditableText(li);
-    txt = String(txt || '').replace(/\u200b/g, '').replace(/\u00a0/g, ' ').trim();
+    txt = String(txt || '').replace(/\\u200b/g, '').replace(/\\u00a0/g, ' ').trim();
     return !txt;
   }}
 
@@ -3349,19 +3358,19 @@ Recipients: ' + result.selected.join(', '));
   function normalizeFlightTyped(text) {{
     var raw = String(text || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
     if(!raw) return '';
-    if(/^\d{1,5}$/.test(raw)) return raw;
+    if(/^\\d{1,5}$/.test(raw)) return raw;
     return raw;
   }}
 
   function flightCandidatesFromTyped(typed) {{
     var out = [];
     var seen = {{}};
-    var digitsOnly = /^\d{{1,5}}$/.test(typed || '');
+    var digitsOnly = /^\\d{{1,5}}$/.test(typed || '');
 
     Object.keys(LOCAL_FLIGHTS || {{}}).forEach(function(code) {{
-      var key = String(code || '').toUpperCase().replace(/\s+/g,'');
+      var key = String(code || '').toUpperCase().replace(/\\s+/g,'');
       if(!key || seen[key]) return;
-      var m = key.match(/^([A-Z]{{2,3}})(\d{{1,5}})$/);
+      var m = key.match(/^([A-Z]{{2,3}})(\\d{{1,5}})$/);
       if(!m) return;
       var num = m[2];
       if((digitsOnly && num.indexOf(typed) === 0) || (!digitsOnly && key.indexOf(typed) === 0)) {{
@@ -3392,7 +3401,7 @@ Recipients: ' + result.selected.join(', '));
       if(el.tagName === 'TD') {{ el.appendChild(g); }}
       else if(el.parentElement) {{ el.parentElement.insertBefore(g, el.nextSibling); }}
     }}
-    g.textContent = '\u2192 '+txt+' (Tab)';
+    g.textContent = '\\u2192 '+txt+' (Tab)';
   }}
   function removeGhost(el) {{
     [el, el.parentElement].forEach(function(p) {{
@@ -3405,11 +3414,11 @@ Recipients: ' + result.selected.join(', '));
   function parseTime(val) {{
     if(!val) return '';
     val = String(val).trim();
-    var iso = val.match(/T(\d{{2}}:\d{{2}})/);
+    var iso = val.match(/T(\\d{{2}}:\\d{{2}})/);
     if(iso) return iso[1];
-    var hm = val.match(/^(\d{{1,2}}:\d{{2}})$/);
+    var hm = val.match(/^(\\d{{1,2}}:\\d{{2}})$/);
     if(hm) return hm[1];
-    var d4 = val.match(/^(\d{{4}})$/);
+    var d4 = val.match(/^(\\d{{4}})$/);
     if(d4) return d4[1].slice(0,2)+':'+d4[1].slice(2);
     return '';
   }}
@@ -3471,7 +3480,7 @@ Recipients: ' + result.selected.join(', '));
       var dest = (info && info.dest) ? info.dest : '???';
       _ghost = isLoadPlan
         ? (flt + '/' + dest + '/' + todayFull() + '.')
-        : (flt + '/' + dest + '/' + todayFull() + ' \u2014 Completed as per plan');
+        : (flt + '/' + dest + '/' + todayFull() + ' \\u2014 Completed as per plan');
       li.dataset.ghostVal = _ghost;
       showGhost(li, _ghost);
     }}
@@ -3493,7 +3502,7 @@ Recipients: ' + result.selected.join(', '));
       }}
 
       var reqId = ++_reqId;
-      showGhost(li, flt + '/???/' + todayFull() + '\u2026');
+      showGhost(li, flt + '/???/' + todayFull() + '\\u2026');
       fetchFlightInfo(flt, todayISO(), function(info) {{
         if(reqId !== _reqId) return;
         applyFlightGhost(flt, info);
@@ -3511,7 +3520,7 @@ Recipients: ' + result.selected.join(', '));
         e.preventDefault();
         var acceptVal = li.dataset.ghostVal;
         var candidates = flightCandidatesFromTyped(normalizeFlightTyped(cleanEditableText(li)));
-        if(!/\//.test(acceptVal) && candidates.length) {{
+        if(!/\\//.test(acceptVal) && candidates.length) {{
           acceptVal = candidates[0];
           li.innerText = acceptVal;
           setCursorEnd(li);
@@ -3632,6 +3641,7 @@ Recipients: ' + result.selected.join(', '));
         li.style.listStyle = 'none';
         li.style.paddingLeft = '14px';
         li.style.position = 'relative';
+        /* إضافة النقطة عبر ::before — يُعالَج بالـ CSS */
       }} else {{
         li.style.listStyleType = 'disc';
         li.style.listStylePosition = 'outside';
@@ -3693,8 +3703,8 @@ Recipients: ' + result.selected.join(', '));
   ];
 
   function buildOffloadIndexCellHTML(idx) {{
-    return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" '
-      + 'style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;padding:0;margin:0;border:1px solid #0b3a78;background:#dce6f4;color:#0b3a78;border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">×</button>'
+    return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" '
+      + 'style="position:absolute;top:4px;left:4px;width:18px;height:18px;line-height:16px;padding:0;margin:0;border:1px solid #c2410c;background:#fee2e2;color:#c2410c;border-radius:3px;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;z-index:2;">×</button>'
       + '<strong class="offload-row-num">' + idx + '</strong>';
   }}
 
@@ -3749,6 +3759,7 @@ Recipients: ' + result.selected.join(', '));
       }});
       if(!rows.length || rows[rows.length - 1] !== row) return;
       e.preventDefault();
+      e.stopPropagation();
       var tr = appendOffloadRow(false);
       if(tr) {{
         setTimeout(function() {{
@@ -3757,7 +3768,7 @@ Recipients: ' + result.selected.join(', '));
             firstCell.focus();
             setCursorEnd(firstCell);
           }}
-        }}, 0);
+        }}, 10);
       }}
     }});
 
@@ -3804,7 +3815,7 @@ Recipients: ' + result.selected.join(', '));
         if(dateCell) {{
           var dv2 = (dateCell.innerText||'').replace(/ /g,'').trim().toUpperCase();
           var mons = {{JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12}};
-          var dm = dv2.match(/^(\d{{1,2}})([A-Z]{{3}})(\d{{2,4}})?$/);
+          var dm = dv2.match(/^(\\d{{1,2}})([A-Z]{{3}})(\\d{{2,4}})?$/);
           if(dm) {{
             var yr = dm[3] ? (dm[3].length===2 ? 2000+parseInt(dm[3]) : parseInt(dm[3])) : new Date().getFullYear();
             isoDate = yr+'-'+(mons[dm[2]]||1).toString().padStart(2,'0')+'-'+dm[1].padStart(2,'0');
@@ -3923,12 +3934,12 @@ Recipients: ' + result.selected.join(', '));
      C) MANPOWER — SN Autocomplete
      ══════════════════════════════════════ */
   function extractSnNamePair(text) {{
-    var txt = String(text || '').replace(/ /g,' ').replace(/\s+/g,' ').trim();
+    var txt = String(text || '').replace(/ /g,' ').replace(/\\s+/g,' ').trim();
     if(!txt) return null;
-    var m = txt.match(/^(?:SN\s*)?(\d{3,10})\s+(.+)$/i);
+    var m = txt.match(/^(?:SN\\s*)?(\\d{3,10})\\s+(.+)$/i);
     if(!m) return null;
     var sn = String(m[1] || '').replace(/[^0-9]/g,'');
-    var name = String(m[2] || '').replace(/\s+/g,' ').trim();
+    var name = String(m[2] || '').replace(/\\s+/g,' ').trim();
     if(!sn || !name) return null;
     return {{ sn: sn, name: name }};
   }}
@@ -3944,14 +3955,14 @@ Recipients: ' + result.selected.join(', '));
       var allStaff = window._ALL_STAFF || {{}};
       Object.keys(allStaff).forEach(function(sn) {{
         var snClean = String(sn).replace(/[^0-9]/g,'');
-        var name    = String(allStaff[sn] || '').replace(/\s+/g,' ').trim();
+        var name    = String(allStaff[sn] || '').replace(/\\s+/g,' ').trim();
         if(snClean && name && !map[snClean]) map[snClean] = name;
       }});
     }} catch(ex) {{}}
     /* 2) الموظفون الظاهرون في DOM */
     document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {{
       var sn   = String(el.dataset.sn || '').replace(/[^0-9]/g,'');
-      var name = String(el.dataset.name || '').replace(/\s+/g,' ').trim();
+      var name = String(el.dataset.name || '').replace(/\\s+/g,' ').trim();
       if(sn && name && !map[sn]) map[sn] = name;
     }});
     /* 3) نص مكتوب يدوياً */
@@ -3997,7 +4008,7 @@ Recipients: ' + result.selected.join(', '));
     var selected = li.querySelector && li.querySelector('[data-sn][data-name]');
     if(selected) {{
       var snSel = String(selected.dataset.sn || '').replace(/[^0-9]/g,'');
-      var nameSel = String(selected.dataset.name || '').replace(/\s+/g,' ').trim();
+      var nameSel = String(selected.dataset.name || '').replace(/\\s+/g,' ').trim();
       if(snSel && nameSel) return 'SN' + snSel + ' ' + nameSel;
     }}
     return cleanEditableText(li);
@@ -4056,11 +4067,11 @@ Recipients: ' + result.selected.join(', '));
   function extractTypedSn(text) {{
     var txt = String(text || '')
       .replace(/[•·▪◦●]/g,' ')
-      .replace(/\u00a0/g,' ')
-      .replace(/^[\s\-–—]+/, '')
+      .replace(/\\u00a0/g,' ')
+      .replace(/^[\\s\\-–—]+/, '')
       .trim();
     if(!txt) return '';
-    var m = txt.match(/(?:SN\s*)?(\d{{1,10}})/i);
+    var m = txt.match(/(?:SN\\s*)?(\\d{{1,10}})/i);
     return m ? m[1] : '';
   }}
 
@@ -4074,7 +4085,7 @@ Recipients: ' + result.selected.join(', '));
 
     function pushEntry(snVal, nameVal) {{
       var sn = String(snVal || '').replace(/[^0-9]/g,'');
-      var name = String(nameVal || '').replace(/\s+/g,' ').trim();
+      var name = String(nameVal || '').replace(/\\s+/g,' ').trim();
       if(!sn || !name || seen[sn]) return;
       seen[sn] = true;
       entries.push({{ sn: sn, name: name }});
@@ -4230,7 +4241,7 @@ Recipients: ' + result.selected.join(', '));
     li.addEventListener('paste', function(ev) {{
       if(isFormattedManpowerEntry(li)) {{
         var pasted = ((ev.clipboardData || window.clipboardData) && (ev.clipboardData || window.clipboardData).getData('text')) || '';
-        pasted = String(pasted || '').replace(/\s+/g, ' ').trim();
+        pasted = String(pasted || '').replace(/\\s+/g, ' ').trim();
         if(pasted) {{
           ev.preventDefault();
           convertFormattedManpowerToPlain(li, {{type:'insertText', text:pasted}});
@@ -5353,7 +5364,7 @@ function parseRosterHtml(html, shiftKey) {{
                 var raw = ne.textContent.trim();
                 var name = raw;
                 var sn = "";
-                var mx = raw.match(/^(.+?)\s*[-\u2013]\s*(\d+)(?:\s*\(.*?\))?\s*$/);
+                var mx = raw.match(/^(.+?)\\s*[-\\u2013]\\s*(\\d+)(?:\\s*\\(.*?\\))?\\s*$/);
                 if (mx) {{
                     name = mx[1].trim();
                     sn = mx[2].trim();
@@ -5388,7 +5399,7 @@ function parseImportFlightDispatchText(html, shiftKey) {{
 
     (html || "")
         .split(/\r?\n/)
-        .map(function(line) {{ return (line || "").replace(/\s+/g, " ").trim(); }})
+        .map(function(line) {{ return (line || "").replace(/\\s+/g, " ").trim(); }})
         .filter(Boolean)
         .forEach(function(line) {{
             var low = normShift(line);
@@ -5415,7 +5426,7 @@ function parseImportFlightDispatchText(html, shiftKey) {{
             if (currentDept !== "flight dispatch (export)" && currentDept !== "flight dispatch (import)") return;
             if (currentShift !== target) return;
 
-            var mx = line.match(/^(.+?)\s*[·•\-–]\s*(\d{3,6})\b.*$/);
+            var mx = line.match(/^(.+?)\\s*[·•\\-–]\\s*(\\d{3,6})\b.*$/);
             if (!mx) return;
 
             var sn = mx[2].trim();
@@ -5441,7 +5452,7 @@ function buildEmpRow(name, sn) {{
 
 function loadManpower() {{
     var el = document.getElementById("mp-content");
-    el.innerHTML = '<div class="mp-loading">\u062c\u0627\u0631\u064a \u0627\u0644\u062a\u062d\u0645\u064a\u0644...</div>';
+    el.innerHTML = '<div class="mp-loading">\\u062c\\u0627\\u0631\\u064a \\u0627\\u0644\\u062a\\u062d\\u0645\\u064a\\u0644...</div>';
 
     var dateStr = getTodayDate();
     var exportUrl = ROSTER_DAILY_BASE + dateStr + "/?t=" + Date.now();
@@ -5494,10 +5505,10 @@ function loadManpower() {{
             grouped[dept].forEach(function(e) {{ html += buildEmpRow(e.name, e.sn); }});
         }}
 
-        el.innerHTML = html || '<div class="mp-loading">\u0644\u0627 \u062a\u0648\u062c\u062f \u0628\u064a\u0627\u0646\u0627\u062a \u0644\u0644\u0645\u0646\u0627\u0648\u0628\u0629 \u0627\u0644\u062d\u0627\u0644\u064a\u0629</div>';
+        el.innerHTML = html || '<div class="mp-loading">\\u0644\\u0627 \\u062a\\u0648\\u062c\\u062f \\u0628\\u064a\\u0627\\u0646\\u0627\\u062a \\u0644\\u0644\\u0645\\u0646\\u0627\\u0648\\u0628\\u0629 \\u0627\\u0644\\u062d\\u0627\\u0644\\u064a\\u0629</div>';
     }})
     .catch(function(err) {{
-        el.innerHTML = '<div class="mp-loading">\u062e\u0637\u0623 \u0641\u064a \u062a\u062d\u0645\u064a\u0644 \u0627\u0644\u0631\u0648\u0633\u062a\u0631: ' + err.message + '</div>';
+        el.innerHTML = '<div class="mp-loading">\\u062e\\u0637\\u0623 \\u0641\\u064a \\u062a\\u062d\\u0645\\u064a\\u0644 \\u0627\\u0644\\u0631\\u0648\\u0633\\u062a\\u0631: ' + err.message + '</div>';
     }});
 }}
 
