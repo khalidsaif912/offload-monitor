@@ -2582,17 +2582,15 @@ function parseImportFlightDispatchText(html, shiftKey) {
     var target = normShift(SHIFT_MAP[shiftKey] || shiftKey || "Morning");
     var knownDepts = {
         "documentation": "Documentation",
-        "flight dispatch (export)": "Flight Dispatch (Export)",
-        "flight dispatch (import)": "Flight Dispatch (Import)",
+        "flight dispatch (export)": "Flight Dispatch",
+        "flight dispatch (import)": "Flight Dispatch",
         "import checkers": "Import Checkers",
         "import operators": "Import Operators",
         "release control": "Release Control",
         "supervisors": "Supervisors"
     };
-    var result = {
-        "Flight Dispatch (Export)": [],
-        "Flight Dispatch (Import)": []
-    };
+    var result = [];
+    var seen = {};
     var currentDept = "";
     var currentShift = "";
 
@@ -2629,10 +2627,16 @@ function parseImportFlightDispatchText(html, shiftKey) {
             var mx = line.match(/^(.+?)\s*[·•\-–]\s*(\d(3, 6)).*$/);
             if (!mx) return;
 
-            result[knownDepts[currentDept]].push({
-                name: mx[1].trim(),
-                sn: mx[2].trim(),
-                dept: knownDepts[currentDept]
+            var sn = mx[2].trim();
+            var name = mx[1].trim();
+            var key = sn + "|" + name.toLowerCase();
+            if (seen[key]) return;
+            seen[key] = true;
+
+            result.push({
+                name: name,
+                sn: sn,
+                dept: "Flight Dispatch"
             });
         });
 
@@ -2640,7 +2644,8 @@ function parseImportFlightDispatchText(html, shiftKey) {
 }
 
 function buildEmpRow(name, sn) {
-    return '<div class="mp-emp"><span class="emp-sn">' + sn + '</span><span class="emp-name">' + name + '</span></div>';
+    var snHtml = sn ? '<span class="emp-sn">' + sn + '</span>' : '';
+    return '<div class="mp-emp">' + snHtml + '<span class="emp-name">' + name + '</span></div>';
 }
 
 function loadManpower() {
@@ -2684,12 +2689,9 @@ function loadManpower() {
         if (supportEmps.length) grouped["C) Support Team"] = supportEmps.slice();
 
         if (importHtml) {
-            var fdGroups = parseImportFlightDispatchText(importHtml, shift);
-            if (fdGroups["Flight Dispatch (Export)"].length) {
-                grouped["Flight Dispatch (Export)"] = fdGroups["Flight Dispatch (Export)"].slice();
-            }
-            if (fdGroups["Flight Dispatch (Import)"].length) {
-                grouped["Flight Dispatch (Import)"] = fdGroups["Flight Dispatch (Import)"].slice();
+            var fdStaff = parseImportFlightDispatchText(importHtml, shift);
+            if (fdStaff.length) {
+                grouped["Flight Dispatch"] = fdStaff.slice();
             }
         }
 
@@ -2724,7 +2726,7 @@ function copyManpower() {
     for (var dept in mpData) {
         text += dept + ":\n";
         mpData[dept].forEach(function(e) {
-            text += "  SN " + e.sn + " — " + e.name + "\n";
+            text += "  " + (e.sn ? e.sn + " — " : "") + e.name + "\n";
         });
         text += "\n";
     }
