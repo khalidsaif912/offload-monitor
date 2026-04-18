@@ -1651,11 +1651,11 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
     def _delete_btn() -> str:
         return (
             f'<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" '
-            f'aria-label="Delete row" title="Delete row" '
-            f'style="position:absolute;top:3px;left:3px;width:20px;height:20px;line-height:18px;'
-            f'padding:0;margin:0;border:2px solid #c2410c;background:#fee2e2;color:#c2410c;'
-            f'border-radius:4px;font-size:16px;font-weight:900;cursor:pointer;display:inline-flex;'
-            f'align-items:center;justify-content:center;z-index:10;">×</button>'
+            f'aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" '
+            f'style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;'
+            f'padding:0;margin:0;border:1px solid {header_blue};background:{hdr_bg};color:{header_blue};'
+            f'border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;'
+            f'align-items:center;justify-content:center;">×</button>'
         )
 
     def _idx_cell(index: int, bg: str) -> str:
@@ -2328,10 +2328,23 @@ def build_shift_report(date_dir: str, shift: str) -> None:
     #report-content{{width:1180px;max-width:100%;background:#fff;border:1px solid #d0d5e8;margin:0 auto;table-layout:fixed;}}
     .btn-bar{{max-width:1180px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}}
     .btn-bar button{{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}}
-    /* قوائم bullets ثابتة للأقسام التي كانت تختفي فيها النقطة */
-    #ul-csdrescreening, #ul-special-handover, #ul-other{{list-style:none!important;padding:0!important;margin:4px 0 10px 22px!important;color:#1b1f2a;}}
-    #ul-csdrescreening li, #ul-special-handover li, #ul-other li{{position:relative;list-style:none!important;padding-left:14px;min-height:18px;}}
-    #ul-csdrescreening li::before, #ul-special-handover li::before, #ul-other li::before{{content:'•';position:absolute;left:0;top:0;color:#1b1f2a;font-weight:700;line-height:1.2;}}
+    /* Bullet fix: contenteditable disables list-style in Chrome/Safari — use ::before */
+    #ul-loadplan li,#ul-advloading li,#ul-handover li,#ul-briefings li,#ul-opnotes li,
+    #ul-sickleave li,#ul-annualleave li,#ul-trainee li,#ul-overtime li,
+    #ul-ctu li,#ul-inventory li,#ul-support li,#ul-supervisors li,
+    #ul-fd-export li,#ul-fd-import li,#ul-flight-dispatch li,[id^="ul-dept-"] li{{
+      display:block;list-style:none!important;padding-left:14px;position:relative;
+    }}
+    #ul-loadplan li::before,#ul-advloading li::before,#ul-handover li::before,#ul-briefings li::before,
+    #ul-opnotes li::before,#ul-sickleave li::before,#ul-annualleave li::before,#ul-trainee li::before,
+    #ul-overtime li::before,#ul-ctu li::before,#ul-inventory li::before,#ul-support li::before,
+    #ul-supervisors li::before,#ul-fd-export li::before,#ul-fd-import li::before,
+    #ul-flight-dispatch li::before,[id^="ul-dept-"] li::before{{
+      content:'•';position:absolute;left:1px;top:0;color:#1b1f2a;font-weight:700;
+    }}
+    #ul-csdrescreening,#ul-special-handover,#ul-other{{list-style:none!important;padding:0!important;margin:4px 0 10px 22px!important;color:#1b1f2a;}}
+    #ul-csdrescreening li,#ul-special-handover li,#ul-other li{{display:block;position:relative;list-style:none!important;padding-left:14px;min-height:18px;}}
+    #ul-csdrescreening li::before,#ul-special-handover li::before,#ul-other li::before{{content:'•';position:absolute;left:1px;top:0;color:#1b1f2a;font-weight:700;}}
     /* جدول الأوفلود — حل جذري للتنسيق على الشاشة والجوال */
     .offload-wrap{{width:100%;max-width:100%;overflow:visible;}}
     .offload-table{{width:100%;table-layout:fixed;border-collapse:collapse;}}
@@ -3196,11 +3209,7 @@ window._REPORT_CLOUD_PATH  = 'docs/data/report_edits/{date_dir}/{shift}.json';
   function sendEmailNow(){{
     openRecipientsManager('send').then(function(result){{
       if(!result || !result.selected || !result.selected.length) return;
-      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟
-
-Shift: {shift}
-Date: {date_dir}
-Recipients: ' + result.selected.join(', '));
+      var ok = confirm('Shift: {shift} | Date: {date_dir}\nRecipients: ' + result.selected.join(', '));
       if(!ok) return;
 
       var btn = document.getElementById('btn-email');
@@ -3275,19 +3284,12 @@ Recipients: ' + result.selected.join(', '));
     }});
   }}
 
-  function _bindButtons() {{
-    var copyBtn = document.getElementById('btn-copy');
-    var manageBtn = document.getElementById('btn-manage-emails');
-    var emailBtn = document.getElementById('btn-email');
-    if(copyBtn && !copyBtn._bound) {{ copyBtn._bound=true; copyBtn.addEventListener('click', onCopyReport); }}
-    if(manageBtn && !manageBtn._bound) {{ manageBtn._bound=true; manageBtn.addEventListener('click', openRecipientsFile); }}
-    if(emailBtn && !emailBtn._bound) {{ emailBtn._bound=true; emailBtn.addEventListener('click', sendEmailNow); }}
-  }}
-  if(document.readyState === 'loading') {{
-    document.addEventListener('DOMContentLoaded', _bindButtons);
-  }} else {{
-    _bindButtons();
-  }}
+  var copyBtn = document.getElementById('btn-copy');
+  var manageBtn = document.getElementById('btn-manage-emails');
+  var emailBtn = document.getElementById('btn-email');
+  if(copyBtn) copyBtn.addEventListener('click', onCopyReport);
+  if(manageBtn) manageBtn.addEventListener('click', openRecipientsFile);
+  if(emailBtn) emailBtn.addEventListener('click', sendEmailNow);
 }})();
 
 /* ══════════════════════════════════════════════════════
@@ -3640,8 +3642,9 @@ Recipients: ' + result.selected.join(', '));
         li.style.paddingLeft = '14px';
         li.style.position = 'relative';
       }} else {{
-        li.style.listStyleType = 'disc';
-        li.style.listStylePosition = 'outside';
+        li.style.listStyle = 'none';
+        li.style.paddingLeft = '14px';
+        li.style.position = 'relative';
       }}
     }}
     return li;
@@ -3700,8 +3703,8 @@ Recipients: ' + result.selected.join(', '));
   ];
 
   function buildOffloadIndexCellHTML(idx) {{
-    return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" '
-      + 'style="position:absolute;top:3px;left:3px;width:20px;height:20px;line-height:18px;padding:0;margin:0;border:2px solid #c2410c;background:#fee2e2;color:#c2410c;border-radius:4px;font-size:16px;font-weight:900;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;z-index:10;">×</button>'
+    return '<button type="button" class="offload-row-delete" data-no-copy="1" data-email-remove="1" aria-label="Delete row" title="Delete row" onclick="deleteOffloadRow(this)" '
+      + 'style="position:absolute;top:4px;left:4px;width:14px;height:14px;line-height:12px;padding:0;margin:0;border:1px solid #0b3a78;background:#dce6f4;color:#0b3a78;border-radius:2px;font-size:11px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;">×</button>'
       + '<strong class="offload-row-num">' + idx + '</strong>';
   }}
 
@@ -3747,8 +3750,8 @@ Recipients: ' + result.selected.join(', '));
     td.addEventListener('keydown', function(e) {{
       if(e.key !== 'Tab' || e.shiftKey) return;
       var row = td.closest('tr');
-      var tbody = row && row.closest('#offload-tbody');
-      if(!row || !tbody) return;
+      var tbody = row && row.parentElement;
+      if(!row || !tbody || tbody.id !== 'offload-tbody') return;
       var editable = Array.from(row.querySelectorAll('td[contenteditable="true"]'));
       if(!editable.length || editable[editable.length - 1] !== td) return;
       var rows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {{
@@ -3756,15 +3759,14 @@ Recipients: ' + result.selected.join(', '));
       }});
       if(!rows.length || rows[rows.length - 1] !== row) return;
       e.preventDefault();
-      e.stopPropagation();
       e.stopImmediatePropagation();
-      setTimeout(function() {{
-        var tr = appendOffloadRow(false);
-        if(tr) {{
-          var firstCell = tr.querySelector('td[contenteditable="true"]');
+      var _tr = appendOffloadRow(false);
+      if(_tr) {{
+        setTimeout(function() {{
+          var firstCell = _tr.querySelector('td[contenteditable="true"]');
           if(firstCell) firstCell.focus();
-        }}
-      }}, 0);
+        }}, 0);
+      }}
     }});
 
     var col = td.dataset.col;
