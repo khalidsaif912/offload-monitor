@@ -1,0 +1,33 @@
+{
+  "flight": "QR1125",
+  "date": "18-Apr",
+  "std_etd": "23:15",
+  "destination": "DOH",
+  "format": "A",
+  "items": [
+    {
+      "awb": "PLA-91831QR",
+      "pcs": "65",
+      "kgs": "1323",
+      "description": "CONSOL",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "PMC-16138QR",
+      "pcs": "142",
+      "kgs": "2552",
+      "description": "CONSOL",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "22:36",
+  "saved_at": "2026-04-18T22:36:00+04:00",
+  "storage_date_dir": "2026-04-18",
+  "storage_shift": "shift3"
+}

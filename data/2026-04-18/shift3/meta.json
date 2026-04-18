@@ -1,1 +1,14 @@
-{}
+{
+  "flights": {
+    "QR1125_18-Apr_DOH.json": {
+      "flight": "QR1125",
+      "date": "18-Apr",
+      "dest": "DOH",
+      "created_at": "2026-04-18T22:36:00+04:00",
+      "updated_at": "2026-04-18T22:36:00+04:00",
+      "updates": 0,
+      "storage_date_dir": "2026-04-18",
+      "storage_shift": "shift3"
+    }
+  }
+}
