@@ -1,0 +1,23 @@
+{
+  "flight": "OV285",
+  "date": "22-Apr",
+  "std_etd": "13:10",
+  "destination": "JED",
+  "format": "A",
+  "items": [
+    {
+      "awb": "703 13342442",
+      "pcs": "25",
+      "kgs": "324",
+      "description": "CONSOL",
+      "reason": "PAYLOAD",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "15:00",
+  "saved_at": "2026-04-23T15:00:00+04:00",
+  "storage_date_dir": "2026-04-22",
+  "storage_shift": "shift2"
+}
