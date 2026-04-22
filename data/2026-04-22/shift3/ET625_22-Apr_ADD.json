@@ -1,0 +1,23 @@
+{
+  "flight": "ET625",
+  "date": "22-Apr",
+  "std_etd": "04:25",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "7160092060",
+      "pcs": "53",
+      "kgs": "820",
+      "description": "PERSONAL EFF",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "04:52",
+  "saved_at": "2026-04-22T04:52:00+04:00",
+  "storage_date_dir": "2026-04-22",
+  "storage_shift": "shift3"
+}
