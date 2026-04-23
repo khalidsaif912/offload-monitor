@@ -1,0 +1,53 @@
+{
+  "flight": "ET625",
+  "date": "2 3 -Apr",
+  "std_etd": "04:25",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "0 71 - 60092060",
+      "pcs": "34",
+      "kgs": "541",
+      "description": "PERSONAL EFF ECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "071-57175403",
+      "pcs": "10",
+      "kgs": "930",
+      "description": "PERSONAL EFFECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "071-61075313",
+      "pcs": "3",
+      "kgs": "78",
+      "description": "PERSONAL EFFECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "071-61075324",
+      "pcs": "3",
+      "kgs": "59.5",
+      "description": "PERSONAL EFFECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "04:27",
+  "saved_at": "2026-04-23T04:27:00+04:00",
+  "storage_date_dir": "2026-04-23",
+  "storage_shift": "shift3"
+}
