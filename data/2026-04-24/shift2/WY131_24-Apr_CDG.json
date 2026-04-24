@@ -1,0 +1,23 @@
+{
+  "flight": "WY131",
+  "date": "24-Apr",
+  "std_etd": "14:10",
+  "destination": "CDG",
+  "format": "A",
+  "items": [
+    {
+      "awb": "910-18775761",
+      "pcs": "1",
+      "kgs": "255",
+      "description": "CONSOL",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": "AKE46884WY"
+    }
+  ],
+  "email_time": "14:58",
+  "saved_at": "2026-04-24T14:58:00+04:00",
+  "storage_date_dir": "2026-04-24",
+  "storage_shift": "shift2"
+}
