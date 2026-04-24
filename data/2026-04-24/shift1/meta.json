@@ -1,1 +1,14 @@
-{}
+{
+  "flights": {
+    "OV283_24-Apr_JED.json": {
+      "flight": "OV283",
+      "date": "24-Apr",
+      "dest": "JED",
+      "created_at": "2026-04-24T09:40:00+04:00",
+      "updated_at": "2026-04-24T09:40:00+04:00",
+      "updates": 0,
+      "storage_date_dir": "2026-04-24",
+      "storage_shift": "shift1"
+    }
+  }
+}
