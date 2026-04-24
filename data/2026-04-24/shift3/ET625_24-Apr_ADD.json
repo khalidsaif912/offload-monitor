@@ -1,0 +1,33 @@
+{
+  "flight": "ET625",
+  "date": "24-Apr",
+  "std_etd": "04:25",
+  "destination": "ADD",
+  "format": "A",
+  "items": [
+    {
+      "awb": "0 71 - 60092060",
+      "pcs": "11",
+      "kgs": "328",
+      "description": "PERSONAL EFFECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "071-57175403",
+      "pcs": "6",
+      "kgs": "770",
+      "description": "SPARE PARTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "04:42",
+  "saved_at": "2026-04-24T04:42:00+04:00",
+  "storage_date_dir": "2026-04-24",
+  "storage_shift": "shift3"
+}
