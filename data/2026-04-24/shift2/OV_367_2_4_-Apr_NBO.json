@@ -1,0 +1,33 @@
+{
+  "flight": "OV 367",
+  "date": "2 4 -Apr",
+  "std_etd": "14:30|19:22",
+  "destination": "NBO",
+  "format": "A",
+  "items": [
+    {
+      "awb": "703-13342394",
+      "pcs": "5",
+      "kgs": "89",
+      "description": "FABRIC ROLLS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "960-10004433",
+      "pcs": "40",
+      "kgs": "1164.9",
+      "description": "MEDICINE",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "18:55",
+  "saved_at": "2026-04-24T18:55:00+04:00",
+  "storage_date_dir": "2026-04-24",
+  "storage_shift": "shift2"
+}
