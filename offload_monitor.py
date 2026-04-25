@@ -1650,6 +1650,7 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         ("Offloading Pieces Verification", "100px"),
         ("Offloading Reason", "100px"),
         ("Remarks/Additional Information", ""),
+        ("Delete", "55px"),
     ]
 
     col_headers = "<tr>"
@@ -1855,6 +1856,12 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{verified}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{reason_display}</td>
         <td {td_s} contenteditable="true" tabindex="{_next_ti()}">{remarks}</td>
+        <td {td_s}>
+          <button type="button" data-no-copy="1" onclick="deleteOffloadRow(this)"
+            style="font-size:11px;padding:2px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;">
+            &#10005;
+          </button>
+        </td>
       </tr>"""
 
     # ── 3 empty rows for manual entry ──
@@ -1877,13 +1884,19 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
         <td {_empty_td} contenteditable="true" tabindex="{_next_ti()}">&nbsp;</td>
+        <td {_empty_td}>
+          <button type="button" data-no-copy="1" onclick="deleteOffloadRow(this)"
+            style="font-size:11px;padding:2px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;">
+            &#10005;
+          </button>
+        </td>
       </tr>"""
 
     # ── NIL case ──
     if not flights:
         data_rows = f"""
       <tr id="nil-row">
-        <td colspan="12" style="padding:10px 10px; border:1px solid {cell_border};
+        <td colspan="13" style="padding:10px 10px; border:1px solid {cell_border};
             color:{nil_color}; text-align:center; font-style:italic; font-size:12px;
             font-family:Calibri,Arial,sans-serif; background:{row_even};">
           <span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL \u2014 No offload data recorded for this shift.</span>
@@ -1907,6 +1920,12 @@ def _render_offload_table(flights: list[dict], meta: dict) -> str:
         <td {_empty_td} contenteditable="true">&nbsp;</td>
         <td {_empty_td} contenteditable="true">&nbsp;</td>
         <td {_empty_td} contenteditable="true">&nbsp;</td>
+        <td {_empty_td}>
+          <button type="button" data-no-copy="1" onclick="deleteOffloadRow(this)"
+            style="font-size:11px;padding:2px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;">
+            &#10005;
+          </button>
+        </td>
       </tr>"""
 
     table_html = f"""
@@ -2741,11 +2760,10 @@ def build_shift_report(date_dir: str, shift: str) -> None:
 
             <!-- Certifications image -->
             <div style="margin-top:12px;">
-<img
-  src="https://raw.githubusercontent.com/khalidsaif912/offload-monitor/dd88dcfee25c7d2a8959bb4fd01a63dda1309cbf/signature.png"
-  width="430"
-  style="display:block; border:0; outline:none; text-decoration:none; width:430px; max-width:100%; height:auto;"
-  alt="Certifications">
+              <img src="https://raw.githubusercontent.com/khalidsaif912/offload-monitor/dd88dcfee25c7d2a8959bb4fd01a63dda1309cbf/signature.png"
+                   width="430"
+                   style="display:block; border:0; outline:none; text-decoration:none; width:430px; max-width:100%; height:auto;"
+                   alt="Certifications">
             </div>
 
           </td>
@@ -3757,23 +3775,41 @@ window._ALL_STAFF          = {all_staff_js};
     }});
   }}
 
+  function deleteOffloadRow(btn) {{
+    var row = btn && btn.closest ? btn.closest('tr') : null;
+    var tbody = document.getElementById('offload-tbody');
+    if(!row || !tbody || !tbody.contains(row)) return;
+    if(window.confirm && !window.confirm('Delete this row?')) return;
+    row.remove();
+    renumberOffloadRows();
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+  }}
+  window.deleteOffloadRow = deleteOffloadRow;
+
   function makeOffloadRow() {{
     var tbody = document.getElementById('offload-tbody');
     if(!tbody) return null;
     var existingRows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {{
-      return r.querySelectorAll('td').length >= 12;
+      return r.querySelectorAll('td').length >= 13;
     }});
     var template = existingRows[existingRows.length - 1];
     var row = template ? template.cloneNode(true) : document.createElement('tr');
 
     if(!template) {{
-      for(var i=0;i<12;i++) {{ row.appendChild(document.createElement('td')); }}
+      for(var i=0;i<13;i++) {{ row.appendChild(document.createElement('td')); }}
     }}
 
-    var cols = ['','date','flight','std','dest','email','','','','','',''];
+    var cols = ['','date','flight','std','dest','email','','','','','','',''];
     Array.from(row.children).forEach(function(td, i) {{
-      td.innerHTML = (i === 0) ? '<strong></strong>' : '&nbsp;';
-      if(i > 0) {{
+      if(i === 0) {{
+        td.innerHTML = '<strong></strong>';
+        td.removeAttribute('contenteditable');
+      }} else if(i === 12) {{
+        td.innerHTML = '<button type="button" data-no-copy="1" onclick="deleteOffloadRow(this)" style="font-size:11px;padding:2px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;">&#10005;</button>';
+        td.removeAttribute('contenteditable');
+        td.removeAttribute('tabindex');
+      }} else {{
+        td.innerHTML = '&nbsp;';
         td.setAttribute('contenteditable','true');
         td.setAttribute('tabindex','0');
         td.style.outline = td.style.outline || 'none';
@@ -4378,6 +4414,10 @@ window._ALL_STAFF          = {all_staff_js};
       data[id] = el.innerHTML;
     }});
 
+    /* جدول الأوفلود كامل (للحفاظ على الصفوف المضافة/المحذوفة) */
+    var offloadTbody = document.getElementById('offload-tbody');
+    if(offloadTbody) data['__offload_tbody_html__'] = offloadTbody.innerHTML;
+
     /* قوائم ul كاملة (للحفاظ على العناصر المضافة/المحذوفة) */
     document.querySelectorAll('ul[id]').forEach(function(ul){{
       data['__ul__'+ul.id] = ul.innerHTML;
@@ -4403,6 +4443,12 @@ window._ALL_STAFF          = {all_staff_js};
         var rec = e.target && e.target.result;
         if(!rec || !rec.data) return;
         var data = rec.data;
+
+        /* استعادة جدول الأوفلود أولاً (تضمن بقاء الصفوف المضافة/المحذوفة) */
+        if(data['__offload_tbody_html__']){{
+          var offloadTbody = document.getElementById('offload-tbody');
+          if(offloadTbody) offloadTbody.innerHTML = data['__offload_tbody_html__'];
+        }}
 
         /* استعادة قوائم ul أولاً (تضمن وجود العناصر) */
         Object.keys(data).forEach(function(k){{
