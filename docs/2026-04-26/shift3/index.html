@@ -1,0 +1,2246 @@
+<!DOCTYPE html>
+<html xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>Export Warehouse Activity Report — 26/27 APR 2026</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;}
+    body{margin:0;padding:0;background:#eef1f7;font-family:Calibri,Arial,sans-serif;}
+    .page-wrap{background:#eef1f7;padding:16px 6px 40px;min-height:100vh;}
+    #report-content{width:100%;max-width:1100px;background:#fff;border:1px solid #d0d5e8;margin:0 auto;}
+    .btn-bar{max-width:1100px;margin:0 auto;display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;padding:10px 4px;position:sticky;bottom:0;z-index:9999;background:#eef1f7;border-top:1px solid #d0d5e8;box-shadow:0 -2px 8px rgba(11,58,120,.10);}
+    .btn-bar button{font-family:Calibri,Arial,sans-serif;font-size:13px;font-weight:700;color:#fff;border:none;border-radius:8px;padding:10px 18px;cursor:pointer;}
+    /* جدول الأوفلود — يسمح بالتمرير الأفقي على الجوال */
+    .offload-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;width:100%;}
+    .offload-scroll table{min-width:900px;width:100%;}
+
+    /* ══════════════ MOBILE ══════════════ */
+    @media(max-width:700px){
+      /* عام */
+      .page-wrap{padding:4px 0 24px;}
+      #report-content{border-radius:0;border-left:0;border-right:0;}
+
+      /* الهيدر */
+      .hdr-inner{display:block!important;}
+      .hdr-right{display:none!important;}  /* إخفاء "Transom Cargo" على الجوال */
+      .hdr-title{font-size:15px!important;line-height:1.3!important;}
+      .hdr-meta{font-size:11px!important;margin-top:5px!important;line-height:1.6!important;}
+
+      /* padding الأقسام */
+      .sec-pad{padding-left:12px!important;padding-right:12px!important;}
+
+      /* أزرار الأسفل */
+      .btn-bar{justify-content:stretch;margin:0;gap:6px;padding:8px 6px;}
+      .btn-bar button{flex:1 1 45%;font-size:12px;padding:10px 4px;border-radius:6px;}
+
+      /* التوقيع */
+      .sig-wrap td{display:block!important;width:100%!important;padding-bottom:12px!important;border-right:none!important;}
+
+      /* خط الأسماء في MANPOWER */
+      .mp-list li{font-size:12px!important;line-height:1.7!important;}
+      .mp-list span[style*="width:200px"]{width:150px!important;}
+
+      /* footer */
+      .report-footer-td{padding:14px 12px!important;font-size:11px!important;}
+
+      /* section headers — أصغر */
+      .sec-label{font-size:11px!important;}
+
+      /* النصوص العامة */
+      .sec-body{font-size:12.5px!important;}
+      ul li{font-size:12.5px!important;}
+    }
+
+    @media(max-width:400px){
+      .btn-bar button{flex:1 1 100%;}
+      .hdr-title{font-size:13px!important;}
+    }
+  </style>
+</head>
+<body>
+<div class="page-wrap">
+<div style="max-width:1100px;margin:0 auto;">
+
+<table width="100%" cellpadding="0" cellspacing="0" border="0" id="report-content"
+       style="background-color:#ffffff; border:1px solid #d0d5e8;">
+
+  <!-- ═══ HEADER ═══ -->
+  <tr>
+    <td data-email-keep="1" style="background-color:#1e5799; padding:0;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation">
+        <tr>
+          <td width="8" data-email-keep="1" style="background-color:#f59e0b; font-size:1px; line-height:1px;">&nbsp;</td>
+          <td data-email-keep="1" style="padding:20px 22px 18px 16px; background-color:#1e5799;">
+            <table width="100%" cellpadding="0" cellspacing="0" border="0" role="presentation" class="hdr-inner" style="display:table;">
+              <tr>
+                <td data-email-keep="1" class="hdr-left" style="background-color:#1e5799;">
+                  <div class="hdr-title" data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:21px; font-weight:800; color:#ffffff; letter-spacing:0.5px; line-height:1.25;">
+                    <span style="color:#ffffff;">&#9992;&nbsp; Export Warehouse Activity Report</span>
+                  </div>
+                  <div class="hdr-meta" data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#ffffff; margin-top:7px; letter-spacing:0.2px;">
+                    <span style="color:#ffffff;">Shift Date:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">26/27 APR 2026</strong>
+                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;Time:&nbsp;</span><strong style="color:#fde68a; font-weight:700;">21:00 – 06:00 LT</strong>
+                    <span style="color:#ffffff;">&nbsp;&nbsp;|&nbsp;&nbsp;</span><strong style="color:#fde68a; font-weight:700;">Night Shift</strong>
+                  </div>
+                </td>
+                <td align="right" valign="middle" data-email-keep="1" class="hdr-right" style="padding-right:6px; background-color:#1e5799;">
+                  <div data-email-keep="1" style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#93c5fd; line-height:1.5; text-align:right;">
+                    <span style="color:#93c5fd;">Transom Cargo LLC.</span><br>
+                    <strong style="color:#ffffff; font-weight:700;">Export Operations</strong>
+                  </div>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+
+  <!-- ═══ BACK LINK ═══ -->
+  <tr class="back-link-row" id="back-link-row">
+    <td style="padding:10px 24px 8px 24px; background-color:#f8faff; border-bottom:1px solid #e4e9f5;">
+      <a href="../../index.html"
+         style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#0b3a78; font-weight:700; text-decoration:none; display:inline-block;">
+        &#8592; Back to Index
+      </a>
+    </td>
+  </tr>
+
+  <!-- ═══ SECTION 1: OPERATIONAL ACTIVITIES ═══ -->
+  <tr><td class="sec-pad" style="padding:18px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#eef3fc;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">1.&nbsp; OPERATIONAL ACTIVITIES</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <strong style="color:#0b3a78;">Load Plan:</strong>
+      <ul id="ul-loadplan" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="50" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <button onclick="addListItem('ul-loadplan')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+      <br>
+      <strong style="color:#0b3a78;">Advance Loading:</strong>
+      <ul id="ul-advloading" data-flight-list="1" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="51" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <button onclick="addListItem('ul-advloading')" style="font-size:11px;padding:1px 8px;margin-bottom:8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+      <br>
+      <strong style="color:#0b3a78;">CSD Rescreening:</strong>
+      <ul id="ul-csdrescreening" style="margin:4px 0 6px 22px; padding:0; color:#1b1f2a;"><li contenteditable="true" tabindex="52" style="outline:none; min-width:40px;">&nbsp;</li></ul>
+      <button onclick="addListItem('ul-csdrescreening')" style="font-size:11px;padding:1px 8px;margin-bottom:4px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+    </div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 2: BRIEFINGS ═══ -->
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#eef3fc;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">2.&nbsp; BRIEFINGS CONDUCTED</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul id="ul-briefings" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+        <li contenteditable="true" tabindex="60" style="outline:none;">Safety toolbox conducted.</li>
+        <li contenteditable="true" tabindex="61" style="outline:none;">ULD and net serviceability checked.</li>
+        <li contenteditable="true" tabindex="62" style="outline:none;">Staff reminded about punctuality, proper cargo loading/counting, and no mobile phone use while driving.</li>
+        <li contenteditable="true" tabindex="63" style="outline:none;">Briefing on <strong>EY CCS 25-011</strong> (correct pallet stack build-up) – read &amp; sign completed.</li>
+        <li contenteditable="true" tabindex="64" style="outline:none;">Briefing on <strong>QR CGO CSA 09-25</strong> (weight scale discrepancies) – read &amp; sign completed.</li>
+        <li contenteditable="true" tabindex="65" style="outline:none;">Process briefing for shipments UWS discrepancies.</li>
+        <li contenteditable="true" tabindex="66" style="outline:none;"><strong>WY instruction:</strong> No shipment to CAI with handwritten labels – read &amp; sign completed.</li>
+        <li contenteditable="true" tabindex="67" style="outline:none;">EY safety notification related to cargo handling discussed.</li>
+        <li contenteditable="true" tabindex="68" style="outline:none;">Staff reminded to complete LMS training and informed about new roster.</li>
+        <li contenteditable="true" tabindex="69" style="outline:none;">Instructions on attaching printed ULD tags on trolleys.</li>
+        <li contenteditable="true" tabindex="70" style="outline:none;">Stationery logbook kept at supervisor desk.</li>
+      </ul>
+      <button onclick="addListItem('ul-briefings')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+    </div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 3: FLIGHT PERFORMANCE ═══ -->
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#eef3fc;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">3.&nbsp; FLIGHT PERFORMANCE</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      ✅&nbsp; All flights departed on time; no delay related to Cargo.
+    </div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 3B: OPERATIONAL NOTES ═══ -->
+  <tr><td style="padding:0 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#5b6a8a;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#f4f5f9;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#3d4a63; letter-spacing:1px;">OPERATIONAL NOTES</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul id="ul-opnotes" style="margin:0 0 0 22px; padding:0; color:#1b1f2a;">
+        <li contenteditable="true" tabindex="80" style="outline:none;">All flights departed on time as per RDM Mr. Saleh.</li>
+        <li contenteditable="true" tabindex="81" style="outline:none;">DG embargo station check completed.</li>
+        <li contenteditable="true" tabindex="82" style="outline:none;">Pigeonhole check done for any pending documents.</li>
+      </ul>
+      <button onclick="addListItem('ul-opnotes')" style="font-size:11px;padding:1px 8px;margin-top:6px;cursor:pointer;background:#f4f5f9;border:1px solid #5b6a8a;color:#3d4a63;border-radius:3px;">+ Add</button>
+    </div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 4: CHECKS & COMPLIANCE + OFFLOAD ═══ -->
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#eef3fc;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">4.&nbsp; CHECKS &amp; COMPLIANCE</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <strong style="color:#0b3a78;">DG Check:</strong> DG Embargo station check done. AWB left behind: NIL.
+    </div>
+    <!-- عنوان جدول الأوفلود -->
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:14px;">
+      <tr>
+        <td width="4" style="background-color:#c2410c;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#fff7ed;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#c2410c; letter-spacing:1px;">OFFLOADING CARGO #</span>
+        </td>
+      </tr>
+    </table>
+    <div class="offload-scroll" style="margin-top:12px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0"
+           style="border-collapse:collapse; font-family:Calibri,Arial,sans-serif; margin-top:12px; margin-bottom:14px;">
+      <tr><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:40px;">ITEM</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">DATE</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">FLIGHT</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:80px;">STD/ETD</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:60px;">DEST</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:90px;">Email Received Time</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Physical Cargo Received from Ramp</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:90px;">Trolley/ ULD Number</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Process Completed in CMS</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Pieces Verification</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:100px;">Offloading Reason</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; ">Remarks/Additional Information</td><td style="padding:8px 6px; background-color:#dce6f4; color:#1b1f2a;font-weight:700; font-size:11px; font-family:Calibri,Arial,sans-serif;border:1px solid #a8bcd8; text-align:center; vertical-align:middle; width:55px;">Delete</td></tr>
+      <tbody id="offload-tbody">
+      
+      <tr id="nil-row">
+        <td colspan="13" style="padding:10px 10px; border:1px solid #d0d9ee;
+            color:#64748b; text-align:center; font-style:italic; font-size:12px;
+            font-family:Calibri,Arial,sans-serif; background:#ffffff;">
+          <span id="nil-text" contenteditable="true" style="outline:none;display:inline-block;min-width:200px;">NIL — No offload data recorded for this shift.</span>
+          &nbsp;<button onclick="var r=document.getElementById('nil-row');if(r)r.remove();triggerAutosave();"
+            style="font-size:10px;padding:1px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;vertical-align:middle;">✕ Remove</button>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;"><strong>1</strong></td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="date">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="flight">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="std">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="dest">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="email">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;">
+          <button type="button" data-no-copy="1" onclick="deleteOffloadRow(this)"
+            style="font-size:11px;padding:2px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;">
+            &#10005;
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;"><strong>2</strong></td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="date">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="flight">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="std">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="dest">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="email">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;">
+          <button type="button" data-no-copy="1" onclick="deleteOffloadRow(this)"
+            style="font-size:11px;padding:2px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;">
+            &#10005;
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;"><strong>3</strong></td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="date">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="flight">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="std">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="dest">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true" data-col="email">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;" contenteditable="true">&nbsp;</td>
+        <td style="padding:7px 6px;border:1px solid #d0d9ee;font-size:12px;font-family:Calibri,Arial,sans-serif;color:#1b1f2a;background:#ffffff;text-align:center;">
+          <button type="button" data-no-copy="1" onclick="deleteOffloadRow(this)"
+            style="font-size:11px;padding:2px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;">
+            &#10005;
+          </button>
+        </td>
+      </tr>
+      </tbody>
+    </table></div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:16px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 5: SAFETY ═══ -->
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#1a7a3c;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#edf7f1;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">5.&nbsp; SAFETY</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      Safety briefing conducted to all staff, drivers and porters. All checkers reminded to verify net expiration &amp; ULD serviceability.
+      <br><br>
+      <strong style="color:#1a7a3c;">✅ Note:</strong> All staff and drivers are wearing proper PPEs.
+    </div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 6: MANPOWER ═══ -->
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#eef3fc;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">6.&nbsp; MANPOWER</span>
+        </td>
+      </tr>
+    </table>
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:10px;">
+      <tr>
+        
+        <td colspan="2" valign="top" style="font-family:Calibri,Arial,sans-serif;font-size:13px;color:#1b1f2a;line-height:1.8;">
+          
+      <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Supervisors:</div>
+      <ul id="ul-supervisors" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82593" data-name="Mohamed Al Kalbani" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82593</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Mohamed Al Kalbani</span></span></li>
+</ul>
+      <button onclick="addListItem('ul-supervisors')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+      <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Load Control:</div>
+      <ul id="ul-dept-loadcontrol" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82114" data-name="Mubarak Al Nofli" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82114</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Mubarak Al Nofli</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82441" data-name="Mudathir Al Hajri" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82441</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Mudathir Al Hajri</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="81348" data-name="Assad Al Omairi" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN81348</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Assad Al Omairi</span></span></li>
+</ul>
+      <button onclick="addListItem('ul-dept-loadcontrol')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+      <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Export Checker:</div>
+      <ul id="ul-dept-exportchecker" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82673" data-name="Khalifa Al Maqbali" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82673</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Khalifa Al Maqbali</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82615" data-name="Rashid Al Farsi" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82615</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Rashid Al Farsi</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82672" data-name="Dawood Al Siyabi" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82672</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Dawood Al Siyabi</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82547" data-name="Mazin Al Hajri" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82547</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Mazin Al Hajri</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82439" data-name="Ghaith Al Habsi" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82439</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Ghaith Al Habsi</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82661" data-name="Mohamed Al Maskari" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82661</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Mohamed Al Maskari</span></span></li>
+</ul>
+      <button onclick="addListItem('ul-dept-exportchecker')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+      <div style="color:#0b3a78;font-weight:700;font-size:12px;margin:8px 0 2px 0;">Export Operators:</div>
+      <ul id="ul-dept-exportoperators" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82467" data-name="Khamis Al Hinai" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82467</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Khamis Al Hinai</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="81223" data-name="Mazin Al Siyabi" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN81223</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Mazin Al Siyabi</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="8542" data-name="Salim Al Harassi" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN8542</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">Salim Al Harassi</span></span></li>
+</ul>
+      <button onclick="addListItem('ul-dept-exportoperators')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">B) CTU Staff On Duty:</div><ul id="ul-ctu" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-ctu')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Inventory:</div><ul id="ul-inventory" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li style="color:#64748b;">—</li></ul><button onclick="addListItem('ul-inventory')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">C) Support Team:</div><ul id="ul-support" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-support')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Flight Dispatch (Export):</div><ul id="ul-fd-export" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="82414" data-name="BADAR AL BUSAIDI" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82414</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">BADAR AL BUSAIDI</span></span></li>
+<li contenteditable="true" style="outline:none;"><span data-sn="82420" data-name="MOHAMMED AL SAADI" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN82420</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">MOHAMMED AL SAADI</span></span></li></ul><button onclick="addListItem('ul-fd-export')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">Flight Dispatch (Import):</div><ul id="ul-fd-import" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;"><span data-sn="80479" data-name="SAMI AL HADABI" style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;"><strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN80479</strong>&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">SAMI AL HADABI</span></span></li></ul><button onclick="addListItem('ul-fd-import')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">D) Sick Leave / No Show / Others:</div><ul id="ul-sickleave" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-sickleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">E) Annual Leave / Course / Off in Lieu:</div><ul id="ul-annualleave" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-annualleave')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">F) Trainee:</div><ul id="ul-trainee" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-trainee')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+          <div style="color:#0b3a78;font-weight:700;font-size:13px;">G) Overtime Justification:</div><ul id="ul-overtime" class="mp-list" style="margin:2px 0 10px 20px;padding:0;"><li contenteditable="true" style="outline:none;">&nbsp;</li></ul><button onclick="addListItem('ul-overtime')" style="font-size:11px;padding:1px 8px;margin:2px 0 8px;cursor:pointer;background:#eef3fc;border:1px solid #0b3a78;color:#0b3a78;border-radius:3px;">+ Add</button>
+        </td>
+      </tr>
+    </table>
+    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 7: EQUIPMENT STATUS ═══ -->
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#1a7a3c;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#edf7f1;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#1a7a3c; letter-spacing:1px;">7.&nbsp; EQUIPMENT STATUS</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      ✅&nbsp; <strong>ALL EQUIPMENT ARE OK.</strong>
+    </div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 8: HANDOVER ═══ -->
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#0b3a78;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#eef3fc;">
+          <span class="sec-label" style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#0b3a78; letter-spacing:1px;">8.&nbsp; HANDOVER DETAILS</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      <ul style="margin:0 0 10px 22px; padding:0;">
+        <li>READ AND SIGN.</li>
+        <li>Shell &amp; Al-Maha Card Fuel.</li>
+        <li>DIP MAIL Cage Keys.</li>
+        <li>Supervisor mobile phone H/O in good condition.</li>
+        <li>DSE RADIO.</li>
+        <li>All trolleys arranged for early flight.</li>
+      </ul>
+    </div>
+    <div style="border-top:1px solid #e4e9f5; margin-top:14px;"></div>
+  </td></tr>
+
+  <!-- ═══ SECTION 9: OTHER ═══ -->
+  <tr><td class="sec-pad" style="padding:14px 24px 0 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td width="4" style="background-color:#7a5200;">&nbsp;</td>
+        <td style="padding:6px 10px; background-color:#fdf6ec;">
+          <span style="font-family:Calibri,Arial,sans-serif; font-size:12px; font-weight:700; color:#7a5200; letter-spacing:1px;">9.&nbsp; OTHER</span>
+        </td>
+      </tr>
+    </table>
+    <div class="sec-body" style="font-family:Calibri,Arial,sans-serif; font-size:13.5px; color:#1b1f2a; line-height:1.7; margin-top:10px; padding:0 4px;">
+      &nbsp;
+    </div>
+  </td></tr>
+
+  <!-- ═══ FOOTER / SIGNATURE ═══ -->
+  <tr>
+    <td style="padding:22px 24px 24px 24px; background-color:#f8faff; border-top:2px solid #0b3a78;">
+      <table width="100%" cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td valign="top">
+
+            <!-- Best Regards line -->
+            <div style="font-family:Calibri,Arial,sans-serif; font-size:13px; color:#555; margin-bottom:6px;">
+              Best Regards,
+            </div>
+
+            <!-- Name + Title -->
+            <div style="font-family:Calibri,Arial,sans-serif; margin-bottom:10px;">
+              <div style="font-size:15px; font-weight:700; color:#0b3a78; line-height:1.3;">
+                Mohamed Al Kalbani
+              </div>
+              <div style="font-size:12.5px; font-weight:600; color:#444; margin-top:2px;">
+                Duty Supervisor – Export Operation
+              </div>
+            </div>
+
+            <!-- Divider -->
+            <div style="border-top:1px solid #d0d8ea; margin-bottom:10px;"></div>
+
+            <!-- Company block -->
+            <table cellpadding="0" cellspacing="0" border="0">
+              <tr>
+                <!-- TRANSOM logo text -->
+                <td valign="top" style="padding-right:18px; border-right:2px solid #8b0000;">
+                  <table cellpadding="0" cellspacing="0" border="0" style="border-collapse:collapse;">
+                    <tr>
+                      <td width="5" bgcolor="#8b0000" style="background-color:#8b0000; font-size:1px; line-height:1px;">&nbsp;</td>
+                      <td bgcolor="#fdf0f0" style="background-color:#fdf0f0; padding:5px 10px;">
+                        <font face="Arial Black,Arial,sans-serif" color="#8b0000">
+                          <b style="font-size:22px; font-weight:900; letter-spacing:2px; color:#8b0000; font-family:Arial Black,Arial,sans-serif;">TRANSOM</b>
+                        </font><br>
+                        <font face="Arial,sans-serif" color="#888888">
+                          <span style="font-size:9px; font-weight:600; letter-spacing:3px; color:#888888;">CARGO</span>
+                        </font>
+                      </td>
+                    </tr>
+                  </table>
+                </td>
+                <!-- Contact info -->
+                <td valign="top" style="padding-left:16px;">
+                  <div style="font-family:Calibri,Arial,sans-serif; font-size:13px; font-weight:700;
+                              color:#1b1f2a; line-height:1.3; margin-bottom:5px;">
+                    Transom Cargo LLC.
+                  </div>
+                  <div style="font-family:Calibri,Arial,sans-serif; font-size:12px; color:#444; line-height:1.8;">
+                    P.O. Box: 618, P.C: 111<br>
+                    Sultanate of Oman<br>
+                    Phone No. 97297474<br>
+                    <a href="http://www.transomcargo.om"
+                       style="color:#0b3a78; text-decoration:none; font-weight:600;">
+                      www.transomcargo.om
+                    </a>
+                  </div>
+                </td>
+              </tr>
+            </table>
+
+            <!-- Certifications image -->
+            <div style="margin-top:12px;">
+              <img src="https://raw.githubusercontent.com/khalidsaif912/offload-monitor/dd88dcfee25c7d2a8959bb4fd01a63dda1309cbf/signature.png"
+                   width="430"
+                   style="display:block; border:0; outline:none; text-decoration:none; width:430px; max-width:100%; height:auto;"
+                   alt="Certifications">
+            </div>
+
+          </td>
+
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="background-color:#0b3a78; height:5px; font-size:1px; line-height:1px;">&nbsp;</td>
+  </tr>
+
+</table>
+
+<!-- ═══ BUTTONS BAR ═══ -->
+<div class="btn-bar" data-no-copy="1">
+  <button id="btn-copy" type="button" data-no-copy="1" style="background:#0b3a78;box-shadow:0 2px 8px rgba(11,58,120,.25);">📋 Copy Report</button>
+  <button id="btn-manage-emails" type="button" data-no-copy="1" style="background:#475569;box-shadow:0 2px 8px rgba(71,85,105,.25);">📝 Edit Email List</button>
+  <button id="btn-email" type="button" data-no-copy="1" style="background:#c2410c;box-shadow:0 2px 8px rgba(194,65,12,.25);">✉️ Send Email Now</button>
+</div>
+
+</div><!-- /max-width wrapper -->
+</div><!-- /page-wrap -->
+
+<script>
+/* ── Config injected by Python build ── */
+window._AIRLABS_KEY        = '';          /* ضع مفتاح AirLabs هنا إذا توفّر */
+window._LOCAL_MCT_FLIGHTS  = {"IX236": {"dest": "BOM", "std": "00:15"}, "OV401": {"dest": "CGP", "std": "01:15"}, "WY103": {"dest": "LHR", "std": "01:35"}, "WY685": {"dest": "RUH", "std": "01:45"}, "WY849": {"dest": "CGK", "std": "01:50"}, "TK775": {"dest": "IST", "std": "01:55"}, "BS322": {"dest": "CGP", "std": "02:00"}, "WY251": {"dest": "MAA", "std": "02:05"}, "WY211": {"dest": "TRV", "std": "02:25"}, "WY671": {"dest": "JED", "std": "02:25"}, "WY225": {"dest": "COK", "std": "02:25"}, "6E1272": {"dest": "COK", "std": "03:00"}, "OV513": {"dest": "KHI", "std": "03:15"}, "WY241": {"dest": "DEL", "std": "03:20"}, "ET625": {"dest": "ADD", "std": "04:25"}, "3T263": {"dest": "PZU", "std": "04:30"}, "PC831": {"dest": "SAW", "std": "04:35"}, "OMS287": {"dest": "JED", "std": "05:55"}, "QR1149": {"dest": "DOH", "std": "05:55"}, "J4611": {"dest": "PZU", "std": "06:15"}, "GF561": {"dest": "BAH", "std": "07:30"}, "OMS5071": {"dest": "FAU", "std": "08:00"}, "OV5051": {"dest": "OMM", "std": "08:00"}, "WY323": {"dest": "KHI", "std": "08:05"}, "WY253": {"dest": "MAA", "std": "08:20"}, "WY223": {"dest": "COK", "std": "08:25"}, "WY317": {"dest": "DAC", "std": "08:25"}, "OV101": {"dest": "SLL", "std": "08:30"}, "OV283": {"dest": "JED", "std": "08:30"}, "OV251": {"dest": "FJR", "std": "08:30"}, "OMS101": {"dest": "SLL", "std": "08:35"}, "WY815": {"dest": "BKK", "std": "08:40"}, "WY823": {"dest": "KUL", "std": "08:45"}, "WY903": {"dest": "SLL", "std": "08:45"}, "WY283": {"dest": "BLR", "std": "09:10"}, "WY843": {"dest": "MNL", "std": "09:15"}, "WY203": {"dest": "BOM", "std": "09:20"}, "OV211": {"dest": "DMM", "std": "09:35"}, "WY231": {"dest": "HYD", "std": "10:10"}, "WY245": {"dest": "DEL", "std": "10:25"}, "WY831": {"dest": "HKT", "std": "10:30"}, "OV273": {"dest": "MED", "std": "10:55"}, "WY689": {"dest": "JED", "std": "10:55"}, "EY693": {"dest": "AUH", "std": "11:55"}, "WY905": {"dest": "SLL", "std": "12:30"}, "OV205": {"dest": "RUH", "std": "12:30"}, "WY413": {"dest": "AMM", "std": "13:00"}, "WY165": {"dest": "IST", "std": "13:00"}, "FZ42": {"dest": "DXB", "std": "13:10"}, "OV285": {"dest": "JED", "std": "13:10"}, "WY171": {"dest": "AMS", "std": "13:10"}, "OV103": {"dest": "SLL", "std": "13:15"}, "PF733": {"dest": "LHE", "std": "13:15"}, "WY117": {"dest": "FRA", "std": "13:20"}, "D0832": {"dest": "EMA", "std": "13:30"}, "WY699": {"dest": "TIF", "std": "13:35"}, "OV315": {"dest": "SPX", "std": "13:40"}, "WY683": {"dest": "RUH", "std": "13:55"}, "PF735": {"dest": "ISB", "std": "14:00"}, "OV135": {"dest": "DQM", "std": "14:00"}, "WY153": {"dest": "ZRH", "std": "14:05"}, "G9754": {"dest": "CAI", "std": "14:05"}, "BG122": {"dest": "CGP", "std": "14:10"}, "WY131": {"dest": "CDG", "std": "14:10"}, "OV293": {"dest": "AHB", "std": "14:10"}, "WY101": {"dest": "LHR", "std": "14:15"}, "WY693": {"dest": "DMM", "std": "14:30"}, "OV213": {"dest": "DMM", "std": "14:35"}, "WY405": {"dest": "CAI", "std": "14:40"}, "WY675": {"dest": "JED", "std": "14:50"}, "WY291": {"dest": "CCJ", "std": "15:10"}, "WY915": {"dest": "SLL", "std": "15:30"}, "OV5141": {"dest": "MSH", "std": "15:45"}, "WY123": {"dest": "MUC", "std": "15:45"}, "WY183": {"dest": "SVO", "std": "15:55"}, "OV253": {"dest": "FJR", "std": "16:35"}, "WY907": {"dest": "SLL", "std": "16:40"}, "FZ44": {"dest": "DXB", "std": "16:50"}, "D0856": {"dest": "LEJ", "std": "17:00"}, "EY695": {"dest": "AUH", "std": "17:10"}, "OV507": {"dest": "SKT", "std": "17:35"}, "WY909": {"dest": "SLL", "std": "17:40"}, "BG722": {"dest": "DAC", "std": "17:50"}, "OV105": {"dest": "SLL", "std": "18:00"}, "WY681": {"dest": "RUH", "std": "18:50"}, "OV107": {"dest": "SLL", "std": "19:00"}, "GF565": {"dest": "BAH", "std": "19:10"}, "WY921": {"dest": "SLL", "std": "19:40"}, "EK1066": {"dest": "DXB", "std": "20:00"}, "WY143": {"dest": "MXP", "std": "15:05"}, "WY147": {"dest": "FCO", "std": "15:05"}, "WY133": {"dest": "MXP", "std": "20:20"}, "WY381": {"dest": "KWI", "std": "20:30"}, "WY383": {"dest": "KWI", "std": "20:35"}, "WY303": {"dest": "ZNZ", "std": "20:40"}, "FZ48": {"dest": "DXB", "std": "20:45"}, "IX164": {"dest": "DEL", "std": "21:00"}, "IX712": {"dest": "CNN", "std": "21:10"}, "MU2052": {"dest": "PKX", "std": "21:15"}, "MS931": {"dest": "CAI", "std": "21:20"}, "WY821": {"dest": "KUL", "std": "21:25"}, "WY407": {"dest": "CAI", "std": "21:35"}, "WY677": {"dest": "MED", "std": "21:40"}, "WY673": {"dest": "JED", "std": "21:45"}, "WY817": {"dest": "BKK", "std": "21:50"}, "OV497": {"dest": "DAC", "std": "22:15"}, "OV437": {"dest": "CMB", "std": "22:15"}, "OV747": {"dest": "MAA", "std": "22:20"}, "OV773": {"dest": "CCJ", "std": "22:30"}, "OV735": {"dest": "HYD", "std": "22:30"}, "WY833": {"dest": "HKT", "std": "22:35"}, "WY707": {"dest": "DAR", "std": "22:50"}, "OV563": {"dest": "ISB", "std": "23:00"}, "QR1125": {"dest": "DOH", "std": "23:15"}, "OV705": {"dest": "LKO", "std": "23:20"}, "OV783": {"dest": "BLR", "std": "23:20"}, "IX550": {"dest": "TRV", "std": "23:25"}, "OV463": {"dest": "BKK", "std": "23:30"}, "6E1268": {"dest": "BOM", "std": "23:55"}, "GF567": {"dest": "BAH", "std": "23:55"}, "OV505": {"dest": "SKT", "std": "23:55"}};
+window._ALL_STAFF          = {"81021": "WAFAA SALIM", "82473": "ALA AL WAHAIBI", "82452": "MAHMOOD AL HADIDI", "82476": "AHMED ALRUJAIBI", "81399": "JAMAL AL SINANI", "82444": "MOHAMMED AL YAARUBI", "82100": "YOUSUF AL WAHEEDI", "81351": "IBRAHIM AL QUTAITI", "82541": "MOHAMMED AL WAHAIBI", "80215": "GLENDO", "82664": "HAIFA AL BALUSHI", "82460": "MAHAMAD AL MAHARBI", "82665": "MAHANAD AL HADI", "82431": "MAHMOOD AL BALUSHI", "82331": "ISMAIL AL MAHARBI", "82654": "AHMED AL HADI", "82537": "KHALIFA AL SAADI", "82419": "HAITHAM AL BALUSHI", "82425": "ALI AL SHAMSI", "82414": "BADAR AL BUSAIDI", "82420": "MOHAMMED AL SAADI", "82410": "SAID AL SADI", "82416": "NASSER AL OMAIRI", "82417": "TALAL AL HUSEINI", "82423": "BADAR AL BURTAMANI", "82428": "ABDULLAH AL MAHARBI", "82571": "YAARAB AL RAQADI", "80480": "YOUNIS AL SIYABI", "82566": "ANWAR AL AMRI", "80479": "SAMI AL HADABI", "82583": "BADAR AL SHEHHI", "82668": "IBRAHIM AL HADHRAMI", "82454": "HISHAM AL MAHARBI", "82456": "AHMED AL FARSI", "82496": "ANWAR AL HABSI", "82470": "WAHEB AL BARAIDAI", "82614": "MOHAMMED AL MAWALI", "82107": "OMAR AL FUTAISI", "82286": "MAHMOOD AL SHAMSI", "82667": "MOOSA AL BALUSHI", "82642": "SANAD AL HARTHI", "80481": "SALIM AL MAAWALI", "82590": "NASSER AL MAAMARI", "80833": "SULEIMAN AL MAHARBI", "82455": "AHMED AL HUSAINI", "81983": "JABER AL JULANDANI", "82663": "ABDULLAH AL SINAWI", "8336": "KHALID AL BALUSHI", "82457": "ADIL AL BULUSHI", "81991": "HILAL AL SHAMAKHI", "82049": "MAJID AL GHAFRI", "990895": "MOHD AL HADDABI", "80478": "FARIZ AL BALUSHI", "81080": "AHMED AL AMRI", "8836": "HAMED AL FAKHRI", "81151": "JUMA AL HABSI", "81152": "SAID AL HADI", "82330": "MOHAMMED AL BALUCHI", "82458": "KHALID AL ZADJALI", "82535": "MOHAMED AL MAAWALI", "990751": "KHAMIS AL KASBI", "82459": "ALI AL RIYAMI", "80834": "SAID AL AMRI", "990786": "YASIR AL GHARABI", "82435": "QAIS AL MUKHAINI", "81079": "MOHAMMED AL KULAIBI", "82422": "MAHIR AL BALUSHI", "82434": "HISHAM AL SIYABI", "82412": "QASIM AL GHARIBI", "82536": "MOOSA AL HADI", "8901": "UDUGAMA", "81032": "MOHAMMED SAID", "990896": "SAMEER MAHMOOD", "80269": "FRITZ", "80535": "FROILAN", "80235": "Rodolfo Magcaling", "81392": "Adil Al Balushi", "8926": "Salim Al Masroori", "8899": "Rajaram", "80250": "Jay Macalino", "990737": "Said Al Amri", "81300": "Talal Al Balushi", "81404": "Mohamed Al Amri", "82546": "Saleh Al Rashdi", "82593": "Mohamed Al Kalbani", "82445": "Al Muthana Al Shamfari", "82548": "Ahmed Al Muqaini", "81409": "Qasim Al Maqbali", "82596": "Hamed Al Fulaiti", "82575": "Ahmed Al Kharusi", "81258": "Jaafar Al Balushi", "82437": "Marwan Al Difai", "81402": "Mohamed Al Siyabi", "82114": "Mubarak Al Nofli", "82441": "Mudathir Al Hajri", "82551": "Omar Al Obaidi", "81348": "Assad Al Omairi", "82657": "Bushra Al Wahiebi", "82600": "Habib Al Balushi", "82550": "Saleh Al Aufi", "82649": "Saif Al Mahrizi", "82283": "Ahmed Al Mawali", "82587": "Yousuf Al Balushi", "82574": "Ali Al Mamari", "80695": "Hosni Al Sulti", "82659": "Ammar Al Hashmi", "990752": "Ali Yousuf Al Balushi", "82578": "Raad Al Farsi", "8584": "Adil Al Zadjali", "82555": "Riyadh Al Jabri", "82658": "Mohamed Al Mazroie", "82671": "Khalil Al Hinai", "81393": "Ali Al Farsi", "82674": "Mohamed Al Mamari", "81832": "Ahmed Al Bakari", "82424": "Riyadh Al Sulti", "82673": "Khalifa Al Maqbali", "82464": "Wissam Al Kharusi", "82615": "Rashid Al Farsi", "82672": "Dawood Al Siyabi", "8930": "Fahim Al Hashni", "80482": "Waleed Al Hadabi", "82645": "Abdullah Al Shukeili", "82666": "Mohamed Al Maskari", "82547": "Mazin Al Hajri", "82577": "Ali Al Marjubi", "82439": "Ghaith Al Habsi", "82661": "Mohamed Al Maskari", "8715": "Khalid Al Raqadi", "82592": "Mohamed Al Subhi", "990465": "Abdulfatah Al Shukeili", "80270": "Marlon Esmilla", "82616": "Ahmed Al Hashmi", "81307": "Badar Al Hamadani", "82534": "Muadh Al Qasimi", "82656": "Faisal Al Balushi", "82565": "Jamal Al Hadi", "8714": "Mohana Al Subhi", "8762": "Mohamed Al Falahi", "8647": "Issa Al Douyani", "82653": "Ahmed Al Sabii", "81224": "Mohamed Al Amri", "82415": "Ahmed Al Balushi", "8722": "Salim Sulieman", "82467": "Khamis Al Hinai", "81223": "Mazin Al Siyabi", "8941": "Adil Al Oraimi", "82429": "Zakariya Al Balushi", "8542": "Salim Al Harassi", "82468": "Badar Al Fulaiti", "82588": "Ghassan Al Tarsi", "8744": "Said Al Fahkri"};
+</script>
+
+<script>
+(function(){
+  var REPORT_SECRET = '887155';
+  var COPY_SUCCESS_MS = 2500;
+  var REPO_OWNER = 'khalidsaif912';
+  var REPO_NAME = 'offload-monitor';
+  var RECIPIENTS_PATH = 'docs/data/email_recipients.json';
+  var RECIPIENTS_RAW_URL = 'https://raw.githubusercontent.com/' + REPO_OWNER + '/' + REPO_NAME + '/main/' + RECIPIENTS_PATH;
+  var RECIPIENTS_EDIT_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/edit/main/' + RECIPIENTS_PATH;
+  var RECIPIENTS_NEW_URL = 'https://github.com/' + REPO_OWNER + '/' + REPO_NAME + '/new/main?filename=' + encodeURIComponent(RECIPIENTS_PATH);
+  var DEFAULT_RECIPIENTS = [];
+
+  function askSendSecret(){
+    var entered = prompt('Enter send password:');
+    if(entered === null) return false;
+    if((entered || '').trim() !== REPORT_SECRET){
+      alert('Wrong password');
+      return false;
+    }
+    return true;
+  }
+
+  function resetButton(btn, text, color, delay){
+    setTimeout(function(){
+      btn.innerText = text;
+      btn.style.background = color;
+      btn.disabled = false;
+    }, delay || 3000);
+  }
+
+  /* ── قوائم قابلة للتعديل: إضافة وحذف عناصر ── */
+  function addListItem(ulId){
+    var ul = document.getElementById(ulId);
+    if(!ul) return;
+    var li = createEditableListItem(ul);
+    ul.appendChild(li);
+    _attachLiEvents(li);
+    focusEditableListItem(li, isManpowerListUl(ul));
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+  }
+
+  function _attachLiEvents(li){
+    if(!li || li._baseLiSetup) return;
+    li._baseLiSetup = true;
+    var ul = li.parentElement;
+    if(!ul) return;
+
+    if(isManpowerListUl(ul)){
+      if(typeof window.setupManpowerLi === 'function') window.setupManpowerLi(li);
+      return;
+    }
+
+    li.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        e.preventDefault();
+        var newLi = createEditableListItem(li.parentElement);
+        li.parentElement.insertBefore(newLi, li.nextSibling);
+        _attachLiEvents(newLi);
+        focusEditableListItem(newLi, false);
+        return;
+      }
+      if((e.key === 'Backspace'||e.key==='Delete') && (li.innerText.trim()===''||li.innerText.trim()===' ')){
+        if(li.parentElement && li.parentElement.children.length > 1){
+          e.preventDefault();
+          var prev = li.previousElementSibling || li.nextElementSibling;
+          li.parentElement.removeChild(li);
+          if(prev) prev.focus();
+        }
+      }
+    });
+
+    if(ul && (ul.dataset.flightList || ul.getAttribute('data-flight-list'))){
+      var isLP = !!(ul && ul.id === 'ul-loadplan');
+      if(typeof window.setupFlightListItem === 'function') window.setupFlightListItem(li, isLP);
+    }
+  }
+
+  /* ربط الـ li الموجودة مسبقاً بالأحداث عند تحميل الصفحة */
+  document.addEventListener('DOMContentLoaded', function(){
+    var editableLists = [
+      'ul-loadplan','ul-advloading','ul-csdrescreening',
+      'ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
+      'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'
+    ];
+    editableLists.forEach(function(id){
+      var ul = document.getElementById(id);
+      if(!ul) return;
+      Array.from(ul.querySelectorAll('li[contenteditable]')).forEach(function(li){
+        _attachLiEvents(li);
+      });
+    });
+    /* أيضاً أقسام الأقسام الديناميكية */
+    document.querySelectorAll('ul[id^="ul-dept-"]').forEach(function(ul){
+      Array.from(ul.querySelectorAll('li[contenteditable]')).forEach(function(li){
+        _attachLiEvents(li);
+      });
+    });
+  });
+  function plainCopyFallback(text, html){
+    if(html){
+      var holder = document.createElement('div');
+      holder.innerHTML = html;
+      holder.style.position = 'fixed';
+      holder.style.left = '-99999px';
+      holder.style.top = '0';
+      document.body.appendChild(holder);
+      var range = document.createRange();
+      range.selectNodeContents(holder);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      try {
+        if(document.execCommand('copy')){
+          sel.removeAllRanges();
+          document.body.removeChild(holder);
+          return;
+        }
+      } catch (e) {}
+      sel.removeAllRanges();
+      document.body.removeChild(holder);
+    }
+
+    var ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'fixed';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    document.body.removeChild(ta);
+  }
+
+  /* ══════════════════════════════════════════════════════════
+     buildReportHtml — HTML نظيف للإيميل/النسخ
+     القاعدة: البنر (data-email-keep) يحتفظ بألوانه دائماً
+     باقي العناصر: خلفيات داكنة → فاتحة، نص أبيض → داكن
+     ══════════════════════════════════════════════════════════ */
+  function buildReportHtml(){
+    var el = document.getElementById('report-content');
+    if(!el) return null;
+
+    /* خطوة 1: نسخ بسيط — inline styles موجودة في HTML مباشرةً */
+    var clone = el.cloneNode(true);
+
+    function normC(s){ return (s||'').toLowerCase().replace(/\s/g,''); }
+    var DARK=[
+      'rgb(11,58,120)','#0b3a78','rgb(30,64,175)','#1e40af',
+      'rgb(37,99,235)','#2563eb','rgb(10,31,82)','#0a1f52',
+      'rgb(26,110,207)','#1a6ecf'
+    ];
+    function isDark(s){
+      var n=normC(s);
+      for(var i=0;i<DARK.length;i++) if(n===normC(DARK[i])) return true;
+      return false;
+    }
+    function isWhite(s){
+      var n=normC(s);
+      return n==='#ffffff'||n==='#fff'||n==='rgb(255,255,255)';
+    }
+    function inBanner(node){
+      var p=node;
+      while(p&&p!==clone){
+        if(p.getAttribute&&p.getAttribute('data-email-keep')==='1') return true;
+        p=p.parentElement;
+      }
+      return false;
+    }
+
+    /* خطوة 2: تحويل العناصر خارج البنر فقط */
+    clone.querySelectorAll('*').forEach(function(e){
+      if(inBanner(e)) return;
+      if(isDark(e.style.backgroundColor)){
+        e.style.backgroundColor='#eef3fc';
+        e.style.color='#0b3a78';
+      }
+      var bg=e.style.background||'';
+      if(bg.toLowerCase().indexOf('linear-gradient')!==-1){
+        e.style.background='';
+        e.style.backgroundColor='#eef3fc';
+        e.style.color='#0b3a78';
+      }
+      if(isWhite(e.style.color)) e.style.color='#1b1f2a';
+    });
+
+    /* خطوة 3: البنر — تثبيت ألوانه بشكل قاطع بعد خطوة 2 */
+    clone.querySelectorAll('[data-email-keep]').forEach(function(e){
+      var bg=normC(e.style.backgroundColor);
+      /* الشريط الذهبي يبقى */
+      if(bg&&bg!==normC('#f59e0b')&&bg!=='rgb(245,158,11)')
+        e.style.backgroundColor='#1e5799';
+    });
+    var bRoot=clone.querySelector('[data-email-keep="1"]');
+    if(bRoot){
+      /* تطبيق اللون الأبيض على الجذر حتى يرثه كل النص غير المُصنَّف */
+      bRoot.style.color='#ffffff';
+      bRoot.querySelectorAll('*').forEach(function(e){
+        var c=normC(e.style.color);
+        /* ذهبي → يبقى */
+        if(c===normC('#fde68a')||c==='rgb(253,230,138)') return;
+        /* أزرق فاتح → يبقى */
+        if(c===normC('#93c5fd')||c==='rgb(147,197,253)') return;
+        /* فرض الأبيض على الجميع بغض النظر عن القيمة الحالية */
+        e.style.color='#ffffff';
+      });
+    }
+
+    /* خطوة 4: إصلاح الجداول */
+    clone.querySelectorAll('table').forEach(function(t){
+      t.setAttribute('cellpadding','0');
+      t.setAttribute('cellspacing','0');
+      t.setAttribute('border','0');
+      t.setAttribute('role','presentation');
+      t.style.borderCollapse='collapse';
+      if(!t.style.width) t.style.width='100%';
+    });
+    clone.querySelectorAll('td,th').forEach(function(c){
+      if(!c.style.verticalAlign) c.style.verticalAlign='top';
+    });
+
+    /* خطوة 5: تنظيف */
+    clone.querySelectorAll('[contenteditable]').forEach(function(e){
+      e.removeAttribute('contenteditable');
+      e.style.outline='none';
+    });
+    clone.querySelectorAll('[tabindex]').forEach(function(e){
+      e.removeAttribute('tabindex');
+    });
+    /* إزالة أزرار + Add من النسخة المُرسَلة */
+    clone.querySelectorAll('button').forEach(function(e){
+      if(e.textContent.trim().indexOf('Add')!==-1 || e.textContent.trim().indexOf('+')!==-1)
+        e.parentNode && e.parentNode.removeChild(e);
+    });
+    /* إزالة عناصر data-no-copy (أزرار النسخ/الإرسال) من نسخة الإيميل */
+    clone.querySelectorAll('[data-no-copy]').forEach(function(e){
+      e.parentNode && e.parentNode.removeChild(e);
+    });
+    var br=clone.querySelector('#back-link-row');
+    if(br) br.style.display='none';
+
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>body{background:#eef1f7;font-family:Calibri,Arial,sans-serif;margin:0;padding:10px 0;-webkit-text-size-adjust:100%;}table{border-collapse:collapse;}img{max-width:100%;height:auto;display:block;}</style></head><body>'+clone.outerHTML+'</body></html>';
+  }
+
+  function onCopyReport(){
+    var btn = document.getElementById('btn-copy');
+    var el = document.getElementById('report-content');
+    if(!btn || !el) return;
+
+    var full = buildReportHtml();
+    if(!full) return;
+
+    function markCopied(){
+      btn.innerText = '✅ Copied!';
+      btn.style.background = '#059669';
+      resetButton(btn, '📋 Copy Report', '#0b3a78', COPY_SUCCESS_MS);
+    }
+
+    if(navigator.clipboard && window.ClipboardItem){
+      var item = new ClipboardItem({
+        'text/html': new Blob([full], {type:'text/html'}),
+        'text/plain': new Blob([el.innerText], {type:'text/plain'})
+      });
+      navigator.clipboard.write([item]).then(markCopied).catch(function(){
+        if(navigator.clipboard && navigator.clipboard.writeText){
+          navigator.clipboard.writeText(el.innerText).then(markCopied).catch(function(){
+            plainCopyFallback(el.innerText, full);
+            markCopied();
+          });
+        } else {
+          plainCopyFallback(el.innerText, full);
+          markCopied();
+        }
+      });
+    } else {
+      plainCopyFallback(el.innerText, full);
+      markCopied();
+    }
+  }
+
+  function normalizeRecipients(items){
+    var seen = {};
+    var out = [];
+    (items || []).forEach(function(v){
+      var s = String(v || '').trim().toLowerCase();
+      if(!s) return;
+      if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return;
+      if(seen[s]) return;
+      seen[s] = true;
+      out.push(s);
+    });
+    return out;
+  }
+
+  function getLocalRecipients(){
+    try {
+      return normalizeRecipients(JSON.parse(localStorage.getItem('saved_recipients') || '[]'));
+    } catch(e) {
+      return [];
+    }
+  }
+
+  function setLocalRecipients(items){
+    localStorage.setItem('saved_recipients', JSON.stringify(normalizeRecipients(items)));
+  }
+
+  function loadRecipients(){
+    var fallback = getLocalRecipients();
+    if(fallback.length) return Promise.resolve(fallback);
+    return fetch(RECIPIENTS_RAW_URL + '?t=' + Date.now(), {cache:'no-store'})
+      .then(function(r){
+        if(!r.ok) throw new Error('missing');
+        return r.json();
+      })
+      .then(function(data){
+        var arr = normalizeRecipients((data && data.recipients) || DEFAULT_RECIPIENTS);
+        if(arr.length) setLocalRecipients(arr);
+        return arr;
+      })
+      .catch(function(){
+        return normalizeRecipients(DEFAULT_RECIPIENTS);
+      });
+  }
+
+  function renderRecipientList(container, recipients){
+    if(!container) return;
+    if(!recipients.length){
+      container.innerHTML = '<div style="padding:10px;border:1px dashed #cbd5e1;border-radius:8px;color:#64748b;">No saved recipients yet.</div>';
+      return;
+    }
+    container.innerHTML = recipients.map(function(email, idx){
+      return '<label style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;border:1px solid #e2e8f0;border-radius:8px;margin-bottom:8px;background:#fff;">'
+        + '<span style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">'
+        + '<input type="checkbox" data-email="' + email.replace(/"/g,'&quot;') + '" checked>'
+        + '<span style="word-break:break-all;">' + email + '</span>'
+        + '</span>'
+        + '<button type="button" data-del="' + idx + '" style="border:none;background:#dc2626;color:#fff;border-radius:6px;padding:6px 10px;cursor:pointer;font-weight:700;">Delete</button>'
+        + '</label>';
+    }).join('');
+  }
+
+  function openRecipientsManager(mode){
+    return loadRecipients().then(function(initial){
+      var recipients = initial.slice();
+      return new Promise(function(resolve){
+        var backdrop = document.createElement('div');
+        backdrop.style.cssText = 'position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+        var box = document.createElement('div');
+        box.style.cssText = 'width:min(560px,100%);max-height:90vh;overflow:auto;background:#f8fafc;border-radius:16px;box-shadow:0 20px 60px rgba(15,23,42,.35);padding:18px;font-family:Calibri,Arial,sans-serif;';
+        backdrop.appendChild(box);
+        box.innerHTML = ''
+          + '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;">'
+          + '<div><div style="font-size:22px;font-weight:800;color:#0f172a;">Email Recipients</div><div style="font-size:13px;color:#64748b;">Choose all, some, or add a new email.</div></div>'
+          + '<button type="button" id="picker-close" style="border:none;background:#e2e8f0;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Close</button>'
+          + '</div>'
+          + '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">'
+          + '<button type="button" id="picker-all" style="border:none;background:#0b3a78;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Select All</button>'
+          + '<button type="button" id="picker-none" style="border:none;background:#64748b;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Unselect All</button>'
+          + '<button type="button" id="picker-open-gh" style="border:none;background:#475569;color:#fff;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:700;">Open on GitHub</button>'
+          + '</div>'
+          + '<div style="display:flex;gap:8px;margin-bottom:12px;">'
+          + '<input id="picker-new-email" type="email" placeholder="new@example.com" style="flex:1;min-width:0;padding:10px 12px;border:1px solid #cbd5e1;border-radius:8px;font-size:14px;">'
+          + '<button type="button" id="picker-add" style="border:none;background:#059669;color:#fff;border-radius:8px;padding:10px 14px;cursor:pointer;font-weight:700;">Add</button>'
+          + '</div>'
+          + '<div id="picker-list"></div>'
+          + '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:14px;">'
+          + (mode === 'send' ? '<button type="button" id="picker-send" style="border:none;background:#c2410c;color:#fff;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:800;">Send Now</button>' : '')
+          + '<button type="button" id="picker-save-only" style="border:none;background:#0b3a78;color:#fff;border-radius:8px;padding:10px 16px;cursor:pointer;font-weight:800;">Save</button>'
+          + '</div>';
+        document.body.appendChild(backdrop);
+        var list = box.querySelector('#picker-list');
+        function rerender(){ renderRecipientList(list, recipients); }
+        function close(result){ document.body.removeChild(backdrop); resolve(result || null); }
+        rerender();
+        box.querySelector('#picker-close').onclick = function(){ close(null); };
+        box.querySelector('#picker-all').onclick = function(){ list.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ cb.checked = true; }); };
+        box.querySelector('#picker-none').onclick = function(){ list.querySelectorAll('input[type="checkbox"]').forEach(function(cb){ cb.checked = false; }); };
+        box.querySelector('#picker-open-gh').onclick = function(){ window.open(RECIPIENTS_EDIT_URL, '_blank'); };
+        box.querySelector('#picker-add').onclick = function(){
+          var input = box.querySelector('#picker-new-email');
+          var val = String(input.value || '').trim().toLowerCase();
+          if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)){ alert('Enter a valid email address'); return; }
+          recipients = normalizeRecipients(recipients.concat([val]));
+          input.value = '';
+          rerender();
+        };
+        list.addEventListener('click', function(ev){
+          var idx = ev.target && ev.target.getAttribute('data-del');
+          if(idx === null) return;
+          recipients.splice(Number(idx), 1);
+          rerender();
+        });
+        box.querySelector('#picker-save-only').onclick = function(){
+          var selected = normalizeRecipients(recipients);
+          setLocalRecipients(selected);
+          alert('Saved locally in this browser. To save on GitHub, use Open on GitHub.');
+          close({selected:selected, saved:true});
+        };
+        if(mode === 'send'){
+          box.querySelector('#picker-send').onclick = function(){
+            var selected = Array.from(list.querySelectorAll('input[type="checkbox"]:checked')).map(function(cb){ return cb.getAttribute('data-email'); });
+            selected = normalizeRecipients(selected);
+            if(!selected.length){ alert('Choose at least one recipient'); return; }
+            setLocalRecipients(normalizeRecipients(recipients));
+            close({selected:selected, saved:true});
+          };
+        }
+      });
+    });
+  }
+
+  function openRecipientsFile(){
+    if(!askSendSecret()) return;
+    loadRecipients().then(function(items){
+      if(items.length){
+        window.open(RECIPIENTS_EDIT_URL, '_blank');
+      } else {
+        var template = `{
+  "recipients": [
+    "example1@company.com",
+    "example2@company.com"
+  ],
+  "updated_at": "",
+  "source": "offload-monitor-ui"
+}`;
+        var url = RECIPIENTS_NEW_URL + '&value=' + encodeURIComponent(template);
+        window.open(url, '_blank');
+      }
+    });
+  }
+
+  function sendEmailNow(){
+    openRecipientsManager('send').then(function(result){
+      if(!result || !result.selected || !result.selected.length) return;
+      var ok = confirm('إرسال تقرير هذه المناوبة بالإيميل الآن؟\n\nShift: shift3\nDate: 2026-04-26\nRecipients: ' + result.selected.join(', '));
+      if(!ok) return;
+
+      var btn = document.getElementById('btn-email');
+      if(!btn) return;
+      btn.innerText = '⏳ Saving edits…';
+      btn.disabled = true;
+      btn.style.background = '#64748b';
+
+      var pat = localStorage.getItem('gh_pat');
+      if(!pat){
+        pat = prompt('أدخل GitHub Personal Access Token (repo scope):');
+        if(!pat){
+          btn.innerText = '✉️ Send Email Now';
+          btn.style.background = '#c2410c';
+          btn.disabled = false;
+          return;
+        }
+        localStorage.setItem('gh_pat', pat);
+      }
+
+      /* ── Step 1: Capture DOM edits (inline styles, clean email-safe HTML) ── */
+      var editedHtml = buildReportHtml();
+      if(!editedHtml){
+        btn.innerText = '❌ No report found';
+        btn.style.background = '#dc2626';
+        resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
+        return;
+      }
+
+      /* ── Step 2: Get current file SHA then upload the edited HTML to repo ── */
+      var filePath = 'docs/2026-04-26/shift3/index.html';
+      var apiBase = 'https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/';
+      var headers = {
+        'Accept':'application/vnd.github+json',
+        'Authorization':'Bearer ' + pat,
+        'Content-Type':'application/json'
+      };
+
+      btn.innerText = '⏳ Uploading edits…';
+
+      fetch(apiBase + filePath + '?t=' + Date.now(), {headers:headers})
+      .then(function(r){
+        if(r.status === 401){ localStorage.removeItem('gh_pat'); throw new Error('AUTH'); }
+        if(!r.ok && r.status !== 404) throw new Error('GET_SHA_' + r.status);
+        return r.ok ? r.json() : null;
+      })
+      .then(function(fileInfo){
+        var sha = fileInfo ? fileInfo.sha : undefined;
+        /* Use editedHtml — includes user edits + inline styles + email-safe colors */
+        var encoded = btoa(unescape(encodeURIComponent(editedHtml)));
+        var putBody = {
+          message: 'Update report with manual edits (2026-04-26/shift3)',
+          content: encoded,
+          branch: 'main'
+        };
+        if(sha) putBody.sha = sha;
+
+        return fetch(apiBase + filePath, {
+          method: 'PUT',
+          headers: headers,
+          body: JSON.stringify(putBody)
+        });
+      })
+      .then(function(r){
+        if(r.status === 401){ localStorage.removeItem('gh_pat'); throw new Error('AUTH'); }
+        if(!r.ok) throw new Error('PUT_' + r.status);
+        btn.innerText = '⏳ Sending email…';
+
+        /* ── Step 3: Trigger the dispatch to send email ── */
+        return fetch('https://api.github.com/repos/' + REPO_OWNER + '/' + REPO_NAME + '/dispatches', {
+          method:'POST',
+          headers: headers,
+          body:JSON.stringify({
+            event_type:'send_report_now',
+            client_payload:{date_dir:'2026-04-26', shift:'shift3', recipients: result.selected}
+          })
+        });
+      })
+      .then(function(r){
+        if(r.ok || r.status === 204){
+          btn.innerText = '✅ Email Sent!';
+          btn.style.background = '#059669';
+          resetButton(btn, '✉️ Send Email Now', '#c2410c', 4000);
+        } else {
+          if(r.status === 401){ localStorage.removeItem('gh_pat'); }
+          btn.innerText = '❌ Failed (' + r.status + ')';
+          btn.style.background = '#dc2626';
+          resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
+        }
+      })
+      .catch(function(err){
+        var msg = (err && err.message) || 'Error';
+        if(msg === 'AUTH'){
+          btn.innerText = '❌ Token expired — retry';
+        } else {
+          btn.innerText = '❌ ' + msg;
+        }
+        btn.style.background = '#dc2626';
+        resetButton(btn, '✉️ Send Email Now', '#c2410c', 3000);
+      });
+    });
+  }
+
+  var copyBtn = document.getElementById('btn-copy');
+  var manageBtn = document.getElementById('btn-manage-emails');
+  var emailBtn = document.getElementById('btn-email');
+  if(copyBtn) copyBtn.addEventListener('click', onCopyReport);
+  if(manageBtn) manageBtn.addEventListener('click', openRecipientsFile);
+  if(emailBtn) emailBtn.addEventListener('click', sendEmailNow);
+})();
+
+/* ══════════════════════════════════════════════════════
+   SMART AUTOCOMPLETE — Load Plan / Advance Loading / Offload Table / MANPOWER
+   ══════════════════════════════════════════════════════ */
+(function(){
+
+  /* ── 0) Config & Helpers ── */
+  var AIRLABS_KEY = (typeof window._AIRLABS_KEY !== 'undefined') ? window._AIRLABS_KEY : '';
+  var FLT_RE = /^([A-Z]{2,3})(\d{1,5})$/i;
+
+  var LOCAL_FLIGHTS = {};
+  try { var lf = window._LOCAL_MCT_FLIGHTS; if(lf) LOCAL_FLIGHTS = lf; } catch(ex) {}
+
+  function todayFull() {
+    var now = new Date(Date.now() + 4*3600*1000);
+    var d   = now.getUTCDate();
+    var mon = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'][now.getUTCMonth()];
+    var yr  = now.getUTCFullYear();
+    return (d<10?'0'+d:d)+mon+yr;
+  }
+  function todayISO() {
+    return new Date(Date.now() + 4*3600*1000).toISOString().slice(0,10);
+  }
+
+  function forceUpper(el) {
+    var old = cleanEditableText(el);
+    var up  = old.toUpperCase();
+    if(old !== up) {
+      el.textContent = up;
+      setCursorEnd(el);
+    }
+    return up;
+  }
+
+  function cleanEditableText(el) {
+    return String((el && el.innerText) || '')
+      .replace(/[•·▪◦●]/g,' ')
+      .replace(/ /g,' ')
+      .replace(/^[\s\-–—]+/, '')
+      .replace(/\s+/g,' ')
+      .trim();
+  }
+
+  function isEffectivelyEmptyManpowerLi(li) {
+    if(!li) return true;
+    var txt = getManpowerText ? getManpowerText(li) : cleanEditableText(li);
+    txt = String(txt || '').replace(/​/g, '').replace(/ /g, ' ').trim();
+    return !txt;
+  }
+
+  function removeManpowerLiIfEmpty(li) {
+    if(!li || !li.parentElement) return false;
+    if(!isEffectivelyEmptyManpowerLi(li)) return false;
+    var ul = li.parentElement;
+    if(ul.children.length <= 1) return false;
+    var prev = li.previousElementSibling;
+    var next = li.nextElementSibling;
+    ul.removeChild(li);
+    var target = prev || next;
+    if(target) focusEditableListItem(target, true);
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+    return true;
+  }
+
+  function normalizeFlightTyped(text) {
+    var raw = String(text || '').toUpperCase().replace(/[^A-Z0-9]/g,'');
+    if(!raw) return '';
+    if(/^\d(1, 5)$/.test(raw)) return raw;
+    return raw;
+  }
+
+  function flightCandidatesFromTyped(typed) {
+    var out = [];
+    var seen = {};
+    var digitsOnly = /^\d{1,5}$/.test(typed || '');
+
+    Object.keys(LOCAL_FLIGHTS || {}).forEach(function(code) {
+      var key = String(code || '').toUpperCase().replace(/\s+/g,'');
+      if(!key || seen[key]) return;
+      var m = key.match(/^([A-Z]{2,3})(\d{1,5})$/);
+      if(!m) return;
+      var num = m[2];
+      if((digitsOnly && num.indexOf(typed) === 0) || (!digitsOnly && key.indexOf(typed) === 0)) {
+        seen[key] = true;
+        out.push(key);
+      }
+    });
+
+    out.sort(function(a,b) {
+      var ad = a.replace(/^[A-Z]+/, '');
+      var bd = b.replace(/^[A-Z]+/, '');
+      if(ad === typed && bd !== typed) return -1;
+      if(bd === typed && ad !== typed) return 1;
+      if(a === typed && b !== typed) return -1;
+      if(b === typed && a !== typed) return 1;
+      return a.localeCompare(b);
+    });
+    return out.slice(0, 8);
+  }
+
+  function showGhost(el, txt) {
+    var g = el.parentElement && el.parentElement.querySelector(':scope > .ghost-tip');
+    if(!g && el.tagName === 'TD') g = el.querySelector('.ghost-tip');
+    if(!g) {
+      g = document.createElement('span');
+      g.className = 'ghost-tip';
+      g.style.cssText = 'color:#94a3b8;font-style:italic;font-size:11px;display:block;pointer-events:none;user-select:none;white-space:nowrap;';
+      if(el.tagName === 'TD') { el.appendChild(g); }
+      else if(el.parentElement) { el.parentElement.insertBefore(g, el.nextSibling); }
+    }
+    g.textContent = '→ '+txt+' (Tab)';
+  }
+  function removeGhost(el) {
+    [el, el.parentElement].forEach(function(p) {
+      if(!p) return;
+      p.querySelectorAll('.ghost-tip').forEach(function(g) { g.remove(); });
+    });
+  }
+
+  /* ── Flight info fetch (local DB first, then AirLabs) ── */
+  function parseTime(val) {
+    if(!val) return '';
+    val = String(val).trim();
+    var iso = val.match(/T(\d{2}:\d{2})/);
+    if(iso) return iso[1];
+    var hm = val.match(/^(\d{1,2}:\d{2})$/);
+    if(hm) return hm[1];
+    var d4 = val.match(/^(\d{4})$/);
+    if(d4) return d4[1].slice(0,2)+':'+d4[1].slice(2);
+    return '';
+  }
+
+  function fetchFlightInfo(flt, isoDate, cb) {
+    var local = LOCAL_FLIGHTS[flt.toUpperCase()];
+    if(local && (local.dest || local.std)) {
+      cb({
+        std:  parseTime(local.std  || ''),
+        etd:  parseTime(local.etd  || ''),
+        dest: (local.dest || '').toUpperCase()
+      });
+      return;
+    }
+    if(!AIRLABS_KEY) { cb(null); return; }
+    var url = 'https://airlabs.co/api/v9/schedules?api_key='+AIRLABS_KEY
+            + '&flight_iata='+flt.toUpperCase()+'&dep_iata=MCT';
+    if(isoDate) url += '&flight_date='+isoDate;
+    fetch(url, {cache:'no-cache'})
+      .then(function(r) { return r.json(); })
+      .then(function(j) {
+        var rows = j.response || j.data || [];
+        if(!rows.length) {
+          return fetch('https://airlabs.co/api/v9/flights?api_key='+AIRLABS_KEY
+                      +'&flight_iata='+flt.toUpperCase()+'&dep_iata=MCT', {cache:'no-cache'})
+            .then(function(r2) { return r2.json(); })
+            .then(function(j2) {
+              var r2rows = j2.response || j2.data || [];
+              if(!r2rows.length) { cb(null); return; }
+              doRow(r2rows[0]);
+            });
+        }
+        doRow(rows[0]);
+      })
+      .catch(function() { cb(null); });
+    function doRow(row) {
+      cb({
+        std:  parseTime(row.dep_scheduled || ''),
+        etd:  parseTime(row.dep_estimated || ''),
+        dest: (row.arr_iata||'').toUpperCase()
+      });
+    }
+  }
+
+  /* ══════════════════════════════════════
+     A) Load Plan & Advance Loading
+        • كتابة رقم رحلة → ghost suggestion
+        • Tab → تعبئة النص كاملاً
+        • Enter → سطر جديد بنفس الإعداد
+     ══════════════════════════════════════ */
+  function setupFlightListItem(li, isLoadPlan) {
+    if(li._flightSetup) return;   /* منع التكرار */
+    li._flightSetup = true;
+
+    var _ghost = '';
+    var _reqId = 0;
+
+    function applyFlightGhost(flt, info) {
+      var dest = (info && info.dest) ? info.dest : '???';
+      _ghost = isLoadPlan
+        ? (flt + '/' + dest + '/' + todayFull() + '.')
+        : (flt + '/' + dest + '/' + todayFull() + ' — Completed as per plan');
+      li.dataset.ghostVal = _ghost;
+      showGhost(li, _ghost);
+    }
+
+    function updateFlightSuggestion() {
+      var typed = normalizeFlightTyped(cleanEditableText(li));
+      if(!typed) { removeGhost(li); li.dataset.ghostVal=''; return; }
+
+      var candidates = flightCandidatesFromTyped(typed);
+      var flt = '';
+      if(FLT_RE.test(typed)) flt = typed;
+      else if(candidates.length === 1) flt = candidates[0];
+      else if(candidates.length > 1) {
+        li.dataset.ghostVal = candidates[0];
+        showGhost(li, candidates.slice(0, 4).join('   '));
+        return;
+      } else {
+        removeGhost(li); li.dataset.ghostVal=''; return;
+      }
+
+      var reqId = ++_reqId;
+      showGhost(li, flt + '/???/' + todayFull() + '…');
+      fetchFlightInfo(flt, todayISO(), function(info) {
+        if(reqId !== _reqId) return;
+        applyFlightGhost(flt, info);
+      });
+    }
+
+    li.addEventListener('focus', updateFlightSuggestion);
+    li.addEventListener('input', updateFlightSuggestion);
+    li.addEventListener('keyup', updateFlightSuggestion);
+    li.addEventListener('paste', function() { setTimeout(updateFlightSuggestion, 30); });
+
+    /* keydown: Tab → قبول Ghost | Enter → سطر جديد */
+    li.addEventListener('keydown', function(e) {
+      if(e.key === 'Tab' && li.dataset.ghostVal) {
+        e.preventDefault();
+        var acceptVal = li.dataset.ghostVal;
+        var candidates = flightCandidatesFromTyped(normalizeFlightTyped(cleanEditableText(li)));
+        if(!/\//.test(acceptVal) && candidates.length) {
+          acceptVal = candidates[0];
+          li.innerText = acceptVal;
+          setCursorEnd(li);
+          li.dataset.ghostVal = '';
+          updateFlightSuggestion();
+          return;
+        }
+        li.innerText = acceptVal;
+        li.dataset.ghostVal = '';
+        removeGhost(li);
+        setCursorEnd(li);
+        if(typeof triggerAutosave==='function') triggerAutosave();
+
+      } else if(e.key === 'Enter') {
+        e.preventDefault();
+        removeGhost(li);
+        li.dataset.ghostVal = '';
+        var ul = li.parentElement;
+        if(!ul) return;
+        var newLi = document.createElement('li');
+        newLi.contentEditable = 'true';
+        newLi.style.outline = 'none';
+        newLi.innerHTML = '&nbsp;';
+        ul.insertBefore(newLi, li.nextSibling);
+        setupFlightListItem(newLi, isLoadPlan);   /* ← يربط على الـ li الجديدة مباشرة */
+        newLi.focus();
+        setCursorEnd(newLi);
+      }
+    });
+
+    li.addEventListener('blur', function() { setTimeout(function() { if(document.activeElement !== li) removeGhost(li); }, 120); });
+  }
+
+  function setCursorEnd(el) {
+    try {
+      var r = document.createRange();
+      r.selectNodeContents(el);
+      r.collapse(false);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(r);
+    } catch(ex) {}
+  }
+
+  function setCursorStart(el) {
+    try {
+      var r = document.createRange();
+      r.selectNodeContents(el);
+      r.collapse(true);
+      window.getSelection().removeAllRanges();
+      window.getSelection().addRange(r);
+    } catch(ex) {}
+  }
+
+  function isManpowerListUl(ul) {
+    if(!ul || !ul.id) return false;
+    return ul.id.indexOf('ul-dept-') === 0 || MP_IDS.indexOf(ul.id) !== -1;
+  }
+
+  function createEditableListItem(ul) {
+    var li = document.createElement('li');
+    li.contentEditable = 'true';
+    li.style.outline = 'none';
+    li.style.minWidth = '40px';
+    if(isManpowerListUl(ul)) {
+      li.textContent = '​';
+    } else {
+      li.innerHTML = '&nbsp;';
+    }
+    return li;
+  }
+
+  function focusEditableListItem(li, atStart) {
+    if(!li) return;
+    li.focus();
+    if(atStart) setCursorStart(li); else setCursorEnd(li);
+  }
+
+  /* ربط القوائم الموجودة عند تحميل الصفحة */
+  function initFlightLists() {
+    var ulLP  = document.getElementById('ul-loadplan');
+    var ulADV = document.getElementById('ul-advloading');
+    if(ulLP)  ulLP.querySelectorAll('li').forEach(function(li)  { setupFlightListItem(li, true);  });
+    if(ulADV) ulADV.querySelectorAll('li').forEach(function(li) { setupFlightListItem(li, false); });
+  }
+  window.setupFlightListItem = setupFlightListItem;
+  window.initFlightLists = initFlightLists;
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initFlightLists);
+  } else {
+    initFlightLists();
+  }
+
+  /* "+ Add" button — نُعيد تعريف addListItem ليُضيف autocomplete */
+  var _orig = window.addListItem;
+  window.addListItem = function(ulId) {
+    _orig(ulId);
+    var ul = document.getElementById(ulId);
+    if(!ul) return;
+    var last = ul.lastElementChild;
+    if(!last) return;
+    var isLP = (ulId === 'ul-loadplan');
+    var isADV= (ulId === 'ul-advloading');
+    if(isLP || isADV) {
+      setupFlightListItem(last, isLP);
+    } else if(typeof setupManpowerLi === 'function') {
+      setupManpowerLi(last);
+    }
+  };
+
+  /* ══════════════════════════════════════
+     B) جدول الأوفلود
+        • click/focus على date → يكمل التاريخ
+        • input على flight → يجلب STD+DEST
+     ══════════════════════════════════════ */
+  function setupTableCell(td) {
+    if(td._cellSetup) return;   /* منع التكرار */
+    td._cellSetup = true;
+    var col = td.dataset.col;
+    if(!col) return;
+
+    if(col === 'date') {
+      function autoDate() {
+        var txt = td.innerText.replace(/ /g,'').trim();
+        if(!txt) {
+          td.innerText = todayFull();
+          if(typeof triggerAutosave==='function') triggerAutosave();
+        }
+      }
+      td.addEventListener('click',  autoDate);
+      td.addEventListener('focus',  autoDate);
+      td.addEventListener('input',  function() { forceUpper(td); });
+    }
+
+    if(col === 'flight') {
+      var _lastFlt = '';
+      function normalizeFlightCell() {
+        var raw = cleanEditableText(td).toUpperCase().replace(/[^A-Z0-9]/g,'');
+        if((td.textContent || '') !== raw) {
+          td.textContent = raw;
+          setCursorEnd(td);
+        }
+        return raw;
+      }
+      function onFlightInput() {
+        var flt = normalizeFlightCell();
+        if(flt === _lastFlt) return;   /* لا تغيير حقيقي */
+        _lastFlt = flt;
+        if(!FLT_RE.test(flt)) { removeGhost(td); return; }
+        var row      = td.closest('tr');
+        var dateCell = row && row.querySelector('[data-col="date"]');
+        var stdCell  = row && row.querySelector('[data-col="std"]');
+        var destCell = row && row.querySelector('[data-col="dest"]');
+        var emailCell= row && row.querySelector('[data-col="email"]');
+        /* تعبئة التاريخ تلقائياً إذا كان فارغاً */
+        if(dateCell) {
+          var dv = dateCell.innerText.replace(/ /g,'').trim();
+          if(!dv) { dateCell.innerText = todayFull(); dv = todayFull(); }
+        }
+        var isoDate = todayISO();
+        if(dateCell) {
+          var dv2 = (dateCell.innerText||'').replace(/ /g,'').trim().toUpperCase();
+          var mons = {JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+          var dm = dv2.match(/^(\d{1,2})([A-Z]{3})(\d{2,4})?$/);
+          if(dm) {
+            var yr = dm[3] ? (dm[3].length===2 ? 2000+parseInt(dm[3]) : parseInt(dm[3])) : new Date().getFullYear();
+            isoDate = yr+'-'+(mons[dm[2]]||1).toString().padStart(2,'0')+'-'+dm[1].padStart(2,'0');
+          }
+        }
+        showGhost(td, 'fetching '+flt+'…');
+        fetchFlightInfo(flt, isoDate, function(info) {
+          removeGhost(td);
+          if(!info) return;
+          if(stdCell) {
+            var cur = stdCell.innerText.replace(/ /g,'').trim();
+            if(!cur || cur === ' ') {
+              var std = info.std||'', etd = info.etd||'';
+              stdCell.innerText = (std && etd && std!==etd) ? std+' | '+etd : (std||etd||'');
+            }
+          }
+          if(destCell) {
+            var dc = destCell.innerText.replace(/ /g,'').trim();
+            if((!dc) && info.dest) destCell.innerText = info.dest;
+          }
+          if(typeof triggerAutosave==='function') triggerAutosave();
+        });
+      }
+      td.addEventListener('focus',  normalizeFlightCell);
+      td.addEventListener('input',  onFlightInput);
+      td.addEventListener('keyup',  onFlightInput);  /* يشتغل عند paste أيضاً */
+      td.addEventListener('paste', function() { setTimeout(onFlightInput, 50); });
+    }
+  }
+
+  function offloadCellTextIsBlank(td) {
+    return !String(td && td.innerText || '').replace(/ /g,'').trim();
+  }
+
+  function renumberOffloadRows() {
+    var tbody = document.getElementById('offload-tbody');
+    if(!tbody) return;
+    Array.from(tbody.querySelectorAll('tr')).forEach(function(row, idx) {
+      var first = row.querySelector('td');
+      if(first) first.innerHTML = '<strong>' + (idx + 1) + '</strong>';
+    });
+  }
+
+  function deleteOffloadRow(btn) {
+    var row = btn && btn.closest ? btn.closest('tr') : null;
+    var tbody = document.getElementById('offload-tbody');
+    if(!row || !tbody || !tbody.contains(row)) return;
+    if(window.confirm && !window.confirm('Delete this row?')) return;
+    row.remove();
+    renumberOffloadRows();
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+  }
+  window.deleteOffloadRow = deleteOffloadRow;
+
+  function makeOffloadRow() {
+    var tbody = document.getElementById('offload-tbody');
+    if(!tbody) return null;
+    var existingRows = Array.from(tbody.querySelectorAll('tr')).filter(function(r) {
+      return r.querySelectorAll('td').length >= 13;
+    });
+    var template = existingRows[existingRows.length - 1];
+    var row = template ? template.cloneNode(true) : document.createElement('tr');
+
+    if(!template) {
+      for(var i=0;i<13;i++) { row.appendChild(document.createElement('td')); }
+    }
+
+    var cols = ['','date','flight','std','dest','email','','','','','','',''];
+    Array.from(row.children).forEach(function(td, i) {
+      if(i === 0) {
+        td.innerHTML = '<strong></strong>';
+        td.removeAttribute('contenteditable');
+      } else if(i === 12) {
+        td.innerHTML = '<button type="button" data-no-copy="1" onclick="deleteOffloadRow(this)" style="font-size:11px;padding:2px 7px;cursor:pointer;background:#fee2e2;border:1px solid #dc2626;color:#dc2626;border-radius:3px;">&#10005;</button>';
+        td.removeAttribute('contenteditable');
+        td.removeAttribute('tabindex');
+      } else {
+        td.innerHTML = '&nbsp;';
+        td.setAttribute('contenteditable','true');
+        td.setAttribute('tabindex','0');
+        td.style.outline = td.style.outline || 'none';
+      }
+      if(cols[i]) td.setAttribute('data-col', cols[i]);
+      else td.removeAttribute('data-col');
+      td._cellSetup = false;
+    });
+
+    tbody.appendChild(row);
+    renumberOffloadRows();
+    row.querySelectorAll('[data-col]').forEach(setupTableCell);
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+    return row;
+  }
+
+  function setupOffloadTabToAddRow() {
+    var tbody = document.getElementById('offload-tbody');
+    if(!tbody || tbody._tabAddSetup) return;
+    tbody._tabAddSetup = true;
+    tbody.addEventListener('keydown', function(ev) {
+      if(ev.key !== 'Tab' || ev.shiftKey) return;
+      var td = ev.target && ev.target.closest ? ev.target.closest('td[contenteditable]') : null;
+      if(!td || !tbody.contains(td)) return;
+      var cells = Array.from(tbody.querySelectorAll('td[contenteditable]'));
+      var last = cells[cells.length - 1];
+      if(td !== last) return;
+      ev.preventDefault();
+      ev.stopPropagation();
+      var row = makeOffloadRow();
+      var firstEditable = row && row.querySelector('td[contenteditable]');
+      if(firstEditable) firstEditable.focus();
+    }, true);
+  }
+
+  function initTableCells() {
+    document.querySelectorAll('[data-col]').forEach(setupTableCell);
+    /* MutationObserver — يُفعّل autocomplete على الصفوف الجديدة في الجدول */
+    var tbody = document.getElementById('offload-tbody');
+    setupOffloadTabToAddRow();
+    if(tbody) {
+      new MutationObserver(function(muts) {
+        muts.forEach(function(m) {
+          m.addedNodes.forEach(function(n) {
+            if(n.nodeType===1) {
+              n.querySelectorAll('[data-col]').forEach(setupTableCell);
+            }
+          });
+        });
+      }).observe(tbody, {childList:true});
+    }
+  }
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTableCells);
+  } else {
+    initTableCells();
+  }
+
+  /* ══════════════════════════════════════
+     C) MANPOWER — SN Autocomplete
+     ══════════════════════════════════════ */
+  function extractSnNamePair(text) {
+    var txt = String(text || '').replace(/ /g,' ').replace(/\s+/g,' ').trim();
+    if(!txt) return null;
+    var m = txt.match(/^(?:SN\s*)?(\d(3, 10))\s+(.+)$/i);
+    if(!m) return null;
+    var sn = String(m[1] || '').replace(/[^0-9]/g,'');
+    var name = String(m[2] || '').replace(/\s+/g,' ').trim();
+    if(!sn || !name) return null;
+    return { sn: sn, name: name };
+  }
+
+  function manpowerListSelector() {
+    return MP_IDS.map(function(id) { return '#' + id; }).concat(['ul[id^="ul-dept-"]']).join(',');
+  }
+
+  function buildSnMap() {
+    var map = {};
+    /* 1) كل موظفي الروستر المحقونين من Python */
+    try {
+      var allStaff = window._ALL_STAFF || {};
+      Object.keys(allStaff).forEach(function(sn) {
+        var snClean = String(sn).replace(/[^0-9]/g,'');
+        var name    = String(allStaff[sn] || '').replace(/\s+/g,' ').trim();
+        if(snClean && name && !map[snClean]) map[snClean] = name;
+      });
+    } catch(ex) {}
+    /* 2) الموظفون الظاهرون في DOM */
+    document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {
+      var sn   = String(el.dataset.sn || '').replace(/[^0-9]/g,'');
+      var name = String(el.dataset.name || '').replace(/\s+/g,' ').trim();
+      if(sn && name && !map[sn]) map[sn] = name;
+    });
+    /* 3) نص مكتوب يدوياً */
+    document.querySelectorAll(manpowerListSelector() + ' li').forEach(function(li) {
+      var pair = extractSnNamePair(cleanEditableText(li));
+      if(pair && !map[pair.sn]) map[pair.sn] = pair.name;
+    });
+    return map;
+  }
+
+  var snMap = {};
+  var snDropdownHost = null;
+  var snDropdownTarget = null;
+
+  function refreshSnMap() {
+    snMap = buildSnMap();
+    return snMap;
+  }
+
+  function closeSnDropdown() {
+    if(snDropdownHost && snDropdownHost.parentNode) snDropdownHost.parentNode.removeChild(snDropdownHost);
+    snDropdownHost = null;
+    snDropdownTarget = null;
+  }
+
+  function escapeHtml(text) {
+    return String(text || '').replace(/[&<>"]/g, function(ch) {
+      return ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : '&quot;';
+    });
+  }
+
+  function normalizeManpowerEditable(li) {
+    /* لا نُبدّل شيئاً — التنسيق (span data-sn) يجب أن يبقى كما هو.
+       نُنظّف فقط إذا كان محتوى الـ li نصاً خاماً بدون span منسق. */
+    if(!li) return;
+    var hasFormatted = li.querySelector && li.querySelector('[data-sn][data-name]');
+    if(hasFormatted) return;   /* ← منسق → لا تلمسه */
+    /* نص خام فقط — لا نحتاج تنسيقاً هنا */
+  }
+
+  function getManpowerText(li) {
+    if(!li) return '';
+    var selected = li.querySelector && li.querySelector('[data-sn][data-name]');
+    if(selected) {
+      var snSel = String(selected.dataset.sn || '').replace(/[^0-9]/g,'');
+      var nameSel = String(selected.dataset.name || '').replace(/\s+/g,' ').trim();
+      if(snSel && nameSel) return 'SN' + snSel + ' ' + nameSel;
+    }
+    return cleanEditableText(li);
+  }
+
+  function isFormattedManpowerEntry(li) {
+    return !!(li && li.querySelector && li.querySelector('[data-sn][data-name]'));
+  }
+
+  function replaceManpowerText(li, text) {
+    if(!li) return;
+    li.textContent = (text || '').replace(/​/g, '');
+    setCursorEnd(li);
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+  }
+
+  function extractTypedSn(text) {
+    var txt = String(text || '')
+      .replace(/[•·▪◦●]/g,' ')
+      .replace(/ /g,' ')
+      .replace(/^[\s\-–—]+/, '')
+      .trim();
+    if(!txt) return '';
+    var m = txt.match(/(?:SN\s*)?(\d{1,10})/i);
+    return m ? m[1] : '';
+  }
+
+  function collectSnMatches(typed) {
+    typed = String(typed || '').replace(/[^0-9]/g,'');
+    if(!typed) return [];
+    if(!Object.keys(snMap).length) refreshSnMap();
+
+    var seen = {};
+    var entries = [];
+
+    function pushEntry(snVal, nameVal) {
+      var sn = String(snVal || '').replace(/[^0-9]/g,'');
+      var name = String(nameVal || '').replace(/\s+/g,' ').trim();
+      if(!sn || !name || seen[sn]) return;
+      seen[sn] = true;
+      entries.push({ sn: sn, name: name });
+    }
+
+    Object.keys(snMap).forEach(function(snKey) {
+      pushEntry(snKey, snMap[snKey]);
+    });
+
+    document.querySelectorAll('[data-sn][data-name]').forEach(function(el) {
+      pushEntry(el.dataset.sn, el.dataset.name);
+    });
+
+    return entries
+      .map(function(item) {
+        var idx = item.sn.indexOf(typed);
+        var rank = -1;
+        if(item.sn === typed) rank = 0;
+        else if(idx === 0) rank = 1;
+        else if(typed.length >= 2 && idx > 0) rank = 2;
+        else return null;
+        return {
+          sn: item.sn,
+          name: item.name,
+          _rank: rank,
+          _idx: idx < 0 ? 999 : idx,
+          _delta: Math.abs(item.sn.length - typed.length)
+        };
+      })
+      .filter(Boolean)
+      .sort(function(a, b) {
+        if(a._rank !== b._rank) return a._rank - b._rank;
+        if(a._idx !== b._idx) return a._idx - b._idx;
+        if(a._delta !== b._delta) return a._delta - b._delta;
+        return a.sn.localeCompare(b.sn);
+      })
+      .slice(0, 10)
+      .map(function(item) {
+        return { sn: item.sn, name: item.name };
+      });
+  }
+
+  function renderSnSelection(li, item) {
+    if(!li || !item) return;
+    /* Outlook/mobile-safe: فاصل حقيقي بين SN والاسم، بدون flex/gap */
+    li.innerHTML = '<span data-sn="' + escapeHtml(item.sn) + '" data-name="' + escapeHtml(item.name) + '" '
+                 + 'style="font-family:Calibri,Arial,sans-serif;color:#1b1f2a;white-space:nowrap;">'
+                 + '<strong style="font-weight:700;color:#1b1f2a;letter-spacing:0.3px;">SN' + escapeHtml(item.sn) + '</strong>'
+                 + '&nbsp;&nbsp;<span style="font-weight:400;color:#1b1f2a;">' + escapeHtml(item.name) + '</span>'
+                 + '</span>';
+  }
+
+  function applySnSelection(li, item) {
+    if(!li || !item) return;
+    renderSnSelection(li, item);
+    refreshSnMap();
+    closeSnDropdown();
+    setCursorEnd(li);
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+  }
+
+  function positionSnDropdown(li, dd) {
+    if(!li || !dd) return;
+    var rect = li.getBoundingClientRect();
+    dd.style.left = (window.scrollX + rect.left) + 'px';
+    dd.style.top = (window.scrollY + rect.bottom + 4) + 'px';
+    dd.style.minWidth = Math.max(rect.width, 240) + 'px';
+  }
+
+  function showSnDropdown(li, matches) {
+    closeSnDropdown();
+    if(!matches.length) return;
+
+    var dd = document.createElement('div');
+    dd.className = 'sn-drop';
+    dd.setAttribute('contenteditable', 'false');
+    dd.style.cssText = 'position:absolute;background:#fff;border:1px solid #0b3a78;'
+                     + 'border-radius:6px;box-shadow:0 4px 16px rgba(11,58,120,.18);z-index:99999;'
+                     + 'max-height:220px;overflow-y:auto;font-size:13px;';
+
+    matches.forEach(function(item) {
+      var opt = document.createElement('div');
+      opt.setAttribute('contenteditable', 'false');
+      opt.style.cssText = 'padding:7px 12px;cursor:pointer;display:flex;gap:10px;align-items:center;';
+      opt.innerHTML = '<span style="font-weight:700;color:#0b3a78;min-width:70px;">SN' + escapeHtml(item.sn) + '</span>'
+                    + '<span style="color:#1b1f2a;">' + escapeHtml(item.name) + '</span>';
+      opt.onmouseenter = function() { opt.style.background = '#eef3fc'; };
+      opt.onmouseleave = function() { opt.style.background = ''; };
+      opt.onmousedown = function(ev) {
+        ev.preventDefault();
+        applySnSelection(li, item);
+      };
+      dd.appendChild(opt);
+    });
+
+    document.body.appendChild(dd);
+    positionSnDropdown(li, dd);
+    snDropdownHost = dd;
+    snDropdownTarget = li;
+  }
+
+  window.addEventListener('load', refreshSnMap);
+  document.addEventListener('DOMContentLoaded', refreshSnMap);
+  setTimeout(refreshSnMap, 300);
+  setTimeout(refreshSnMap, 1500);
+  window.addEventListener('resize', function() {
+    if(snDropdownHost && snDropdownTarget) positionSnDropdown(snDropdownTarget, snDropdownHost);
+  });
+  window.addEventListener('scroll', function() {
+    if(snDropdownHost && snDropdownTarget) positionSnDropdown(snDropdownTarget, snDropdownHost);
+  }, true);
+  document.addEventListener('click', function(ev) {
+    if(!snDropdownHost) return;
+    if(snDropdownHost.contains(ev.target)) return;
+    if(snDropdownTarget && snDropdownTarget.contains(ev.target)) return;
+    closeSnDropdown();
+  });
+
+  function setupManpowerLi(li) {
+    if(!li || li._mpSetup) return;
+    li._mpSetup = true;
+
+    function updateManpowerSuggestion() {
+      refreshSnMap();
+      closeSnDropdown();
+      if(isFormattedManpowerEntry(li)) return;
+      var typed = extractTypedSn(getManpowerText(li));
+      if(!typed) return;
+      var matches = collectSnMatches(typed);
+      if(matches.length === 1 && matches[0].sn === typed) {
+        applySnSelection(li, matches[0]);
+        return;
+      }
+      if(matches.length) showSnDropdown(li, matches);
+    }
+
+    li.addEventListener('focus', function() {
+      refreshSnMap();
+      if(isFormattedManpowerEntry(li)) closeSnDropdown();
+      else updateManpowerSuggestion();
+    });
+    li.addEventListener('click', function() {
+      refreshSnMap();
+      if(isFormattedManpowerEntry(li)) closeSnDropdown();
+      else updateManpowerSuggestion();
+    });
+    li.addEventListener('input', function() {
+      updateManpowerSuggestion();
+    });
+    li.addEventListener('keyup', function(ev) {
+      if(!['Enter','Tab','Escape'].includes(ev.key)) updateManpowerSuggestion();
+    });
+    li.addEventListener('paste', function(ev) {
+      if(isFormattedManpowerEntry(li)) {
+        var pasted = ((ev.clipboardData || window.clipboardData) && (ev.clipboardData || window.clipboardData).getData('text')) || '';
+        pasted = String(pasted || '').replace(/\s+/g, ' ').trim();
+        if(pasted) {
+          ev.preventDefault();
+          replaceManpowerText(li, pasted);
+          updateManpowerSuggestion();
+          return;
+        }
+      }
+      setTimeout(function() { updateManpowerSuggestion(); }, 30);
+    });
+
+    li.addEventListener('keydown', function(ev) {
+      if(ev.key === 'Enter') {
+        ev.preventDefault();
+        ev.stopPropagation();
+        closeSnDropdown();
+        var ul = li.parentElement;
+        if(!ul) return;
+        var newLi = createEditableListItem(ul);
+        ul.insertBefore(newLi, li.nextSibling);
+        _attachLiEvents(newLi);
+        focusEditableListItem(newLi, true);
+        if(typeof triggerAutosave === 'function') triggerAutosave();
+        return;
+      }
+
+      if(ev.key === 'Escape') {
+        closeSnDropdown();
+        return;
+      }
+
+      if(ev.key === 'Tab') {
+        if(isFormattedManpowerEntry(li)) return;
+        var typedTab = extractTypedSn(getManpowerText(li));
+        var matchesTab = collectSnMatches(typedTab);
+        if(matchesTab.length) {
+          ev.preventDefault();
+          applySnSelection(li, matchesTab[0]);
+        }
+        return;
+      }
+
+      if((ev.key === 'Backspace' || ev.key === 'Delete')) {
+        if(isFormattedManpowerEntry(li)) {
+          ev.preventDefault();
+          replaceManpowerText(li, '');
+          closeSnDropdown();
+          return;
+        }
+        if(isEffectivelyEmptyManpowerLi(li)) {
+          ev.preventDefault();
+          removeManpowerLiIfEmpty(li);
+          return;
+        }
+      }
+    });
+
+    li.addEventListener('blur', function() {
+      if(isFormattedManpowerEntry(li)) {
+        setTimeout(closeSnDropdown, 200);
+        return;
+      }
+      var typed = extractTypedSn(getManpowerText(li));
+      var matches = collectSnMatches(typed);
+      if(typed && matches.length === 1 && matches[0].sn === typed) {
+        applySnSelection(li, matches[0]);
+      } else {
+        var pair = extractSnNamePair(getManpowerText(li));
+        if(pair) {
+          renderSnSelection(li, pair);
+          refreshSnMap();
+        }
+      }
+      setTimeout(closeSnDropdown, 200);
+    });
+  }
+
+  var MP_IDS = ['ul-supervisors','ul-ctu','ul-inventory','ul-support','ul-fd-export','ul-fd-import',
+                'ul-sickleave','ul-annualleave','ul-trainee','ul-overtime'];
+  function initManpower() {
+    refreshSnMap();
+    MP_IDS.forEach(function(id) {
+      var ul = document.getElementById(id);
+      if(!ul) return;
+      ul.querySelectorAll('li').forEach(setupManpowerLi);
+      new MutationObserver(function(muts) {
+        muts.forEach(function(m) {
+          m.addedNodes.forEach(function(n) { if(n.tagName==='LI') setupManpowerLi(n); });
+        });
+      }).observe(ul, {childList:true});
+    });
+    document.querySelectorAll('[id^="ul-dept-"]').forEach(function(ul) {
+      ul.querySelectorAll('li').forEach(setupManpowerLi);
+      new MutationObserver(function(muts) {
+        muts.forEach(function(m) {
+          m.addedNodes.forEach(function(n) { if(n.tagName==='LI') setupManpowerLi(n); });
+        });
+      }).observe(ul, {childList:true});
+    });
+  }
+
+  function isManpowerLiTarget(node) {
+    var el = node;
+    if(el && el.nodeType === 3) el = el.parentElement;
+    var li = el && el.closest ? el.closest('li[contenteditable]') : null;
+    if(!li) {
+      try {
+        var sel = window.getSelection && window.getSelection();
+        var anchor = sel && sel.anchorNode;
+        if(anchor && anchor.nodeType === 3) anchor = anchor.parentElement;
+        li = anchor && anchor.closest ? anchor.closest('li[contenteditable]') : null;
+      } catch(ex) {}
+    }
+    if(!li || !li.parentElement || !li.parentElement.id) return null;
+    var ul = li.parentElement;
+    var id = ul.id || '';
+    if(id.indexOf('ul-dept-') === 0) return li;
+    if(MP_IDS.indexOf(id) !== -1) return li;
+    return null;
+  }
+
+  function handleManpowerInteractive(node, forceOpen) {
+    var li = isManpowerLiTarget(node);
+    if(!li) return;
+    refreshSnMap();
+    if(isFormattedManpowerEntry(li) && !forceOpen) { closeSnDropdown(); return; }
+    var typed = extractTypedSn(getManpowerText(li));
+    if(!typed) { closeSnDropdown(); return; }
+    var matches = collectSnMatches(typed);
+    if(matches.length === 1 && matches[0].sn === typed) {
+      applySnSelection(li, matches[0]);
+      return;
+    }
+    if(matches.length) showSnDropdown(li, matches); else closeSnDropdown();
+  }
+
+  document.addEventListener('focusin', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(li) handleManpowerInteractive(li, false);
+  });
+  document.addEventListener('click', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(li) handleManpowerInteractive(li, false);
+  });
+  document.addEventListener('input', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(li) handleManpowerInteractive(li, false);
+  });
+  document.addEventListener('keyup', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(li && !['Enter','Tab','Escape'].includes(ev.key)) handleManpowerInteractive(li, false);
+  });
+  document.addEventListener('paste', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(li) setTimeout(function(){ handleManpowerInteractive(li, false); }, 30);
+  });
+  function insertManpowerLineAfter(li) {
+    var ul = li && li.parentElement;
+    if(!ul) return null;
+    var newLi = createEditableListItem(ul);
+    ul.insertBefore(newLi, li.nextSibling);
+    _attachLiEvents(newLi);
+    focusEditableListItem(newLi, true);
+    if(typeof triggerAutosave === 'function') triggerAutosave();
+    return newLi;
+  }
+
+  document.addEventListener('keydown', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(!li) return;
+
+    if(ev.key === 'Enter') {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+      closeSnDropdown();
+      insertManpowerLineAfter(li);
+      return;
+    }
+
+    if((ev.key === 'Backspace' || ev.key === 'Delete') && isEffectivelyEmptyManpowerLi(li)) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      if(typeof ev.stopImmediatePropagation === 'function') ev.stopImmediatePropagation();
+      removeManpowerLiIfEmpty(li);
+      return;
+    }
+
+    if(ev.key === 'Escape') { closeSnDropdown(); return; }
+  }, true);
+  document.addEventListener('focusout', function(ev) {
+    var li = isManpowerLiTarget(ev.target);
+    if(!li) return;
+    if(isFormattedManpowerEntry(li)) {
+      setTimeout(closeSnDropdown, 200);
+      return;
+    }
+    var typed = extractTypedSn(getManpowerText(li));
+    var matches = collectSnMatches(typed);
+    if(typed && matches.length === 1 && matches[0].sn === typed) {
+      applySnSelection(li, matches[0]);
+    } else {
+      var pair = extractSnNamePair(getManpowerText(li));
+      if(pair) {
+        renderSnSelection(li, pair);
+        refreshSnMap();
+      }
+    }
+    setTimeout(closeSnDropdown, 200);
+  });
+  window.setupManpowerLi = setupManpowerLi;
+  window.initManpower = initManpower;
+  window.rebindSmartAutocomplete = function() {
+    try { if(typeof window.initFlightLists === 'function') window.initFlightLists(); } catch(ex) {}
+    try { if(typeof initTableCells === 'function') initTableCells(); } catch(ex) {}
+    try { if(typeof window.initManpower === 'function') window.initManpower(); } catch(ex) {}
+    try { if(typeof refreshSnMap === 'function') refreshSnMap(); } catch(ex) {}
+  };
+  if(document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initManpower);
+  } else {
+    initManpower();
+  }
+
+})();
+
+
+
+
+
+/* ══════════════════════════════════════════════════════
+   AUTOSAVE — IndexedDB
+   يحفظ كل تعديل فوري (كل ضغطة حرف) ويستعيده عند التحميل
+   المفتاح: URL الصفحة (date_dir + shift فريد لكل تقرير)
+   ══════════════════════════════════════════════════════ */
+(function(){
+  var DB_NAME = 'offload_autosave';
+  var STORE   = 'reports';
+  var PAGE_KEY = location.pathname;
+  var _db = null;
+  var _saveTimer = null;
+
+  function openDB(cb){
+    if(_db){ cb(_db); return; }
+    var req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = function(e){
+      e.target.result.createObjectStore(STORE, {keyPath:'key'});
+    };
+    req.onsuccess = function(e){ _db = e.target.result; cb(_db); };
+    req.onerror   = function(){ console.warn('[autosave] IndexedDB open failed'); };
+  }
+
+  function saveNow(){
+    /* جمع كل العناصر القابلة للتعديل وحفظ قيمها */
+    var data = {};
+
+    /* contenteditable cells في الجدول */
+    document.querySelectorAll('[contenteditable="true"]').forEach(function(el){
+      var id = el.id || el.dataset.saveKey;
+      if(!id){
+        /* أنشئ مفتاح فريد من موضع العنصر في الـ DOM */
+        var path = [];
+        var node = el;
+        while(node && node !== document.body){
+          var idx = Array.prototype.indexOf.call((node.parentElement||{}).children||[], node);
+          path.unshift((node.tagName||'')+'['+idx+']');
+          node = node.parentElement;
+        }
+        id = path.join('>');
+        el.dataset.saveKey = id;
+      }
+      data[id] = el.innerHTML;
+    });
+
+    /* جدول الأوفلود كامل (للحفاظ على الصفوف المضافة/المحذوفة) */
+    var offloadTbody = document.getElementById('offload-tbody');
+    if(offloadTbody) data['__offload_tbody_html__'] = offloadTbody.innerHTML;
+
+    /* قوائم ul كاملة (للحفاظ على العناصر المضافة/المحذوفة) */
+    document.querySelectorAll('ul[id]').forEach(function(ul){
+      data['__ul__'+ul.id] = ul.innerHTML;
+    });
+
+    /* هل صف NIL موجود؟ */
+    data['__nil_row_removed__'] = !document.getElementById('nil-row');
+
+    openDB(function(db){
+      var tx = db.transaction(STORE,'readwrite');
+      tx.objectStore(STORE).put({key: PAGE_KEY, data: data, ts: Date.now()});
+    });
+  }
+
+  /* استدعاء خارجي من زر حذف NIL */
+  window.triggerAutosave = function(){ saveNow(); };
+
+  function restoreSaved(){
+    openDB(function(db){
+      var tx = db.transaction(STORE,'readonly');
+      var req = tx.objectStore(STORE).get(PAGE_KEY);
+      req.onsuccess = function(e){
+        var rec = e.target && e.target.result;
+        if(!rec || !rec.data) return;
+        var data = rec.data;
+
+        /* استعادة جدول الأوفلود أولاً (تضمن بقاء الصفوف المضافة/المحذوفة) */
+        if(data['__offload_tbody_html__']){
+          var offloadTbody = document.getElementById('offload-tbody');
+          if(offloadTbody) offloadTbody.innerHTML = data['__offload_tbody_html__'];
+        }
+
+        /* استعادة قوائم ul أولاً (تضمن وجود العناصر) */
+        Object.keys(data).forEach(function(k){
+          if(k.indexOf('__ul__') === 0){
+            var ul = document.getElementById(k.replace('__ul__',''));
+            if(ul) ul.innerHTML = data[k];
+          }
+        });
+
+        /* استعادة contenteditable */
+        Object.keys(data).forEach(function(k){
+          if(k.indexOf('__') === 0) return;
+          var el = document.getElementById(k) || document.querySelector('[data-save-key="'+k+'"]');
+          if(el && el.isContentEditable) el.innerHTML = data[k];
+        });
+
+        /* إزالة صف NIL إذا كان محذوفاً */
+        if(data['__nil_row_removed__']){
+          var nr = document.getElementById('nil-row');
+          if(nr) nr.remove();
+        }
+
+        /* بعد استعادة innerHTML تُفقد listeners — أعد ربط autocomplete */
+        setTimeout(function(){
+          try { if(typeof window.rebindSmartAutocomplete === 'function') window.rebindSmartAutocomplete(); } catch(ex) {}
+        }, 0);
+      };
+    });
+  }
+
+  /* ── ربط الحفظ بكل حدث تعديل ── */
+  function _schedSave(){
+    clearTimeout(_saveTimer);
+    _saveTimer = setTimeout(saveNow, 400);
+  }
+
+  document.addEventListener('input',  _schedSave);
+  document.addEventListener('keyup',  _schedSave);
+
+  /* MutationObserver للقوائم (إضافة/حذف عناصر) */
+  var mo = new MutationObserver(function(muts){
+    var changed = muts.some(function(m){
+      return m.type==='childList' || m.type==='characterData';
+    });
+    if(changed) _schedSave();
+  });
+  mo.observe(document.body, {childList:true, subtree:true, characterData:true});
+
+  /* استعادة البيانات بعد تحميل الصفحة */
+  if(document.readyState === 'loading'){
+    document.addEventListener('DOMContentLoaded', restoreSaved);
+  } else {
+    restoreSaved();
+  }
+})();
+</script>
+
+</body>
+</html>
