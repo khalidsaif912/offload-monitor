@@ -1,0 +1,33 @@
+{
+  "flight": "OV513",
+  "date": "27-Apr",
+  "std_etd": "03:15",
+  "destination": "KHI",
+  "format": "A",
+  "items": [
+    {
+      "awb": "960-10042406",
+      "pcs": "12",
+      "kgs": "639",
+      "description": "TAMSULOSIN",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "960-10042421",
+      "pcs": "4",
+      "kgs": "108",
+      "description": "BROMIDE",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "03:44",
+  "saved_at": "2026-04-27T03:44:00+04:00",
+  "storage_date_dir": "2026-04-27",
+  "storage_shift": "shift3"
+}
