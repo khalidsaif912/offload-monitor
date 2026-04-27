@@ -1,0 +1,23 @@
+{
+  "flight": "IX164",
+  "date": "27APR",
+  "std_etd": "21:00",
+  "destination": "DEL",
+  "format": "A",
+  "items": [
+    {
+      "awb": "098-77258204",
+      "pcs": "35",
+      "kgs": "814",
+      "description": "COURIER",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "21:30",
+  "saved_at": "2026-04-27T21:30:00+04:00",
+  "storage_date_dir": "2026-04-27",
+  "storage_shift": "shift3"
+}
