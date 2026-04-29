@@ -1,7 +1,7 @@
 {
   "flight": "OV365",
   "date": "29-APR",
-  "std_etd": "06:25",
+  "std_etd": "06:25|11:20",
   "destination": "NBO",
   "format": "A",
   "items": [
