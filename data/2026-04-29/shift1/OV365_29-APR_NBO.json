@@ -1,0 +1,23 @@
+{
+  "flight": "OV365",
+  "date": "29-APR",
+  "std_etd": "06:25",
+  "destination": "NBO",
+  "format": "A",
+  "items": [
+    {
+      "awb": "960-10004433",
+      "pcs": "30",
+      "kgs": "873",
+      "description": "MEDICINE",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "10:19",
+  "saved_at": "2026-04-29T10:19:00+04:00",
+  "storage_date_dir": "2026-04-29",
+  "storage_shift": "shift1"
+}
