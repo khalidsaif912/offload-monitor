@@ -1,0 +1,33 @@
+{
+  "flight": "BG122",
+  "date": "29-APR",
+  "std_etd": "14:10",
+  "destination": "CGP",
+  "format": "A",
+  "items": [
+    {
+      "awb": "AKE02224BG",
+      "pcs": "25",
+      "kgs": "502",
+      "description": "P. EFFECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "AKE02755BG",
+      "pcs": "26",
+      "kgs": "488",
+      "description": "P. EFFECTS",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "14:14",
+  "saved_at": "2026-04-29T14:14:00+04:00",
+  "storage_date_dir": "2026-04-29",
+  "storage_shift": "shift1"
+}

@@ -9,6 +9,16 @@
       "updates": 1,
       "storage_date_dir": "2026-04-29",
       "storage_shift": "shift1"
+    },
+    "BG122_29-APR_CGP.json": {
+      "flight": "BG122",
+      "date": "29-APR",
+      "dest": "CGP",
+      "created_at": "2026-04-29T14:14:00+04:00",
+      "updated_at": "2026-04-29T14:14:00+04:00",
+      "updates": 0,
+      "storage_date_dir": "2026-04-29",
+      "storage_shift": "shift1"
     }
   }
 }
