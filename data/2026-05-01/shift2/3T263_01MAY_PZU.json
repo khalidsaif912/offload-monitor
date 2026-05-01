@@ -1,0 +1,53 @@
+{
+  "flight": "3T263",
+  "date": "01MAY",
+  "std_etd": "04:30",
+  "destination": "PZU",
+  "format": "A",
+  "items": [
+    {
+      "awb": "524-00019784",
+      "pcs": "6",
+      "kgs": "160",
+      "description": "PERSONAL EFFECTS",
+      "reason": "",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "524-00019876",
+      "pcs": "21",
+      "kgs": "487",
+      "description": "IMITATED JEWLER",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "524-00019880",
+      "pcs": "1",
+      "kgs": "114",
+      "description": "DRILLING CONSUMA",
+      "reason": "",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "524-00019935",
+      "pcs": "60",
+      "kgs": "555",
+      "description": "FAST TEST KIT",
+      "reason": "",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    }
+  ],
+  "email_time": "17:29",
+  "saved_at": "2026-05-01T17:29:00+04:00",
+  "storage_date_dir": "2026-05-01",
+  "storage_shift": "shift2"
+}

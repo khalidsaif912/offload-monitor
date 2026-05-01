@@ -1,1 +1,14 @@
-{}
+{
+  "flights": {
+    "3T263_01MAY_PZU.json": {
+      "flight": "3T263",
+      "date": "01MAY",
+      "dest": "PZU",
+      "created_at": "2026-05-01T17:29:00+04:00",
+      "updated_at": "2026-05-01T17:29:00+04:00",
+      "updates": 0,
+      "storage_date_dir": "2026-05-01",
+      "storage_shift": "shift2"
+    }
+  }
+}
