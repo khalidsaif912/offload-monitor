@@ -10,7 +10,7 @@
       "pcs": "6",
       "kgs": "160",
       "description": "PERSONAL EFFECTS",
-      "reason": "",
+      "reason": "SPACE",
       "class_": "",
       "item": "",
       "trolley": ""
@@ -30,7 +30,7 @@
       "pcs": "1",
       "kgs": "114",
       "description": "DRILLING CONSUMA",
-      "reason": "",
+      "reason": "SPACE",
       "class_": "",
       "item": "",
       "trolley": ""
@@ -40,14 +40,24 @@
       "pcs": "60",
       "kgs": "555",
       "description": "FAST TEST KIT",
-      "reason": "",
+      "reason": "SPACE",
+      "class_": "",
+      "item": "",
+      "trolley": ""
+    },
+    {
+      "awb": "319 - 02029296",
+      "pcs": "8",
+      "kgs": "84",
+      "description": "HARMLESS MEDICINE",
+      "reason": "SPACE",
       "class_": "",
       "item": "",
       "trolley": ""
     }
   ],
-  "email_time": "17:29",
-  "saved_at": "2026-05-01T17:29:00+04:00",
+  "email_time": "20:46",
+  "saved_at": "2026-05-01T20:46:00+04:00",
   "storage_date_dir": "2026-05-01",
   "storage_shift": "shift2"
 }
